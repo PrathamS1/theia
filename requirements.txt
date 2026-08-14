@@ -1,0 +1,9 @@
+neo4j==5.28.0
+google-genai==1.20.0
+pydantic==2.10.6
+pandas==2.2.3
+rapidfuzz==3.12.2
+python-dotenv==1.0.1
+streamlit==1.45.1
+pytest==8.3.5
+tqdm==4.67.1
