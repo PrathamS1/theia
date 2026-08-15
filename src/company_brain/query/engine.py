@@ -4,8 +4,9 @@ query/engine.py — Natural Language Query Engine built on HydraDB.
 Pipeline:
 1. Natural language question -> Keyword/entity extraction
 2. Graph retrieval over HydraDB (Facts, Entities, Provenance, Conflict resolution)
-3. Abstention check (if no graph facts exist -> "Not in the data")
-4. LLM synthesis with strict citations (with retries and graph-fact fallback on API errors)
+3. In-memory keyword filtering for HydraDB compliance
+4. Abstention check (if no graph facts exist -> "Not in the data")
+5. LLM synthesis with strict citations (with retries and graph-fact fallback on API errors)
 """
 
 import time
@@ -50,19 +51,39 @@ def answer_question(question: str, client: GraphClient) -> QueryAnswer:
     """
     genai_client = genai.Client(api_key=config.get_gemini_api_key())
 
-    # 1. Extract search terms from question
-    keywords = [w.strip() for w in question.replace("?", "").replace(",", "").split() if len(w) > 3]
+    # 1. Extract search keywords from question
+    stopwords = {"what", "is", "the", "are", "for", "on", "in", "to", "a", "an", "of", "and", "or", "how", "why", "which", "does", "do", "did"}
+    keywords = [
+        w.strip().lower()
+        for w in question.replace("?", "").replace(",", "").replace(".", "").split()
+        if len(w) > 2 and w.strip().lower() not in stopwords
+    ]
 
-    # 2. Retrieve facts from HydraDB
-    cypher = build_fact_query(keywords[:5])
+    # 2. Retrieve all facts from HydraDB using compliant Cypher
+    cypher = build_fact_query()
     try:
-        facts = client.run(cypher)
+        all_facts = client.run(cypher)
     except Exception as exc:
         logger.warning("Fact retrieval query failed: %s", exc)
-        facts = []
+        all_facts = []
 
-    # 3. Check abstention
-    abstain, reason = should_abstain(facts)
+    # 3. In-memory keyword filtering (bypasses unsupported Cypher string functions in HydraDB)
+    matching_facts = []
+    for f in all_facts:
+        sub = str(f.get("subject") or f.get("f.subject", "")).lower()
+        attr = str(f.get("attribute") or f.get("f.attribute", "")).lower()
+        val = str(f.get("value") or f.get("f.value", "")).lower()
+
+        if not keywords:
+            matching_facts.append(f)
+        elif any(kw in sub or kw in attr or kw in val for kw in keywords):
+            matching_facts.append(f)
+
+    # Use matching facts if found, else all facts if query had no specific keywords
+    target_facts = matching_facts if matching_facts else (all_facts[:10] if not keywords else [])
+
+    # 4. Check abstention
+    abstain, reason = should_abstain(target_facts)
     if abstain:
         return QueryAnswer(
             answer="I don't know based on the provided company data. " + reason,
@@ -70,21 +91,21 @@ def answer_question(question: str, client: GraphClient) -> QueryAnswer:
             abstained=True,
         )
 
-    # 4. Format fact summary
+    # 5. Format fact summary
     facts_summary_lines = []
     doc_ids = set()
-    for f in facts:
-        sub = f.get("f.subject", "")
-        attr = f.get("f.attribute", "")
-        val = f.get("f.value", "")
-        doc = f.get("f.doc_id", "")
+    for f in target_facts:
+        sub = f.get("subject") or f.get("f.subject", "")
+        attr = f.get("attribute") or f.get("f.attribute", "")
+        val = f.get("value") or f.get("f.value", "")
+        doc = f.get("doc_id") or f.get("f.doc_id", "")
         if doc:
             doc_ids.add(str(doc))
         facts_summary_lines.append(f"- [{doc}] {sub} -> {attr}: {val}")
 
-    facts_summary = "\n".join(facts_summary_lines)
+    facts_summary = "\n".join(facts_summary_lines[:20])
 
-    # 5. LLM Synthesis with retries and fallback
+    # 6. LLM Synthesis with retries and fallback
     prompt = ANSWER_PROMPT.format(question=question, facts_summary=facts_summary)
     
     max_retries = config.LLM_MAX_RETRIES
