@@ -40,10 +40,6 @@ logger = logging.getLogger(__name__)
 class GraphClient:
     """
     Wraps a Neo4j Bolt driver targeting HydraDB.
-
-    - Uses `causal` consistency for normal reads/writes.
-    - Use run(..., strong=True) for queries that must see the very latest write
-      (e.g. right after a bulk load, before an eval run).
     """
 
     def __init__(
@@ -61,8 +57,6 @@ class GraphClient:
         )
         logger.info("GraphClient connected to %s", self._uri)
 
-    # ── Lifecycle ─────────────────────────────────────────────────────────────
-
     def close(self) -> None:
         self._driver.close()
         logger.info("GraphClient closed.")
@@ -73,7 +67,9 @@ class GraphClient:
     def __exit__(self, *_: Any) -> None:
         self.close()
 
-    # ── Query helpers ─────────────────────────────────────────────────────────
+    def get_session(self) -> Session:
+        """Returns a persistent Neo4j Session for high-throughput batch writes."""
+        return self._driver.session()
 
     def run(
         self,
@@ -81,64 +77,36 @@ class GraphClient:
         parameters: dict[str, Any] | None = None,
         strong: bool = False,
     ) -> list[dict[str, Any]]:
-        """
-        Run a Cypher query and return all records as plain dicts.
-
-        Args:
-            cypher:     Cypher query string.
-            parameters: Optional parameter dict for parameterised queries.
-            strong:     If True, use strong consistency (slower but guaranteed
-                        to see the latest committed write).
-        """
         access_mode = "WRITE" if strong else None
         with self._driver.session(
             fetch_size=1000,
             **({"default_access_mode": access_mode} if access_mode else {}),
         ) as session:
             result: Result = session.run(cypher, parameters or {})
-            return [dict(record) for record in result]
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
 
     def run_write(
         self,
         cypher: str,
         parameters: dict[str, Any] | None = None,
+        session: Session | None = None,
     ) -> list[dict[str, Any]]:
-        """Convenience wrapper for write queries using auto-commit RUN execution."""
-        with self._driver.session() as session:
+        """Convenience wrapper for write queries. Consumes result streams to prevent socket hangs."""
+        if session is not None:
             result: Result = session.run(cypher, parameters or {})
-            return [dict(record) for record in result]
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
 
-    def run_batch(
-        self,
-        cypher: str,
-        rows: list[dict[str, Any]],
-        batch_size: int | None = None,
-    ) -> int:
-        """
-        Execute a batched UNWIND write.
-
-        The Cypher must use `UNWIND $rows AS row` and reference `row.*`.
-        Returns the total number of rows processed.
-
-        Example:
-            client.run_batch(
-                "UNWIND $rows AS row MERGE (d:Document {doc_id: row.doc_id}) SET d += row",
-                rows=[{"doc_id": "abc", "source": "slack", ...}, ...],
-            )
-        """
-        batch_size = batch_size or config.WRITE_BATCH_SIZE
-        total = 0
-        for i in range(0, len(rows), batch_size):
-            chunk = rows[i : i + batch_size]
-            self.run_write(cypher, {"rows": chunk})
-            total += len(chunk)
-            logger.debug("Batch write: %d / %d rows", total, len(rows))
-        return total
-
-    # ── Health check ──────────────────────────────────────────────────────────
+        with self._driver.session() as s:
+            result: Result = s.run(cypher, parameters or {})
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
 
     def ping(self) -> bool:
-        """Return True if HydraDB is reachable."""
         try:
             result = self.run("MATCH (n:Document) RETURN count(*)")
             return isinstance(result, list)

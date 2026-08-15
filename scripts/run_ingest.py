@@ -2,10 +2,8 @@
 """
 scripts/run_ingest.py — Entry point for Phase 1 Data Ingestion & LLM Extraction.
 
-Iterates over documents in data/raw/, calls Gemini LLM extractor (or heuristic fallback),
-and loads Document nodes, extracted Entities, and Facts into HydraDB.
-
-Supports multithreaded execution (--workers N), idempotency, and live tqdm progress bar.
+Decouples parallel CPU extraction from database writes to eliminate socket lock contention
+and achieve maximum ingestion throughput on HydraDB.
 
 Usage:
     python3 scripts/run_ingest.py [--limit N] [--workers N] [--reset] [--force] [--heuristic]
@@ -30,14 +28,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("run_ingest")
 
 
-def _process_doc(doc: dict, loader: GraphLoader, existing_doc_ids: set, force: bool, heuristic: bool):
+def _extract_doc(doc: dict, heuristic: bool):
     doc_id = doc["doc_id"]
     source = doc["source"]
     created_at = doc["created_at"]
     text = doc["text"]
-
-    if doc_id in existing_doc_ids and not force:
-        return doc_id, True, 0, 0, source
 
     extraction = extract_from_document(
         doc_text=text,
@@ -45,22 +40,13 @@ def _process_doc(doc: dict, loader: GraphLoader, existing_doc_ids: set, force: b
         source=source,
         force_heuristic=heuristic,
     )
-
-    loader.load_document(
-        doc_id=doc_id,
-        source=source,
-        created_at=created_at,
-        text_snippet=text[:500],
-        extraction=extraction,
-    )
-
-    return doc_id, False, len(extraction.entities), len(extraction.facts), source
+    return doc, extraction
 
 
 def main():
     parser = argparse.ArgumentParser(description="Ingest Redwood documents into HydraDB")
     parser.add_argument("--limit", type=int, default=0, help="Max documents to ingest (0 = all)")
-    parser.add_argument("--workers", type=int, default=8, help="Number of parallel worker threads (default: 8)")
+    parser.add_argument("--workers", type=int, default=8, help="Number of parallel extraction worker threads (default: 8)")
     parser.add_argument("--reset", action="store_true", help="Clear existing graph nodes before ingesting")
     parser.add_argument("--force", action="store_true", help="Force re-ingest documents even if already in HydraDB")
     parser.add_argument("--heuristic", action="store_true", help="Bypass LLM API calls and use 100% rule-based heuristic extraction")
@@ -80,7 +66,7 @@ def main():
         all_docs = all_docs[:args.limit]
 
     total_docs = len(all_docs)
-    logger.info("Found %d total documents to process (Parallel Workers: %d).", total_docs, args.workers)
+    logger.info("Found %d total documents to process.", total_docs)
 
     with GraphClient() as client:
         if not client.ping():
@@ -110,49 +96,57 @@ def main():
             except Exception as e:
                 logger.debug("Could not fetch existing document IDs: %s", e)
 
+        # Filter out already ingested docs
+        to_process = [d for d in all_docs if d["doc_id"] not in existing_doc_ids or args.force]
+        skipped_count = total_docs - len(to_process)
+        if skipped_count > 0:
+            logger.info("Skipping %d already ingested documents.", skipped_count)
+
+        if not to_process:
+            logger.info("All documents are already ingested in HydraDB! Nothing to do.")
+            return
+
         loader = GraphLoader(client)
         new_count = 0
-        skipped_count = 0
         total_entities_extracted = 0
         total_facts_extracted = 0
 
-        pbar = tqdm(total=total_docs, desc="Ingesting Documents", unit="doc")
+        # Step 1: Parallel CPU Extraction (Fast)
+        logger.info("Phase 1: Extracting entities & facts (Parallel Workers: %d)...", args.workers)
+        extracted_results = []
+        with ThreadPoolExecutor(max_workers=args.workers) as executor:
+            futures = [executor.submit(_extract_doc, doc, args.heuristic) for doc in to_process]
+            for future in tqdm(as_completed(futures), total=len(futures), desc="Extracting Facts", unit="doc"):
+                try:
+                    doc, extraction = future.result()
+                    extracted_results.append((doc, extraction))
+                except Exception as exc:
+                    logger.warning("Extraction error: %s", exc)
 
-        if args.workers > 1:
-            with ThreadPoolExecutor(max_workers=args.workers) as executor:
-                futures = {
-                    executor.submit(_process_doc, doc, loader, existing_doc_ids, args.force, args.heuristic): doc
-                    for doc in all_docs
-                }
-                for future in as_completed(futures):
-                    try:
-                        doc_id, skipped, n_ent, n_fact, src = future.result()
-                        if skipped:
-                            skipped_count += 1
-                        else:
-                            new_count += 1
-                            total_entities_extracted += n_ent
-                            total_facts_extracted += n_fact
-                            existing_doc_ids.add(doc_id)
-                        pbar.update(1)
-                        pbar.set_postfix(new_docs=new_count, skipped=skipped_count, facts=total_facts_extracted)
-                    except Exception as exc:
-                        logger.warning("Error processing document: %s", exc)
-                        pbar.update(1)
-        else:
-            for doc in all_docs:
-                doc_id, skipped, n_ent, n_fact, src = _process_doc(doc, loader, existing_doc_ids, args.force, args.heuristic)
-                if skipped:
-                    skipped_count += 1
-                else:
-                    new_count += 1
-                    total_entities_extracted += n_ent
-                    total_facts_extracted += n_fact
-                    existing_doc_ids.add(doc_id)
-                pbar.update(1)
-                pbar.set_postfix(new_docs=new_count, skipped=skipped_count, facts=total_facts_extracted)
+        # Step 2: Sequential High-Throughput DB Writes over a single persistent session
+        logger.info("Phase 2: Writing extracted knowledge graph to HydraDB...")
+        with client.get_session() as db_session:
+            for doc, extraction in tqdm(extracted_results, desc="Writing to HydraDB", unit="doc"):
+                doc_id = doc["doc_id"]
+                source = doc["source"]
+                created_at = doc["created_at"]
+                text = doc["text"]
 
-        pbar.close()
+                n_ent = len(extraction.entities)
+                n_fact = len(extraction.facts)
+                total_entities_extracted += n_ent
+                total_facts_extracted += n_fact
+
+                loader.load_document(
+                    doc_id=doc_id,
+                    source=source,
+                    created_at=created_at,
+                    text_snippet=text[:500],
+                    extraction=extraction,
+                    session=db_session,
+                )
+                existing_doc_ids.add(doc_id)
+                new_count += 1
 
         logger.info("\n🎉 Ingestion complete!")
         logger.info("  New Documents Ingested: %d", new_count)

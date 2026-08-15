@@ -1,7 +1,6 @@
 """
 extraction/extractor.py — document extraction engine using Google GenAI SDK
-with automatic exponential backoff retries, rate-limiting delay, circuit breaker,
-and comprehensive heuristic extraction fallback.
+with automatic circuit breaker and instant heuristic extraction fallback.
 """
 
 import re
@@ -20,7 +19,7 @@ from company_brain.extraction.prompts import (
 
 logger = logging.getLogger(__name__)
 
-# Circuit breaker flag: if Gemini daily quota is exhausted, switch immediately to heuristic extraction
+# Circuit breaker flag: if Gemini daily quota or rate limit is hit, switch immediately to heuristic extraction for all subsequent docs
 _QUOTA_EXHAUSTED = False
 
 # Initialize GenAI Client lazily
@@ -42,74 +41,50 @@ def extract_from_document(
     force_heuristic: bool = False,
 ) -> DocumentExtractionResult:
     """
-    Calls Gemini API with structured output config to extract typed entities and facts.
-    If Gemini quota is exhausted or force_heuristic=True, uses instant rule-based extraction.
+    Calls Gemini API to extract typed entities and facts.
+    If force_heuristic=True or any API error/rate limit occurs, immediately triggers instant heuristic extraction without sleeping.
     """
     global _QUOTA_EXHAUSTED
 
     if not doc_text or not doc_text.strip():
         return DocumentExtractionResult(entities=[], facts=[])
 
-    # If force_heuristic or circuit breaker triggered, run instant heuristic extraction
+    # If force_heuristic or circuit breaker triggered, run instant heuristic extraction immediately
     if force_heuristic or _QUOTA_EXHAUSTED:
         return _heuristic_fallback_extract(doc_text, doc_id, source)
 
-    client = get_client()
-    prompt = f"Source Type: {source}\nDocument ID: {doc_id}\n\nDocument Content:\n{doc_text[:8000]}"
+    try:
+        client = get_client()
+        prompt = f"Source Type: {source}\nDocument ID: {doc_id}\n\nDocument Content:\n{doc_text[:8000]}"
 
-    max_retries = config.LLM_MAX_RETRIES
-    backoff = config.LLM_RETRY_BACKOFF
-    delay = config.LLM_DELAY_SECONDS
+        response = client.models.generate_content(
+            model=config.GEMINI_MODEL,
+            contents=prompt,
+            config={
+                "system_instruction": EXTRACTION_SYSTEM_PROMPT,
+                "response_mime_type": "application/json",
+                "response_schema": DocumentExtractionResult,
+            },
+        )
+        if response.parsed:
+            return response.parsed
+        return DocumentExtractionResult(entities=[], facts=[])
 
-    for attempt in range(max_retries + 1):
-        try:
-            if delay > 0:
-                time.sleep(delay)
-
-            response = client.models.generate_content(
-                model=config.GEMINI_MODEL,
-                contents=prompt,
-                config={
-                    "system_instruction": EXTRACTION_SYSTEM_PROMPT,
-                    "response_mime_type": "application/json",
-                    "response_schema": DocumentExtractionResult,
-                },
-            )
-            if response.parsed:
-                return response.parsed
-            return DocumentExtractionResult(entities=[], facts=[])
-
-        except Exception as exc:
-            exc_str = str(exc)
-            is_quota = "RESOURCE_EXHAUSTED" in exc_str or "Quota" in exc_str or "quota" in exc_str
-            is_rate_limit = "429" in exc_str or is_quota
-
-            if is_quota:
-                logger.warning(
-                    "Gemini API Quota Exhausted for doc_id=%s. Activating Circuit Breaker (heuristic fallback for remaining ingestion).",
-                    doc_id
-                )
-                _QUOTA_EXHAUSTED = True
-                return _heuristic_fallback_extract(doc_text, doc_id, source)
-
-            if is_rate_limit and attempt < max_retries:
-                wait_time = (backoff ** (attempt + 1)) * max(1.0, delay)
-                logger.warning(
-                    "Rate limit (429) hit for doc_id=%s (attempt %d/%d). Retrying in %.1fs...",
-                    doc_id, attempt + 1, max_retries, wait_time
-                )
-                time.sleep(wait_time)
-            else:
-                logger.error("Extraction API call failed for doc_id=%s: %s. Using heuristic fallback.", doc_id, exc)
-                return _heuristic_fallback_extract(doc_text, doc_id, source)
-
-    return _heuristic_fallback_extract(doc_text, doc_id, source)
+    except Exception as exc:
+        # On ANY API failure or 429 error, activate circuit breaker immediately
+        logger.warning(
+            "Gemini API call failed for doc_id=%s: %s. Activating instant heuristic circuit breaker.",
+            doc_id, exc
+        )
+        _QUOTA_EXHAUSTED = True
+        return _heuristic_fallback_extract(doc_text, doc_id, source)
 
 
 def _heuristic_fallback_extract(doc_text: str, doc_id: str, source: str) -> DocumentExtractionResult:
     """
     Comprehensive rule-based heuristic extractor for enterprise documents.
     Extracts Person, Org, Ticket, and Fact assertions using pattern recognition & metadata parsing.
+    Instant execution with 0 network calls and 0 sleep delay.
     """
     entities: List[ExtractedEntity] = []
     facts: List[ExtractedFact] = []
@@ -172,5 +147,4 @@ def _heuristic_fallback_extract(doc_text: str, doc_id: str, source: str) -> Docu
                 confidence=0.75,
             ))
 
-    logger.info("  [HEURISTIC] Extracted %d entities, %d facts for doc_id=%s (source=%s)", len(entities), len(facts), doc_id, source)
     return DocumentExtractionResult(entities=entities, facts=facts)

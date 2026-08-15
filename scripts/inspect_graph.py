@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/inspect_graph.py — Inspect counts and sample nodes/edges in HydraDB.
+scripts/inspect_graph.py — Inspect counts and sample nodes/edges in HydraDB using strong consistency mode.
 
 Usage:
     python3 scripts/inspect_graph.py [--sample]
@@ -31,7 +31,7 @@ def main():
         
         # 1. Count Document nodes
         try:
-            doc_res = client.run("MATCH (d:Document) RETURN count(*)")
+            doc_res = client.run("MATCH (d:Document) RETURN count(*)", strong=True)
             doc_count = doc_res[0].get("count(*)", doc_res[0].get("count(d)", 0))
         except Exception:
             doc_count = 0
@@ -39,7 +39,7 @@ def main():
 
         # 2. Count Fact nodes
         try:
-            fact_res = client.run("MATCH (f:Fact) RETURN count(*)")
+            fact_res = client.run("MATCH (f:Fact) RETURN count(*)", strong=True)
             fact_count = fact_res[0].get("count(*)", fact_res[0].get("count(f)", 0))
         except Exception:
             fact_count = 0
@@ -47,7 +47,7 @@ def main():
 
         # 3. Count Person nodes
         try:
-            person_res = client.run("MATCH (p:Person) RETURN count(*)")
+            person_res = client.run("MATCH (p:Person) RETURN count(*)", strong=True)
             person_count = person_res[0].get("count(*)", person_res[0].get("count(p)", 0))
         except Exception:
             person_count = 0
@@ -55,7 +55,7 @@ def main():
 
         # 4. Count Org nodes
         try:
-            org_res = client.run("MATCH (o:Org) RETURN count(*)")
+            org_res = client.run("MATCH (o:Org) RETURN count(*)", strong=True)
             org_count = org_res[0].get("count(*)", org_res[0].get("count(o)", 0))
         except Exception:
             org_count = 0
@@ -63,7 +63,7 @@ def main():
 
         # 5. Count Ticket nodes
         try:
-            ticket_res = client.run("MATCH (t:Ticket) RETURN count(*)")
+            ticket_res = client.run("MATCH (t:Ticket) RETURN count(*)", strong=True)
             ticket_count = ticket_res[0].get("count(*)", ticket_res[0].get("count(t)", 0))
         except Exception:
             ticket_count = 0
@@ -71,7 +71,7 @@ def main():
 
         # 6. Count SAME_AS edges
         try:
-            same_res = client.run("MATCH (a:Person)-[r:SAME_AS]->(b:Person) RETURN count(*)")
+            same_res = client.run("MATCH (a:Person)-[r:SAME_AS]->(b:Person) RETURN count(*)", strong=True)
             same_count = same_res[0].get("count(*)", 0)
         except Exception:
             same_count = 0
@@ -79,7 +79,7 @@ def main():
 
         # 7. Count SUPERSEDES edges
         try:
-            sup_res = client.run("MATCH (a:Fact)-[r:SUPERSEDES]->(b:Fact) RETURN count(*)")
+            sup_res = client.run("MATCH (a:Fact)-[r:SUPERSEDES]->(b:Fact) RETURN count(*)", strong=True)
             sup_count = sup_res[0].get("count(*)", 0)
         except Exception:
             sup_count = 0
@@ -91,7 +91,7 @@ def main():
         if args.sample or doc_count > 0:
             print("\n--- 🔍 SAMPLE FACTS (Top 5) ---")
             try:
-                facts = client.run("MATCH (f:Fact) RETURN f.id, f.subject, f.attribute, f.value, f.trust_score, f.doc_id")
+                facts = client.run("MATCH (f:Fact) RETURN f.id, f.subject, f.attribute, f.value, f.trust_score, f.doc_id", strong=True)
                 for idx, f in enumerate(facts[:5]):
                     sub = f.get("f.subject") or f.get("subject", "")
                     attr = f.get("f.attribute") or f.get("attribute", "")
@@ -104,7 +104,7 @@ def main():
 
             print("\n--- 👤 SAMPLE PERSON ENTITIES (Top 5) ---")
             try:
-                persons = client.run("MATCH (p:Person) RETURN p.id, p.name, p.email, p.handle, p.source")
+                persons = client.run("MATCH (p:Person) RETURN p.id, p.name, p.email, p.handle, p.source", strong=True)
                 for idx, p in enumerate(persons[:5]):
                     name = p.get("p.name") or p.get("name", "")
                     email = p.get("p.email") or p.get("email", "")
