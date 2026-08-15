@@ -2,11 +2,10 @@
 """
 scripts/run_ingest.py — Entry point for Phase 1 Data Ingestion & LLM Extraction.
 
-Iterates over documents in data/raw/, calls Gemini LLM extractor,
+Iterates over documents in data/raw/, calls Gemini LLM extractor (or heuristic fallback),
 and loads Document nodes, extracted Entities, and Facts into HydraDB.
 
-Supports idempotency, automatic circuit breaker on 429 quota exhaustion,
-and optional --heuristic flag for instant local extraction.
+Features live tqdm progress bar with total counts, ETA, and speed.
 
 Usage:
     python3 scripts/run_ingest.py [--limit N] [--reset] [--force] [--heuristic]
@@ -16,6 +15,7 @@ import argparse
 import sys
 import logging
 from pathlib import Path
+from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
@@ -45,7 +45,13 @@ def main():
     if args.heuristic:
         logger.info("Heuristic flag enabled. Bypassing LLM API calls and using rule-based extraction for all documents.")
 
-    logger.info("Starting ingestion from %s...", raw_dir)
+    logger.info("Collecting documents from %s...", raw_dir)
+    all_docs = list(iter_documents_from_dir(raw_dir))
+    if args.limit > 0:
+        all_docs = all_docs[:args.limit]
+
+    total_docs = len(all_docs)
+    logger.info("Found %d total documents to process.", total_docs)
 
     with GraphClient() as client:
         if not client.ping():
@@ -77,11 +83,11 @@ def main():
 
         loader = GraphLoader(client)
         count = 0
+        total_entities_extracted = 0
+        total_facts_extracted = 0
 
-        for doc in iter_documents_from_dir(raw_dir):
-            if args.limit > 0 and count >= args.limit:
-                break
-
+        pbar = tqdm(all_docs, desc="Ingesting Documents", unit="doc")
+        for doc in pbar:
             doc_id = doc["doc_id"]
             source = doc["source"]
             created_at = doc["created_at"]
@@ -89,11 +95,9 @@ def main():
 
             # Skip if already ingested (Idempotency)
             if doc_id in existing_doc_ids and not args.force:
-                logger.info("[skip] doc_id=%s already ingested in HydraDB.", doc_id)
+                pbar.set_postfix_str(f"[skip] {doc_id[:12]}")
                 continue
 
-            logger.info("[%d] Extracting doc_id=%s source=%s", count + 1, doc_id, source)
-            
             # LLM or Heuristic extraction
             extraction = extract_from_document(
                 doc_text=text,
@@ -101,7 +105,11 @@ def main():
                 source=source,
                 force_heuristic=args.heuristic,
             )
-            logger.info("  -> Found %d entities, %d facts", len(extraction.entities), len(extraction.facts))
+            
+            ent_count = len(extraction.entities)
+            fact_count = len(extraction.facts)
+            total_entities_extracted += ent_count
+            total_facts_extracted += fact_count
 
             # Load into HydraDB
             loader.load_document(
@@ -114,7 +122,12 @@ def main():
             existing_doc_ids.add(doc_id)
             count += 1
 
-        logger.info("Ingestion complete. Processed %d new documents.", count)
+            pbar.set_postfix(new_docs=count, total_facts=total_facts_extracted, src=source)
+
+        logger.info("\n🎉 Ingestion complete!")
+        logger.info("  Processed %d / %d documents", count, total_docs)
+        logger.info("  Total Extracted Entities: %d", total_entities_extracted)
+        logger.info("  Total Extracted Facts:    %d", total_facts_extracted)
 
 
 if __name__ == "__main__":

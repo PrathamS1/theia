@@ -75,6 +75,9 @@ python scripts/smoke_test.py
 # Ingest all 9 sources into HydraDB
 python scripts/run_ingest.py
 
+# Inspect graph stats and sample facts/entities
+python scripts/inspect_graph.py
+
 # Run entity resolution + conflict tagging
 python scripts/run_resolution.py
 
