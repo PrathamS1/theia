@@ -34,10 +34,24 @@ with st.sidebar:
     try:
         with GraphClient() as client:
             connected = client.ping()
-        if connected:
-            st.success("HydraDB Connected (bolt://127.0.0.1:7687)")
-        else:
-            st.error("HydraDB Disconnected")
+            if connected:
+                st.success("HydraDB Connected (bolt://127.0.0.1:7687)")
+                
+                try:
+                    st.subheader("📊 Graph Statistics")
+                    docs = client.run("MATCH (n:Document) RETURN count(*)")[0]["count(*)"]
+                    facts = client.run("MATCH (n:Fact) RETURN count(*)")[0]["count(*)"]
+                    persons = client.run("MATCH (n:Person) RETURN count(*)")[0]["count(*)"]
+                    resolved = client.run("MATCH ()-[r:SAME_AS]->() RETURN count(*)")[0]["count(*)"]
+                    
+                    st.markdown(f"- **Documents:** {docs:,}")
+                    st.markdown(f"- **Facts:** {facts:,}")
+                    st.markdown(f"- **Persons:** {persons:,}")
+                    st.markdown(f"- **Resolved Links:** {resolved:,}")
+                except Exception as e:
+                    st.warning("Could not load stats")
+            else:
+                st.error("HydraDB Disconnected")
     except Exception as e:
         st.error(f"Connection Error: {e}")
 
@@ -53,6 +67,9 @@ with st.sidebar:
             st.session_state["user_query"] = sample
 
 # Query Input
+st.markdown("---")
+use_llm = st.checkbox("Enable LLM Synthesis (Turn off if hitting API rate limits)", value=False)
+
 user_query = st.text_input(
     "Ask a question about Redwood Inference internal documents:",
     value=st.session_state.get("user_query", ""),
@@ -64,7 +81,7 @@ if user_query:
     with st.spinner("Traversing HydraDB graph & generating answer..."):
         try:
             with GraphClient() as client:
-                res = answer_question(user_query, client)
+                res = answer_question(user_query, client, use_llm=use_llm)
             
             if res.abstained:
                 st.warning("⚠️ **Abstention Triggered** (Not in Data)")

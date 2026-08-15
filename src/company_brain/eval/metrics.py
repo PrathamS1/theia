@@ -1,39 +1,51 @@
 """
-eval/metrics.py — Metric calculations for EnterpriseRAG-Bench evaluation.
+eval/metrics.py — Compute accuracy and F1 metrics for eval harness results.
 """
 
-from typing import List, Dict, Any
+from typing import Any
 
 
-def compute_metrics(eval_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+def compute_metrics(results: list[dict[str, Any]]) -> dict[str, Any]:
     """
-    Computes accuracy metrics broken down by question_type.
+    Compute overall and per-category accuracy + mean F1 from eval results.
+
+    Each result dict is expected to have:
+        question_type: str
+        is_correct: bool
+        f1_score: float (0.0–1.0)
     """
-    by_category: Dict[str, Dict[str, int]] = {}
+    total = len(results)
+    if total == 0:
+        return {
+            "total_questions": 0,
+            "overall_accuracy": 0.0,
+            "mean_f1": 0.0,
+            "by_category": {},
+        }
 
-    for res in eval_results:
-        qtype = res.get("question_type", "basic")
-        if qtype not in by_category:
-            by_category[qtype] = {"total": 0, "correct": 0}
+    correct = sum(1 for r in results if r.get("is_correct"))
+    f1_scores = [float(r.get("f1_score", 0.0)) for r in results]
+    mean_f1 = sum(f1_scores) / total
 
-        by_category[qtype]["total"] += 1
-        if res.get("is_correct"):
-            by_category[qtype]["correct"] += 1
+    by_category: dict[str, Any] = {}
+    for r in results:
+        cat = r.get("question_type", "unknown")
+        if cat not in by_category:
+            by_category[cat] = {"correct": 0, "total": 0, "f1_sum": 0.0}
+        by_category[cat]["total"] += 1
+        if r.get("is_correct"):
+            by_category[cat]["correct"] += 1
+        by_category[cat]["f1_sum"] += float(r.get("f1_score", 0.0))
 
-    total_q = len(eval_results)
-    total_correct = sum(1 for r in eval_results if r.get("is_correct"))
-    overall_accuracy = (total_correct / total_q * 100.0) if total_q > 0 else 0.0
-
-    category_summary = {}
-    for cat, counts in by_category.items():
-        tot = counts["total"]
-        corr = counts["correct"]
-        acc = (corr / tot * 100.0) if tot > 0 else 0.0
-        category_summary[cat] = {"total": tot, "correct": corr, "accuracy": round(acc, 2)}
+    for cat, stats in by_category.items():
+        t = stats["total"]
+        stats["accuracy"] = round(100.0 * stats["correct"] / t, 2) if t else 0.0
+        stats["avg_f1"] = round(stats["f1_sum"] / t, 4) if t else 0.0
+        del stats["f1_sum"]
 
     return {
-        "total_questions": total_q,
-        "total_correct": total_correct,
-        "overall_accuracy": round(overall_accuracy, 2),
-        "by_category": category_summary,
+        "total_questions": total,
+        "overall_accuracy": round(100.0 * correct / total, 2),
+        "mean_f1": round(mean_f1, 4),
+        "by_category": by_category,
     }

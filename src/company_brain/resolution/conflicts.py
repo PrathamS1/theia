@@ -43,7 +43,14 @@ def detect_and_tag_conflicts(client: GraphClient) -> int:
                 trust = record.get("trust_score") if record.get("trust_score") is not None else record.get("f.trust_score")
 
                 if sub and attr and val:
-                    key = (sub, attr)
+                    generic_attrs = {"status", "priority", "type", "date", "author", "id", "name", "project", "owner"}
+                    if sub.startswith("dsid_") or sub.startswith("doc_"):
+                        if attr in generic_attrs:
+                            continue
+                        key = ("__global_entity__", attr)
+                    else:
+                        key = (sub, attr)
+                        
                     fact_dict = {
                         "id": fact_id,
                         "subject": sub,

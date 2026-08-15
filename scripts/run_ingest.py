@@ -12,6 +12,7 @@ Usage:
 import argparse
 import sys
 import logging
+from itertools import islice
 from pathlib import Path
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -61,9 +62,13 @@ def main():
         logger.info("Heuristic mode enabled: using 100%% rule-based extraction.")
 
     logger.info("Collecting documents from %s...", raw_dir)
-    all_docs = list(iter_documents_from_dir(raw_dir))
+    # Use islice for lazy collection — stops reading zip archives as soon as
+    # the limit is reached instead of scanning every document upfront.
+    doc_iter = iter_documents_from_dir(raw_dir)
     if args.limit > 0:
-        all_docs = all_docs[:args.limit]
+        all_docs = list(islice(doc_iter, args.limit))
+    else:
+        all_docs = list(doc_iter)
 
     total_docs = len(all_docs)
     logger.info("Found %d total documents to process.", total_docs)

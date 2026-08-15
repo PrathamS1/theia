@@ -17,8 +17,9 @@ def should_abstain(retrieved_facts: List[Dict[str, Any]], min_facts: int = 1) ->
         return True, "Information requested is not found in the company data graph."
 
     # Check if facts contain any non-empty subject and value
-    has_valid = any(f.get("f.subject") or f.get("f.value") for f in retrieved_facts)
+    has_valid = any(f.get("subject") or f.get("f.subject") or f.get("value") or f.get("f.value") for f in retrieved_facts)
     if not has_valid:
         return True, "No verifiable graph facts match the query target."
+
 
     return False, ""
