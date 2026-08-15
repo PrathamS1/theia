@@ -49,9 +49,11 @@ def detect_and_tag_conflicts(client: GraphClient) -> int:
             winner = sorted_facts[0]
 
             for loser in sorted_facts[1:]:
+                w_trust = winner.get("trust_score", 0.5)
+                l_trust = loser.get("trust_score", 0.5)
                 link_cypher = (
                     f"MATCH (w:Fact {{id: {winner['id']}}}), (l:Fact {{id: {loser['id']}}}) "
-                    f"CREATE (w)-[:SUPERSEDES {{reason: 'Higher trust score ({winner.get(\"trust_score\")}) overrides ({loser.get(\"trust_score\")})'}}]->(l)"
+                    f"CREATE (w)-[:SUPERSEDES {{reason: 'Higher trust score ({w_trust}) overrides ({l_trust})'}}]->(l)"
                 )
                 try:
                     client.run_write(link_cypher)

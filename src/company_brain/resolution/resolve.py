@@ -3,8 +3,10 @@ resolution/resolve.py — Entity Resolution engine.
 
 Evaluates candidate pairs, checks shared graph context, invokes LLM adjudication when needed,
 and writes SAME_AS {confidence, evidence} edges to HydraDB.
+Includes exponential backoff retries, pacing, and rule-based fallback on 429 rate limits.
 """
 
+import time
 import logging
 from typing import List, Tuple, Dict, Any
 from google import genai
@@ -59,28 +61,75 @@ def resolve_entities(client: GraphClient) -> int:
             _write_same_as(client, p1["id"], p2["id"], confidence, evidence)
             same_as_count += 1
         elif score >= 85.0:
-            # LLM Adjudication for ambiguous cases
-            try:
-                prompt = ADJUDICATION_PROMPT.format(
-                    name_a=p1.get("name"), email_a=p1.get("email"), source_a=p1.get("source"),
-                    name_b=p2.get("name"), email_b=p2.get("email"), source_b=p2.get("source"),
-                )
-                res = genai_client.models.generate_content(
-                    model=config.GEMINI_MODEL,
-                    contents=prompt,
-                    config={
-                        "response_mime_type": "application/json",
-                        "response_schema": AdjudicationResult,
-                    },
-                )
-                if res.parsed and res.parsed.is_same_entity:
-                    _write_same_as(client, p1["id"], p2["id"], res.parsed.confidence, res.parsed.reasoning)
-                    same_as_count += 1
-            except Exception as exc:
-                logger.warning("LLM adjudication failed for %s vs %s: %s", p1['name'], p2['name'], exc)
+            # LLM Adjudication for ambiguous cases with retries & fallback
+            adjudicated = _adjudicate_pair_with_retry(genai_client, p1, p2, score)
+            if adjudicated:
+                _write_same_as(client, p1["id"], p2["id"], adjudicated.confidence, adjudicated.reasoning)
+                same_as_count += 1
 
     logger.info("Entity resolution complete. Created %d SAME_AS edges.", same_as_count)
     return same_as_count
+
+
+def _adjudicate_pair_with_retry(
+    genai_client: genai.Client,
+    p1: Dict[str, Any],
+    p2: Dict[str, Any],
+    score: float,
+) -> AdjudicationResult | None:
+    """
+    Adjudicates candidate pair using Gemini API with exponential backoff on 429s,
+    falling back to rule-based fuzzy score resolution if API limits are exhausted.
+    """
+    prompt = ADJUDICATION_PROMPT.format(
+        name_a=p1.get("name"), email_a=p1.get("email"), source_a=p1.get("source"),
+        name_b=p2.get("name"), email_b=p2.get("email"), source_b=p2.get("source"),
+    )
+
+    max_retries = config.LLM_MAX_RETRIES
+    backoff = config.LLM_RETRY_BACKOFF
+    delay = config.LLM_DELAY_SECONDS
+
+    for attempt in range(max_retries + 1):
+        try:
+            if delay > 0:
+                time.sleep(delay)
+
+            res = genai_client.models.generate_content(
+                model=config.GEMINI_MODEL,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": AdjudicationResult,
+                },
+            )
+            if res.parsed and res.parsed.is_same_entity:
+                return res.parsed
+            return None
+
+        except Exception as exc:
+            exc_str = str(exc)
+            is_rate_limit = "429" in exc_str or "RESOURCE_EXHAUSTED" in exc_str or "Quota" in exc_str
+
+            if is_rate_limit and attempt < max_retries:
+                wait_time = (backoff ** (attempt + 1)) * max(1.0, delay)
+                logger.warning(
+                    "Rate limit (429) hit during adjudication of %s vs %s (attempt %d/%d). Retrying in %.1fs...",
+                    p1.get('name'), p2.get('name'), attempt + 1, max_retries, wait_time
+                )
+                time.sleep(wait_time)
+            else:
+                logger.warning("LLM adjudication failed for %s vs %s: %s. Using rule fallback.", p1.get('name'), p2.get('name'), exc)
+                # Rule-based fallback: if fuzzy similarity >= 88%, consider them the same entity
+                if score >= 88.0:
+                    return AdjudicationResult(
+                        is_same_entity=True,
+                        confidence=round(score / 100.0, 2),
+                        reasoning=f"Rule-based fallback: High fuzzy similarity ({score:.1f}%) between '{p1.get('name')}' and '{p2.get('name')}'"
+                    )
+                return None
+
+    return None
 
 
 def _write_same_as(client: GraphClient, id1: int, id2: int, confidence: float, evidence: str) -> None:

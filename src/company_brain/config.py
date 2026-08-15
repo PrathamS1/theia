@@ -41,6 +41,10 @@ MAX_HOP_DEPTH: int = int(os.getenv("MAX_HOP_DEPTH", "4"))
 WRITE_BATCH_SIZE: int = int(os.getenv("WRITE_BATCH_SIZE", "500"))
 # Minimum fuzzy similarity score (0-100) to form a blocking candidate pair.
 BLOCKING_THRESHOLD: int = int(os.getenv("BLOCKING_THRESHOLD", "85"))
+# Rate limiting & Retries for Gemini API
+LLM_DELAY_SECONDS: float = float(os.getenv("LLM_DELAY_SECONDS", "1.0"))
+LLM_MAX_RETRIES: int = int(os.getenv("LLM_MAX_RETRIES", "5"))
+LLM_RETRY_BACKOFF: float = float(os.getenv("LLM_RETRY_BACKOFF", "2.0"))
 
 def get_gemini_api_key() -> str:
     return os.getenv("GEMINI_API_KEY") or GEMINI_API_KEY

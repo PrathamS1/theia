@@ -2,12 +2,13 @@
 query/engine.py — Natural Language Query Engine built on HydraDB.
 
 Pipeline:
-1. Natural language question -> Keyword/entity extraction via Gemini
+1. Natural language question -> Keyword/entity extraction
 2. Graph retrieval over HydraDB (Facts, Entities, Provenance, Conflict resolution)
 3. Abstention check (if no graph facts exist -> "Not in the data")
-4. LLM synthesis with strict citations
+4. LLM synthesis with strict citations (with retries and graph-fact fallback on API errors)
 """
 
+import time
 import logging
 from typing import Dict, Any, List
 from google import genai
@@ -83,23 +84,51 @@ def answer_question(question: str, client: GraphClient) -> QueryAnswer:
 
     facts_summary = "\n".join(facts_summary_lines)
 
-    # 5. LLM Synthesis
+    # 5. LLM Synthesis with retries and fallback
     prompt = ANSWER_PROMPT.format(question=question, facts_summary=facts_summary)
-    try:
-        response = genai_client.models.generate_content(
-            model=config.GEMINI_MODEL,
-            contents=prompt,
-        )
-        answer_text = response.text.strip() if response.text else "Unable to generate answer."
-        return QueryAnswer(
-            answer=answer_text,
-            citations=list(doc_ids),
-            abstained=False,
-        )
-    except Exception as exc:
-        logger.error("LLM answer generation failed: %s", exc)
-        return QueryAnswer(
-            answer="Error processing question.",
-            citations=[],
-            abstained=True,
-        )
+    
+    max_retries = config.LLM_MAX_RETRIES
+    backoff = config.LLM_RETRY_BACKOFF
+    delay = config.LLM_DELAY_SECONDS
+
+    for attempt in range(max_retries + 1):
+        try:
+            if delay > 0:
+                time.sleep(delay)
+
+            response = genai_client.models.generate_content(
+                model=config.GEMINI_MODEL,
+                contents=prompt,
+            )
+            answer_text = response.text.strip() if response.text else "Unable to generate answer."
+            return QueryAnswer(
+                answer=answer_text,
+                citations=list(doc_ids),
+                abstained=False,
+            )
+        except Exception as exc:
+            exc_str = str(exc)
+            is_rate_limit = "429" in exc_str or "RESOURCE_EXHAUSTED" in exc_str or "Quota" in exc_str
+
+            if is_rate_limit and attempt < max_retries:
+                wait_time = (backoff ** (attempt + 1)) * max(1.0, delay)
+                logger.warning("Rate limit (429) hit during answer synthesis (attempt %d/%d). Retrying in %.1fs...", attempt + 1, max_retries, wait_time)
+                time.sleep(wait_time)
+            else:
+                logger.error("LLM answer generation failed: %s. Returning raw graph facts summary.", exc)
+                # Fallback to presenting verified graph facts directly
+                fallback_answer = (
+                    "According to verified facts retrieved from company data:\n" +
+                    facts_summary
+                )
+                return QueryAnswer(
+                    answer=fallback_answer,
+                    citations=list(doc_ids),
+                    abstained=False,
+                )
+
+    return QueryAnswer(
+        answer="According to verified facts retrieved from company data:\n" + facts_summary,
+        citations=list(doc_ids),
+        abstained=False,
+    )
