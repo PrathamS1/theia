@@ -50,3 +50,15 @@ def build_supersedes_query() -> str:
         "MATCH (w:Fact {id: $fid})-[:SUPERSEDES]->(l:Fact) "
         "RETURN l.id AS loser_id"
     )
+
+
+def build_all_superseded_ids_query() -> str:
+    """
+    Returns the integer IDs of ALL loser facts that have an incoming SUPERSEDES edge.
+    Used to filter out stale/superseded facts from query results in Python.
+    Fast: traverses only SUPERSEDES edges, not all facts.
+    """
+    return (
+        "MATCH ()-[:SUPERSEDES]->(loser:Fact) "
+        "RETURN loser.id AS loser_id"
+    )

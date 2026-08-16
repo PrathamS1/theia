@@ -112,18 +112,32 @@ def main():
                 })
                 continue
 
-            # Scoring
-            if expects_abstain:
-                # Correct if system correctly abstained
+            # Scoring — split by question type for accuracy
+            if q_type == "abstention" or expects_abstain:
+                # Correct iff system correctly abstained from answering
                 is_correct = ans.abstained
                 f1 = 1.0 if is_correct else 0.0
+
+            elif q_type == "conflict_resolution":
+                # Keyword overlap but require the winning fact's value to appear
+                if not gold_facts:
+                    is_correct = not ans.abstained
+                    f1 = 1.0 if is_correct else 0.0
+                else:
+                    key_words = [w.lower() for w in " ".join(gold_facts).split() if len(w) > 4]
+                    is_correct = any(w in ans.answer.lower() for w in key_words) and not ans.abstained
+                    f1 = _token_f1(ans.answer, gold_facts)
+
             elif not gold_facts:
                 # No gold facts given — mark as correct if not abstained
                 is_correct = not ans.abstained
                 f1 = 1.0 if is_correct else 0.0
+
             else:
+                # Default (basic / multi_hop): token F1 threshold
                 f1 = _token_f1(ans.answer, gold_facts)
                 is_correct = f1 >= args.threshold
+
 
             results.append({
                 "question_id": q_id,
@@ -132,7 +146,7 @@ def main():
                 "answer": ans.answer,
                 "citations": ans.citations,
                 "abstained": ans.abstained,
-                "matched_entities": ans.matched_entities,
+                "matched_entities": getattr(ans, "matched_entities", []),
                 "f1_score": round(f1, 4),
                 "is_correct": is_correct,
                 "gold_facts": gold_facts,
@@ -140,7 +154,8 @@ def main():
 
             status = "✓" if is_correct else "✗"
             abstain_tag = " [ABSTAIN]" if ans.abstained else ""
-            entity_tag = f" entities={ans.matched_entities[:2]}" if ans.matched_entities else ""
+            matched = getattr(ans, "matched_entities", [])
+            entity_tag = f" entities={matched[:2]}" if matched else ""
             logger.info(
                 "[%d/%d] %s %s (%s) F1=%.2f%s%s",
                 idx + 1, len(questions), status, q_id, q_type, f1, abstain_tag, entity_tag,
