@@ -37,9 +37,10 @@ Documents (9 sources: Slack, Gmail, Linear, Drive, HubSpot, Fireflies, GitHub, C
 
 ## Why HydraDB
 
-- **`algo.MSpaths`**: batch-checks thousands of entity-resolution candidate pairs against shared graph context (same ticket, thread, meeting) in one call — impossible to replicate efficiently with naive one-by-one Cypher.
-- **Multi-hop Cypher**: natively traverses provenance chains (Document → MENTIONS → Person → SAME_AS → Person → ASSIGNED_TO → Ticket) without materialising intermediate results.
-- **Snapshot consistency**: `strong` consistency mode guarantees post-bulk-load queries see all committed writes before the eval run starts.
+- **Multi-hop Cypher traversal**: natively follows provenance chains (Document → `MENTIONS` → Person → `SAME_AS` → canonical Person → `HAS_FACT` → Fact) in a single query without materialising intermediate results.
+- **`SUPERSEDES` conflict edges**: contradicting facts from different sources are modelled as two separate graph edges linked by a `SUPERSEDES` relationship — resolution happens at query time, enabling "what was true as of date X" and "what is true now" as two different graph queries against the same data.
+- **Snapshot consistency**: `strong` consistency mode guarantees post-bulk-load queries see all committed writes before the eval run starts — critical for reproducible eval results.
+- **Bolt-native Python driver**: HydraDB's Bolt-compatible endpoint lets the `neo4j` Python driver connect directly with zero custom HTTP plumbing, and the UNWIND batch write API enabled 4,000 documents × 95K facts to be loaded at ~1.45 docs/sec on commodity hardware.
 
 ## Setup
 

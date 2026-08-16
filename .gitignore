@@ -34,3 +34,6 @@ Thumbs.db
 
 # SuiteSparse build (built locally in WSL, not needed in repo)
 ~/SuiteSparse/
+
+# Next steps
+NEXT_STEPS.md

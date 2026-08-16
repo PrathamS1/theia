@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 scripts/run_eval.py — Phase 4 Evaluation Harness.
 
@@ -7,7 +6,7 @@ against the query engine, evaluates accuracy vs gold answers using token F1,
 and reports metrics by category.
 
 Usage:
-    python3 scripts/run_eval.py [--limit N] [--save]
+    python3 scripts/run_eval.py [--limit N] [--save] [--heuristic]
 """
 
 import json
@@ -59,13 +58,16 @@ def main():
     parser.add_argument("--save", action="store_true", help="Save results to data/eval_results.jsonl")
     parser.add_argument("--threshold", type=float, default=0.3,
                         help="Token F1 threshold to count an answer as correct (default: 0.3)")
-    parser.add_argument("--no-llm", action="store_true", help="Bypass LLM synthesis and return raw facts directly")
+    parser.add_argument("--heuristic", action="store_true", help="Run 100% deterministic non-AI synthesis (instant, zero API calls)")
     args = parser.parse_args()
 
     questions_path = config.QUESTIONS_FILE
     if not questions_path.exists():
         logger.error("Questions file %s not found. Run bash scripts/download_dataset.sh first.", questions_path)
         sys.exit(1)
+
+    if args.heuristic:
+        logger.info("⚡ Heuristic non-AI mode enabled: using deterministic graph synthesis without Gemini API calls.")
 
     logger.info("Loading questions from %s...", questions_path)
     questions = []
@@ -93,7 +95,7 @@ def main():
             expects_abstain = q_data.get("expected_abstain", False)
 
             try:
-                ans = answer_question(q_text, client, use_llm=not args.no_llm)
+                ans = answer_question(q_text, client, force_heuristic=args.heuristic)
             except Exception as exc:
                 logger.warning("[%d/%d] Error on %s: %s", idx + 1, len(questions), q_id, exc)
                 results.append({
@@ -109,7 +111,6 @@ def main():
                     "gold_facts": gold_facts,
                 })
                 continue
-
 
             # Scoring
             if expects_abstain:

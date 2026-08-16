@@ -81,7 +81,7 @@ if user_query:
     with st.spinner("Traversing HydraDB graph & generating answer..."):
         try:
             with GraphClient() as client:
-                res = answer_question(user_query, client, use_llm=use_llm)
+                res = answer_question(user_query, client, force_heuristic=not use_llm)
             
             if res.abstained:
                 st.warning("⚠️ **Abstention Triggered** (Not in Data)")

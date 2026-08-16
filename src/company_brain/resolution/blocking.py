@@ -22,7 +22,7 @@ def generate_candidate_pairs(client: GraphClient) -> List[Tuple[Dict[str, Any], 
     """
     # 1. Fetch Person entities
     try:
-        persons = client.run("MATCH (p:Person) RETURN p.id AS id, p.name AS name, p.email AS email, p.handle AS handle, p.source AS source")
+        persons = client.run_read("MATCH (p:Person) RETURN p.id AS id, p.name AS name, p.email AS email, p.handle AS handle, p.source AS source")
     except Exception:
         persons = []
 

@@ -9,9 +9,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HYDRA_STORE="${SCRIPT_DIR}/../.hydradb/store"
-HYDRA_CACHE="${SCRIPT_DIR}/../.hydradb/cache"
-HYDRA_AUTH_TOKEN_FILE="${SCRIPT_DIR}/../.hydradb/auth-token"
+# Store on native Linux ext4 filesystem to avoid /mnt/c/ NTFS fsync overhead (~1000x faster)
+HYDRA_STORE="${HOME}/hydradb_store/store"
+HYDRA_CACHE="${HOME}/hydradb_store/cache"
+HYDRA_AUTH_TOKEN_FILE="${HOME}/hydradb_store/auth-token"
 
 mkdir -p "$HYDRA_STORE" "$HYDRA_CACHE"
 
