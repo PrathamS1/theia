@@ -1,10 +1,11 @@
 """
 graph/loader.py — bulk loader for Document, Entity, and Fact nodes into HydraDB.
 
-Obeyes HydraDB Cypher rules:
-- Integer node `id` property (generated deterministically from string identifiers)
-- Clean node creation patterns avoiding duplicate node allocation overhead
-- High-throughput execution using persistent Neo4j Bolt sessions
+Complies strictly with HydraDB Cypher rules:
+- Positive 32-bit integer node `id` property
+- Single one-hop CREATE pattern: (Document)-[:MENTIONS]->(Entity) and (Document)-[:HAS_FACT]->(Fact)
+- Parameterized queries (no string interpolation) to prevent Cypher parse errors from special characters
+- High-throughput execution with persistent Neo4j Bolt session reuse
 """
 
 import logging
@@ -42,50 +43,78 @@ class GraphLoader:
     ) -> None:
         """
         Loads a document and its extracted entities and facts into HydraDB.
-        Reuses an open persistent Bolt session to maximize write speed.
+        Uses parameterized Cypher queries to avoid parse errors from special characters in values.
         """
         doc_int_id = string_to_int_id(f"doc_{doc_id}")
         source_trust = trust_for(source)
+        has_written = False
 
-        # 1. Create Document Node ONCE per document
-        doc_cypher = (
-            f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-        )
-        try:
-            self.client.run_write(doc_cypher, session=session)
-        except Exception as e:
-            logger.debug("Failed doc write %s: %s", doc_id, e)
-
-        # 2. Create Entity Nodes
+        # 1. Create Entity Nodes: (Document)-[:MENTIONS]->(Entity)
         for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
             entity_int_id = string_to_int_id(entity_key)
             label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
 
-            ent_cypher = (
-                f"CREATE (e:{label} {{id: {entity_int_id}, name: '{_sanitize(entity.name)}', source: '{source}'}})"
+            cypher = (
+                f"CREATE (d:Document {{id: $did, doc_id: $doc_id, source: $source, created_at: $ts}})"
+                f"-[:MENTIONS]->"
+                f"(e:{label} {{id: $eid, name: $name, source: $source}})"
             )
+            params = {
+                "did": doc_int_id,
+                "doc_id": doc_id,
+                "source": source,
+                "ts": created_at,
+                "eid": entity_int_id,
+                "name": entity.name or "",
+            }
             try:
-                self.client.run_write(ent_cypher, session=session)
+                self.client.run_write(cypher, params, session=session)
+                has_written = True
             except Exception as e:
                 logger.debug("Failed entity write %s: %s", entity.name, e)
 
-        # 3. Create Fact Nodes
+        # 2. Create Fact Nodes: (Document)-[:HAS_FACT]->(Fact)
         for idx, fact in enumerate(extraction.facts):
             fact_key = f"fact_{doc_id}_{idx}"
             fact_int_id = string_to_int_id(fact_key)
 
-            fact_cypher = (
-                f"CREATE (f:Fact {{id: {fact_int_id}, subject: '{_sanitize(fact.subject)}', attribute: '{_sanitize(fact.attribute)}', value: '{_sanitize(fact.value)}', trust_score: {source_trust}, doc_id: '{doc_id}'}})"
+            cypher = (
+                "CREATE (d:Document {id: $did, doc_id: $doc_id, source: $source, created_at: $ts})"
+                "-[:HAS_FACT]->"
+                "(f:Fact {id: $fid, subject: $subject, attribute: $attribute, value: $value, trust_score: $trust, doc_id: $doc_id})"
             )
+            params = {
+                "did": doc_int_id,
+                "doc_id": doc_id,
+                "source": source,
+                "ts": created_at,
+                "fid": fact_int_id,
+                "subject": fact.subject or "",
+                "attribute": fact.attribute or "",
+                "value": fact.value or "",
+                "trust": source_trust,
+            }
             try:
-                self.client.run_write(fact_cypher, session=session)
+                self.client.run_write(cypher, params, session=session)
+                has_written = True
             except Exception as e:
                 logger.debug("Failed fact write %s: %s", fact.subject, e)
 
-
-def _sanitize(text: str) -> str:
-    """Escape quotes for safe inline Cypher strings."""
-    if not text:
-        return ""
-    return text.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+        # 3. Fallback for docs with no entities/facts
+        if not has_written:
+            cypher = (
+                "CREATE (d:Document {id: $did, doc_id: $doc_id, source: $source, created_at: $ts})"
+                "-[:MENTIONS]->"
+                "(e:Document {id: $did, doc_id: $doc_id, source: $source, created_at: $ts})"
+            )
+            params = {
+                "did": doc_int_id,
+                "doc_id": doc_id,
+                "source": source,
+                "ts": created_at,
+            }
+            try:
+                self.client.run_write(cypher, params, session=session)
+            except Exception as e:
+                logger.debug("Failed standalone doc write %s: %s", doc_id, e)

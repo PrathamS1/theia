@@ -106,6 +106,28 @@ class GraphClient:
             result.consume()
             return records
 
+    def run_batch(
+        self,
+        cypher: str,
+        rows: list[dict[str, Any]],
+        batch_size: int | None = None,
+    ) -> int:
+        """
+        Execute a batched UNWIND write query.
+        The Cypher must use `UNWIND $rows AS row` and reference `row.*`.
+        Returns total number of rows written.
+        """
+        batch_size = batch_size or getattr(config, "WRITE_BATCH_SIZE", 200)
+        total = 0
+        with self._driver.session() as s:
+            for i in range(0, len(rows), batch_size):
+                chunk = rows[i : i + batch_size]
+                res = s.run(cypher, {"rows": chunk})
+                res.consume()
+                total += len(chunk)
+                logger.debug("Batch write progress: %d / %d rows", total, len(rows))
+        return total
+
     def ping(self) -> bool:
         try:
             result = self.run("MATCH (n:Document) RETURN count(*)")

@@ -61,9 +61,7 @@ def main():
         logger.info("Heuristic mode enabled: using 100%% rule-based extraction.")
 
     logger.info("Collecting documents from %s...", raw_dir)
-    all_docs = list(iter_documents_from_dir(raw_dir))
-    if args.limit > 0:
-        all_docs = all_docs[:args.limit]
+    all_docs = list(iter_documents_from_dir(raw_dir, max_docs=args.limit))
 
     total_docs = len(all_docs)
     logger.info("Found %d total documents to process.", total_docs)
@@ -123,7 +121,7 @@ def main():
                 except Exception as exc:
                     logger.warning("Extraction error: %s", exc)
 
-        # Step 2: Sequential High-Throughput DB Writes over a single persistent session
+        # Step 2: High-Throughput DB Writes over persistent session
         logger.info("Phase 2: Writing extracted knowledge graph to HydraDB...")
         with client.get_session() as db_session:
             for doc, extraction in tqdm(extracted_results, desc="Writing to HydraDB", unit="doc"):
@@ -132,10 +130,8 @@ def main():
                 created_at = doc["created_at"]
                 text = doc["text"]
 
-                n_ent = len(extraction.entities)
-                n_fact = len(extraction.facts)
-                total_entities_extracted += n_ent
-                total_facts_extracted += n_fact
+                total_entities_extracted += len(extraction.entities)
+                total_facts_extracted += len(extraction.facts)
 
                 loader.load_document(
                     doc_id=doc_id,
