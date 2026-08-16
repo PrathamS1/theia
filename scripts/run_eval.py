@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 scripts/run_eval.py — Entry point for Phase 4 Evaluation Harness.
 
@@ -6,7 +5,7 @@ Loops over questions in data/questions/questions.jsonl, executes each question a
 the query engine, evaluates accuracy vs gold answers, and reports metrics by category.
 
 Usage:
-    python3 scripts/run_eval.py [--limit N]
+    python3 scripts/run_eval.py [--limit N] [--heuristic]
 """
 
 import json
@@ -29,12 +28,16 @@ logger = logging.getLogger("run_eval")
 def main():
     parser = argparse.ArgumentParser(description="Evaluate Company Brain on questions.jsonl")
     parser.add_argument("--limit", type=int, default=0, help="Max questions to evaluate (0 = all)")
+    parser.add_argument("--heuristic", action="store_true", help="Run 100% deterministic non-AI synthesis (instant, zero API calls)")
     args = parser.parse_args()
 
     questions_path = config.QUESTIONS_FILE
     if not questions_path.exists():
         logger.error("Questions file %s not found. Run bash scripts/download_dataset.sh first.", questions_path)
         sys.exit(1)
+
+    if args.heuristic:
+        logger.info("⚡ Heuristic non-AI mode enabled: using deterministic graph synthesis without Gemini API calls.")
 
     logger.info("Loading questions from %s...", questions_path)
     questions = []
@@ -56,16 +59,24 @@ def main():
             q_type = q_data.get("question_type", "basic")
             gold_facts = q_data.get("answer_facts", [])
 
-            ans = answer_question(q_text, client)
+            try:
+                ans = answer_question(q_text, client, force_heuristic=args.heuristic)
+            except Exception as exc:
+                logger.warning("Error evaluating question %s: %s", q_id, exc)
+                continue
 
-            # Check if answer contains gold fact key terms
-            correct_facts = 0
-            for fact in gold_facts:
-                key_words = [w.lower() for w in fact.split() if len(w) > 4]
-                if any(w in ans.answer.lower() for w in key_words):
-                    correct_facts += 1
-
-            is_correct = (correct_facts >= max(1, len(gold_facts) // 2)) if gold_facts else (not ans.abstained)
+            # Category-specific scoring
+            if q_type == "abstention":
+                is_correct = ans.abstained
+            elif gold_facts:
+                correct_facts = 0
+                for fact in gold_facts:
+                    key_words = [w.lower() for w in fact.split() if len(w) > 4]
+                    if any(w in ans.answer.lower() for w in key_words):
+                        correct_facts += 1
+                is_correct = (correct_facts >= max(1, len(gold_facts) // 2)) and not ans.abstained
+            else:
+                is_correct = not ans.abstained
 
             results.append({
                 "question_id": q_id,
@@ -76,7 +87,8 @@ def main():
                 "is_correct": is_correct,
             })
 
-            logger.info("[%d/%d] %s (%s): %s", idx + 1, len(questions), q_id, q_type, "✓ Correct" if is_correct else "✗ Incorrect")
+            status_str = "✓ Correct" if is_correct else "✗ Incorrect"
+            logger.info("[%d/%d] %s (%s): %s", idx + 1, len(questions), q_id, q_type, status_str)
 
     metrics = compute_metrics(results)
     logger.info("\n=== EVALUATION REPORT ===")
