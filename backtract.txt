@@ -1,0 +1,549 @@
+
+HYDRABRAIN — INGESTION FIX PLAN
+================================
+Confirmed root causes, in priority order, with exact code fixes.
+Do these in order. Steps 0-3 must happen before you re-ingest anything.
+
+
+STEP 0 — CONFIRM WHETHER HYDRADB SUPPORTS MERGE
+------------------------------------------------
+The current loader.py docstring calls out "single one-hop CREATE pattern" as
+a compliance RULE, which suggests MERGE may not be supported by HydraDB's
+Cypher subset. Do not assume — test it first with a throwaway query:
+
+    with GraphClient() as client:
+        client.run_write("MERGE (t:ScratchTest {id: 999999}) SET t.x = 1")
+        result = client.run_read("MATCH (t:ScratchTest {id: 999999}) RETURN t.x AS x")
+        print(result)
+        client.run_write("MATCH (t:ScratchTest {id: 999999}) DETACH DELETE t")
+
+  IF THIS WORKS: use the MERGE-based loader.py fix in Step 3 as-is.
+
+  IF THIS FAILS: replace every MERGE in Step 3 with the manual upsert pattern:
+
+    MATCH (n:Label {id: $id})
+    RETURN n.id AS existing_id
+    -- in Python: if no row returned, then run the original single-hop CREATE.
+    -- if a row IS returned, run a separate MATCH ... SET ... to update properties,
+    -- and a separate MATCH-both-then-CREATE-edge for the relationship, guarded
+    -- the same way (check the edge doesn't already exist before creating it,
+    -- to avoid duplicate MENTIONS/HAS_FACT edges piling up on re-runs).
+
+  This determines which version of Step 3 you actually use. Don't skip this
+  check — building on an assumption here is exactly what caused the current
+  bug (the Document node being silently recreated on every write).
+
+
+STEP 1 — ROOT CAUSE CONFIRMED: loader.py recreates the Document node on
+every entity/fact write
+--------------------------------------------------------------------------
+load_document() issues a fresh CREATE with the SAME Document id for every
+single entity and every single fact in a document. If a doc has 5 entities
+and 8 facts, that's 13 CREATE attempts at the same node id. Given HydraDB
+enforces id as a strict node-identity property, everything after the first
+CREATE almost certainly fails — silently, because failures go to
+logger.debug() which is below your configured INFO level.
+
+This is why: Person node count is far lower than expected from 4000 docs,
+facts are effectively unreachable, and doc_recall was 0.00 across every
+verbose test question.
+
+FIX (see Step 3 for full corrected loader.py) — create the Document node
+exactly ONCE per document, separately from entity/fact writes, using MATCH
+to reference it afterward rather than recreating it.
+
+
+STEP 2 — ROOT CAUSE CONFIRMED: ingestion order is skewed, and zip-vs-unzipped
+selection is GLOBAL instead of per-source
+--------------------------------------------------------------------------
+Two separate bugs in loader_base.py's iter_documents_from_dir():
+
+(a) It walks the ENTIRE raw/ directory tree (all 9 source folders) into two
+    flat lists — unzipped_files and zip_files — BEFORE deciding what to
+    process. Then: "files_to_process = unzipped_files if unzipped_files
+    else zip_files". This check is global, not per-folder. If even ONE
+    source folder out of your 9 has raw unzipped files, EVERY zip-only
+    source folder is silently skipped entirely — 0 documents from it, no
+    error, no warning.
+
+(b) Even when files are the right type, they're processed in os.walk()
+    order, which is filesystem-dependent and NOT guaranteed to visit
+    sources evenly. With --limit 4000 and 9 source folders (confluence,
+    fireflies, github, gmail, google_drive, hubspot, jira, linear, slack),
+    it is very likely the first 1-2 folders visited (alphabetically:
+    confluence, fireflies) consumed most or all of your 4000-document
+    budget before slack/jira/linear/github/hubspot/gmail were touched at
+    all. This alone can fully explain 0/5 doc_recall in your verbose test —
+    no retrieval fix helps if the expected document's source was never
+    ingested in the first place.
+
+FIX (see Step 3): per-source file selection (not global), plus round-robin
+across sources so a --limit N run gets balanced coverage of all 9 sources
+instead of exhausting the first two alphabetically.
+
+
+STEP 3 — CORRECTED CODE
+------------------------
+
+### 3a. src/company_brain/ingest/sources/loader_base.py — FULL REPLACEMENT
+
+"""
+ingest/sources/loader_base.py — Base loader helper for iterating dataset
+JSON/JSONL/TXT document files, round-robined across the 9 source folders.
+"""
+
+import os
+import json
+import zipfile
+from pathlib import Path
+from typing import Generator, Dict, Any, List
+
+
+def _list_source_dirs(dir_path: Path) -> List[Path]:
+    """Immediate subdirectories of raw/ — treated as the 9 source folders."""
+    dirs = [p for p in dir_path.iterdir() if p.is_dir()]
+    return sorted(dirs)
+
+
+def _files_for_source(source_dir: Path) -> List[Path]:
+    """
+    Per-SOURCE file selection (not global). Prefer unzipped docs within THIS
+    folder; fall back to zip archives within THIS folder only if no unzipped
+    files exist here. Fixes the bug where one unzipped source elsewhere in
+    the tree caused every zip-only source to be silently dropped.
+    """
+    unzipped, zipped = [], []
+    for root, _, files in os.walk(source_dir):
+        for file in files:
+            full_path = Path(root) / file
+            if file.endswith(".zip"):
+                zipped.append(full_path)
+            elif file.endswith((".json", ".jsonl", ".txt", ".md", ".html")):
+                unzipped.append(full_path)
+    return unzipped if unzipped else zipped
+
+
+def _normalize_doc(data: Dict[str, Any], file_path: Path, zip_member_name: str = "") -> Dict[str, Any]:
+    doc_id = data.get("doc_id") or data.get("id") or (Path(zip_member_name).stem if zip_member_name else file_path.stem)
+    source = data.get("source") or data.get("source_type") or file_path.parent.name
+    created_at = data.get("created_at") or data.get("timestamp") or data.get("date") or "2026-01-01T00:00:00Z"
+    text = data.get("text") or data.get("content") or data.get("body") or json.dumps(data)
+    return {
+        "doc_id": str(doc_id),
+        "source": str(source).lower(),
+        "created_at": str(created_at),
+        "text": str(text),
+    }
+
+
+def _normalize_raw_text(text: str, file_path: Path, zip_member_name: str = "") -> Dict[str, Any]:
+    doc_id = Path(zip_member_name).stem if zip_member_name else file_path.stem
+    source = file_path.parent.name or "unknown"
+    return {
+        "doc_id": str(doc_id),
+        "source": str(source).lower(),
+        "created_at": "2026-01-01T00:00:00Z",
+        "text": text,
+    }
+
+
+def _iter_file(file_path: Path, seen_doc_ids: set) -> Generator[Dict[str, Any], None, None]:
+    ext = file_path.suffix.lower()
+    if ext == ".zip":
+        try:
+            with zipfile.ZipFile(file_path, "r") as z:
+                for name in z.namelist():
+                    if name.endswith("/"):
+                        continue
+                    try:
+                        with z.open(name) as f:
+                            raw = f.read().decode("utf-8", errors="ignore")
+                            if name.endswith(".json"):
+                                data = json.loads(raw)
+                                items = data if isinstance(data, list) else [data]
+                                for item in items:
+                                    if isinstance(item, dict):
+                                        doc = _normalize_doc(item, file_path, name)
+                                        if doc["doc_id"] not in seen_doc_ids:
+                                            seen_doc_ids.add(doc["doc_id"])
+                                            yield doc
+                            elif name.endswith(".jsonl"):
+                                for line in raw.splitlines():
+                                    if line.strip():
+                                        doc = _normalize_doc(json.loads(line), file_path, name)
+                                        if doc["doc_id"] not in seen_doc_ids:
+                                            seen_doc_ids.add(doc["doc_id"])
+                                            yield doc
+                            else:
+                                doc = _normalize_raw_text(raw, file_path, name)
+                                if doc["doc_id"] not in seen_doc_ids:
+                                    seen_doc_ids.add(doc["doc_id"])
+                                    yield doc
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+    elif ext == ".json":
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                data = json.load(f)
+                items = data if isinstance(data, list) else [data]
+                for item in items:
+                    if isinstance(item, dict):
+                        doc = _normalize_doc(item, file_path)
+                        if doc["doc_id"] not in seen_doc_ids:
+                            seen_doc_ids.add(doc["doc_id"])
+                            yield doc
+        except Exception:
+            pass
+    elif ext == ".jsonl":
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    if line.strip():
+                        doc = _normalize_doc(json.loads(line), file_path)
+                        if doc["doc_id"] not in seen_doc_ids:
+                            seen_doc_ids.add(doc["doc_id"])
+                            yield doc
+        except Exception:
+            pass
+    elif ext in (".txt", ".md", ".html"):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                text = f.read()
+                doc = _normalize_raw_text(text, file_path)
+                if doc["doc_id"] not in seen_doc_ids:
+                    seen_doc_ids.add(doc["doc_id"])
+                    yield doc
+        except Exception:
+            pass
+
+
+def iter_documents_from_dir(dir_path: Path, max_docs: int = 0) -> Generator[Dict[str, Any], None, None]:
+    """
+    Round-robins across the 9 source subfolders so a --limit N run gets
+    balanced coverage instead of exhausting the first 1-2 folders
+    alphabetically. Falls back to treating dir_path itself as one flat
+    source if it contains no subdirectories.
+    """
+    if not dir_path.exists():
+        return
+
+    source_dirs = _list_source_dirs(dir_path)
+    if not source_dirs:
+        source_dirs = [dir_path]
+
+    seen_doc_ids: set = set()
+    per_source_iters = []
+    for sdir in source_dirs:
+        files = _files_for_source(sdir)
+
+        def _chain(files=files):
+            for fp in files:
+                yield from _iter_file(fp, seen_doc_ids)
+
+        per_source_iters.append(_chain())
+
+    count = 0
+    active = list(per_source_iters)
+    while active and (max_docs <= 0 or count < max_docs):
+        still_active = []
+        for it in active:
+            try:
+                doc = next(it)
+            except StopIteration:
+                continue
+            yield doc
+            count += 1
+            still_active.append(it)
+            if max_docs > 0 and count >= max_docs:
+                break
+        active = still_active
+
+
+### 3b. src/company_brain/graph/loader.py — FULL REPLACEMENT (MERGE version)
+### Only use this version if Step 0's scratch test confirmed MERGE works.
+
+"""
+graph/loader.py — bulk loader for Document, Entity, and Fact nodes into
+HydraDB. Creates the Document node exactly ONCE per document, then attaches
+entities/facts by matching the existing node rather than recreating it.
+"""
+
+import logging
+import zlib
+from typing import Optional
+from neo4j import Session
+
+from company_brain.graph.client import GraphClient
+from company_brain.graph.schema import trust_for
+from company_brain.extraction.prompts import DocumentExtractionResult
+
+logger = logging.getLogger(__name__)
+
+
+def string_to_int_id(identifier: str) -> int:
+    return zlib.crc32(identifier.encode("utf-8")) & 0x7FFFFFFF
+
+
+class GraphLoader:
+    def __init__(self, client: GraphClient) -> None:
+        self.client = client
+        self._write_failures = 0
+        self._write_successes = 0
+
+    def load_document(
+        self,
+        doc_id: str,
+        source: str,
+        created_at: str,
+        text_snippet: str,
+        extraction: DocumentExtractionResult,
+        session: Optional[Session] = None,
+    ) -> None:
+        doc_int_id = string_to_int_id(f"doc_{doc_id}")
+        source_trust = trust_for(source)
+
+        # 1. Document node — created/updated exactly once.
+        doc_cypher = (
+            "MERGE (d:Document {id: $did}) "
+            "SET d.doc_id = $doc_id, d.source = $source, d.created_at = $ts"
+        )
+        try:
+            self.client.run_write(doc_cypher, {
+                "did": doc_int_id, "doc_id": doc_id, "source": source, "ts": created_at,
+            }, session=session)
+        except Exception as e:
+            self._write_failures += 1
+            logger.warning("Failed to create Document node %s: %s", doc_id, e)
+            return  # nothing downstream can attach without this node
+
+        # 2. Entities — MATCH the doc (already exists), MERGE the entity, MERGE the edge.
+        for entity in extraction.entities:
+            entity_key = f"{entity.entity_type}_{entity.name}"
+            entity_int_id = string_to_int_id(entity_key)
+            label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
+
+            cypher = (
+                f"MATCH (d:Document {{id: $did}}) "
+                f"MERGE (e:{label} {{id: $eid}}) "
+                f"SET e.name = $name, e.source = $source "
+                f"MERGE (d)-[:MENTIONS]->(e)"
+            )
+            try:
+                self.client.run_write(cypher, {
+                    "did": doc_int_id, "eid": entity_int_id,
+                    "name": entity.name or "", "source": source,
+                }, session=session)
+                self._write_successes += 1
+            except Exception as e:
+                self._write_failures += 1
+                logger.warning("Failed entity write %s (%s): %s", entity.name, doc_id, e)
+
+        # 3. Facts — same MATCH-then-MERGE pattern.
+        for idx, fact in enumerate(extraction.facts):
+            fact_key = f"fact_{doc_id}_{idx}"
+            fact_int_id = string_to_int_id(fact_key)
+
+            cypher = (
+                "MATCH (d:Document {id: $did}) "
+                "MERGE (f:Fact {id: $fid}) "
+                "SET f.subject = $subject, f.attribute = $attribute, f.value = $value, "
+                "    f.trust_score = $trust, f.doc_id = $doc_id "
+                "MERGE (d)-[:HAS_FACT]->(f)"
+            )
+            try:
+                self.client.run_write(cypher, {
+                    "did": doc_int_id, "fid": fact_int_id,
+                    "subject": fact.subject or doc_id,
+                    "attribute": fact.attribute or "",
+                    "value": fact.value or "",
+                    "trust": source_trust,
+                    "doc_id": doc_id,
+                }, session=session)
+                self._write_successes += 1
+            except Exception as e:
+                self._write_failures += 1
+                logger.warning("Failed fact write %s (%s): %s", fact.subject, doc_id, e)
+
+        # 4. Fallback for docs with nothing extracted — still get a searchable node.
+        if not extraction.entities and not extraction.facts:
+            fallback_id = string_to_int_id(f"docmarker_{doc_id}")
+            cypher = (
+                "MATCH (d:Document {id: $did}) "
+                "MERGE (e:Entity {id: $eid}) "
+                "SET e.name = $doc_id, e.source = $source "
+                "MERGE (d)-[:MENTIONS]->(e)"
+            )
+            try:
+                self.client.run_write(cypher, {
+                    "did": doc_int_id, "eid": fallback_id,
+                    "doc_id": doc_id, "source": source,
+                }, session=session)
+            except Exception as e:
+                logger.warning("Failed fallback write %s: %s", doc_id, e)
+
+    def report(self) -> None:
+        logger.info("Write results — succeeded: %d, failed: %d",
+                     self._write_successes, self._write_failures)
+
+
+NOTE: after switching run_ingest.py's main loop, call loader.report() at the
+end so your "Ingestion complete" summary reflects ACTUAL persisted writes,
+not just extracted counts. Currently the logged totals come from
+extraction.entities/facts in memory — they say nothing about what actually
+landed in HydraDB.
+
+IF MERGE IS NOT SUPPORTED (Step 0 failed): replace every MERGE above with:
+    a MATCH-first existence check, then CREATE only if not found, exactly as
+    described in Step 0's fallback pattern. This is more verbose (2 queries
+    per node instead of 1) but avoids relying on an unconfirmed clause.
+
+
+### 3c. src/company_brain/graph/schema.py — trust table fix
+
+Your inspect_graph.py sample showed source values like "05_internal-tools",
+"terraform-and-iac", "contracts-and-legal-process" — these are the
+dataset's real per-document category labels (from data.get("source") inside
+each JSON record), NOT your 9 top-level folder names. None of these match
+SOURCE_TRUST's keys, so trust_for() has likely been returning DEFAULT_TRUST
+(0.5) for nearly every fact — flattening your entire conflict-resolution
+trust layer.
+
+Fix: derive trust from the TOP-LEVEL folder (which you already have
+available as the doc's containing source directory), not the fine-grained
+category string. Pass both through separately:
+
+    # in loader_base.py's normalize functions, ALSO capture the top-level
+    # folder name (source_dirs[i].name from the round-robin loop) as
+    # "source_root", separate from the fine-grained "source" category.
+    # Then in schema.py:
+
+    SOURCE_TRUST: dict[str, float] = {
+        "linear": 0.95,
+        "jira": 0.95,
+        "github": 0.92,
+        "confluence": 0.90,
+        "hubspot": 0.88,
+        "fireflies": 0.75,
+        "slack": 0.65,
+        "google_drive": 0.70,
+        "gmail": 0.60,
+    }
+
+    def trust_for(source_root: str) -> float:
+        return SOURCE_TRUST.get(source_root.lower(), DEFAULT_TRUST)
+
+  Keep the fine-grained "source" (e.g. "terraform-and-iac") on the Document
+  node for filtering/display — just don't use it as the trust lookup key.
+
+
+### 3d. src/company_brain/extraction/extractor.py — heuristic subject fix
+
+Every heuristic fact currently gets subject=doc_id (the full document
+identifier string). This breaks any retrieval strategy that expects
+Fact.subject to be a resolvable entity/topic name. Given your actual data is
+technical spec/runbook documentation (billing-meter-spec, max_file_size,
+RTO_target), subject should be the nearest section heading, not the doc id.
+
+Add a lightweight heading tracker to _heuristic_fallback_extract:
+
+    # Insert near the top of _heuristic_fallback_extract, before the KV/bullet
+    # extraction blocks:
+
+    heading_pattern = re.compile(r'^#{1,6}\s*(.+)$|^([A-Z][A-Za-z0-9 _-]{3,60}):\s*$', re.MULTILINE)
+    headings = heading_pattern.findall(doc_text)
+    current_heading = doc_id  # fallback if no headings found at all
+
+    # Then, when building each ExtractedFact in the KV and bullet loops,
+    # replace `subject=doc_id` with a heading-aware subject:
+    #   walk doc_text up to the match position, find the nearest preceding
+    #   heading match, and use that as subject instead of doc_id.
+    # Minimal version if you don't have time for position-tracking:
+
+    first_heading = next((h[0] or h[1] for h in headings if (h[0] or h[1])), None)
+    fact_subject = first_heading.strip() if first_heading else doc_id
+
+  Then use `subject=fact_subject` in both the KV and bullet fact
+  construction. This is a coarse fix (one subject per document rather than
+  per-section) but it's a real, resolvable topic label instead of an opaque
+  doc id, and it's cheap to add under time pressure.
+
+  Also widen the Person-exclusion list while you're in this file — it
+  currently only excludes ("Here","Channel","Everyone","All"), which is why
+  team/process labels like "Eng-Tools", "Infra-Cost-Ops", "Handoff" got
+  tagged as Person entities:
+
+    _NOT_PEOPLE = {"here", "channel", "everyone", "all", "team", "ops",
+                    "eng", "infra", "oncall", "handoff", "tools", "admin"}
+    # skip handle if handle.lower() in _NOT_PEOPLE, or the derived name has
+    # no space (real person names in this heuristic path should generally
+    # look like "First Last" once title-cased from an email or two-word handle)
+
+
+STEP 4 — INDEX/CONSTRAINT CREATION (still missing, still needed)
+--------------------------------------------------------------------------
+Create scripts/create_indexes.py and run it once, right after Step 0's
+scratch test, before re-ingesting:
+
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+    from company_brain.graph.client import GraphClient
+
+    STATEMENTS = [
+        "CREATE CONSTRAINT person_id IF NOT EXISTS FOR (p:Person) REQUIRE p.id IS UNIQUE",
+        "CREATE CONSTRAINT doc_id_unique IF NOT EXISTS FOR (d:Document) REQUIRE d.id IS UNIQUE",
+        "CREATE CONSTRAINT fact_id_unique IF NOT EXISTS FOR (f:Fact) REQUIRE f.id IS UNIQUE",
+        "CREATE INDEX fact_subject_idx IF NOT EXISTS FOR (f:Fact) ON (f.subject)",
+        "CREATE INDEX doc_source_idx IF NOT EXISTS FOR (d:Document) ON (d.source)",
+        "CREATE INDEX person_name_idx IF NOT EXISTS FOR (p:Person) ON (p.name)",
+    ]
+
+    with GraphClient() as client:
+        for stmt in STATEMENTS:
+            try:
+                client.run_write(stmt)
+                print(f"OK: {stmt}")
+            except Exception as e:
+                print(f"FAILED (check HydraDB's exact index syntax): {stmt} -> {e}")
+
+  If any of these fail, check HydraDB's README/docs for its exact supported
+  index/constraint syntax before assuming indexes aren't possible at all —
+  the syntax may differ slightly from standard Neo4j Cypher.
+
+
+STEP 5 — RE-RUN SEQUENCE
+--------------------------------------------------------------------------
+1.  Run Step 0's MERGE scratch test. Note the result.
+2.  Apply loader_base.py fix (3a) — always safe, no dependency on Step 0.
+3.  Apply loader.py fix (3b), using the MERGE or fallback variant per Step 0.
+4.  Apply schema.py trust fix (3c).
+5.  Apply extractor.py subject/person fix (3d).
+6.  Run scripts/create_indexes.py (Step 4).
+7.  python scripts/run_ingest.py --reset --limit 4000 --heuristic
+      -> check the new loader.report() output: successes vs failures.
+      -> a high failure count here means Step 0's choice (MERGE vs fallback)
+         needs re-checking, not that something else is wrong.
+8.  python scripts/inspect_graph.py --sample
+      -> Sample Facts should now show real subjects (headings/topics), not
+         doc_ids. Sample Persons should no longer show team/process labels.
+9.  python scripts/run_resolution.py --heuristic
+10. python scripts/run_eval.py --limit 5 --heuristic --verbose
+      -> THE KEY CHECK: is doc_recall still 0.00 across all 5? If yes, the
+         expected documents for those specific 5 questions may simply not
+         be among the ~4000 ingested yet (coverage, not correctness) — try
+         a larger --limit or check which sources the first 5 questions'
+         expected_doc_ids actually come from.
+11. Once doc_recall moves off zero for at least some questions, apply the
+    eval scoring fix from the prior conversation (require doc_recall > 0
+    for is_correct in _score_factual_recall and _score_conflicting_info)
+    before trusting any accuracy number, including a full 500-question run.
+
+
+WHAT NOT TO DO RIGHT NOW
+--------------------------------------------------------------------------
+Do not run a full 500-question eval until Step 5.10 shows doc_recall moving
+off 0.00 on the 5-question sanity check. A full run before that just
+reproduces the same false-positive text-matching problem at higher volume
+and burns time you don't have with ~3 days left.
