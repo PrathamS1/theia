@@ -21,7 +21,6 @@ from company_brain.query.cypher_templates import (
     build_doc_facts_query,
     build_entity_docs_query,
     build_same_as_query,
-    build_all_superseded_ids_query,
 )
 from company_brain.query.abstain import should_abstain
 
@@ -171,11 +170,6 @@ def answer_question(
             matched_entity_ids.add(ent["id"])
             matched_entity_names.add(ent["name"])
 
-    if matched_entity_names:
-        logger.info("Matched entities: %s", list(matched_entity_names)[:5])
-    else:
-        logger.debug("No entity name match found in question — using keyword fallback")
-
     # Multi-hop traversal: expand matched Person entities using SAME_AS edges
     expanded_entity_ids = set(matched_entity_ids)
     same_as_cypher = build_same_as_query()
@@ -192,37 +186,30 @@ def answer_question(
     doc_dir = _get_document_directory(client)
     candidate_doc_ids: Set[int] = set()
 
-    # (a) Match docs mentioning resolved entities via MENTIONS edges
-    if expanded_entity_ids:
-        entity_docs_cypher = build_entity_docs_query()
-        for eid in expanded_entity_ids:
-            try:
-                docs_res = client.run_read(entity_docs_cypher, {"eid": eid})
-                for d in docs_res:
-                    if d.get("did") is not None:
-                        candidate_doc_ids.add(d["did"])
-            except Exception:
-                pass
-        if candidate_doc_ids:
-            logger.info("Found %d candidate docs via entity MENTIONS traversal", len(candidate_doc_ids))
+    # (a) Match docs mentioning resolved entities
+    entity_docs_cypher = build_entity_docs_query()
+    for eid in expanded_entity_ids:
+        try:
+            docs_res = client.run_read(entity_docs_cypher, {"eid": eid})
+            for d in docs_res:
+                if d.get("did") is not None:
+                    candidate_doc_ids.add(d["did"])
+        except Exception:
+            pass
 
-    # (b) Keyword-based fallback — always run this to supplement entity matching.
-    # The loader uses CREATE (not MERGE) so MENTIONS edges may point to duplicate
-    # document nodes; keyword matching on doc_id / source is more reliable.
-    for d in doc_dir:
-        src = str(d.get("source") or "").lower()
-        did_str = str(d.get("doc_id") or "").lower()
-        if any(kw in src or kw in did_str for kw in keywords):
-            candidate_doc_ids.add(d["did"])
-        if len(candidate_doc_ids) >= 60:
-            break
+    # (b) Match docs by source or keywords in doc_id
+    if not candidate_doc_ids or len(candidate_doc_ids) < 5:
+        for d in doc_dir:
+            src = str(d.get("source") or "").lower()
+            did_str = str(d.get("doc_id") or "").lower()
+            if any(kw in src or kw in did_str for kw in keywords):
+                candidate_doc_ids.add(d["did"])
+            if len(candidate_doc_ids) >= 40:
+                break
 
-    # (c) If still empty, sample the first 50 documents as a last resort
+    # If still empty, sample the first 25 documents
     if not candidate_doc_ids and doc_dir:
-        candidate_doc_ids = {d["did"] for d in doc_dir[:50]}
-        logger.debug("No keyword/entity match — using first 50 docs as fallback sample")
-
-    logger.info("Candidate docs selected: %d", len(candidate_doc_ids))
+        candidate_doc_ids = {d["did"] for d in doc_dir[:25]}
 
     # 4. Fetch facts from candidate documents using anchored lookups (fast, <20ms)
     doc_facts_cypher = build_doc_facts_query()
@@ -251,23 +238,7 @@ def answer_question(
         except Exception as exc:
             logger.debug("Failed fetching facts for doc %s: %s", did, exc)
 
-    # 5. Filter out superseded (loser) facts — conflict-aware retrieval
-    superseded_ids: Set[int] = set()
-    try:
-        superseded_rows = client.run_read(build_all_superseded_ids_query())
-        superseded_ids = {int(r["loser_id"]) for r in superseded_rows if r.get("loser_id") is not None}
-        if superseded_ids:
-            logger.debug("Filtering out %d superseded facts from results", len(superseded_ids))
-    except Exception as exc:
-        logger.debug("Could not load superseded IDs (non-fatal): %s", exc)
-
-    logger.info("Raw facts fetched: %d | Superseded IDs to filter: %d", len(raw_facts), len(superseded_ids))
-
-    # Remove superseded facts — keep only authoritative winning facts
-    raw_facts = [f for f in raw_facts if f.get("id") not in superseded_ids]
-    logger.info("Facts after conflict filter: %d", len(raw_facts))
-
-    # 6. Score and filter facts by keyword relevance
+    # 5. Score and filter facts by keyword relevance
     scored_facts = []
     for f in raw_facts:
         f_text = f"{f['subject']} {f['attribute']} {f['value']}".lower()
