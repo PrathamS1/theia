@@ -59,13 +59,11 @@ class GraphClient:
             self._uri,
             auth=(self._user, self._password),
         )
-        logger.info("GraphClient connected to %s", self._uri)
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     def close(self) -> None:
         self._driver.close()
-        logger.info("GraphClient closed.")
 
     def __enter__(self) -> GraphClient:
         return self

@@ -51,7 +51,14 @@ def main():
         all_questions = all_questions[:args.limit]
 
     logger.info("=== Starting Benchmark Evaluation on %d Questions ===", len(all_questions))
-    logger.info("Connecting to HydraDB and initializing Hybrid Query Engine...")
+    
+    # Check HydraDB connectivity
+    with GraphClient() as test_client:
+        if test_client.ping():
+            logger.info("✅ HydraDB is ACTIVE on bolt://127.0.0.1:7687 (Full Hybrid Graph + Vector Search enabled).")
+        else:
+            logger.warning("⚠️  HydraDB is NOT RUNNING on bolt://127.0.0.1:7687! Evaluation will run in Vector-Only mode without graph traversals.")
+            logger.warning("   To enable full graph traversal, start HydraDB with: bash scripts/start_hydradb.sh")
 
     engine = QueryEngine()
 
