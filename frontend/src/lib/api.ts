@@ -17,7 +17,7 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
     res = await fetch(path, { signal });
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e;
-    throw new ApiError('Cannot reach the Theia API. Is uvicorn running on :8000?');
+    throw new ApiError('Cannot reach the API at /api - check that both the Vite dev server and uvicorn (:8000) are running.');
   }
   if (!res.ok) throw new ApiError(`Request failed (${res.status}) for ${path}`, res.status);
   return res.json() as Promise<T>;
@@ -81,7 +81,7 @@ export async function runQuery(
     });
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e;
-    throw new ApiError('Cannot reach the Theia API. Is uvicorn running on :8000?');
+    throw new ApiError('Cannot reach the API at /api - check that both the Vite dev server and uvicorn (:8000) are running.');
   }
   if (!res.ok) {
     const detail = await res.json().catch(() => null);

@@ -13,8 +13,32 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# src/company_brain/indexing/vector_store.py -> repo root is 4 levels up.
+# (Previously 3 levels, which resolved to src/ and put the index at
+# src/data/vectors/ instead of data/vectors/ -- harmless since read and write
+# agreed, but confusing and inconsistent with every other data path in the repo.)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 VECTOR_DIR = PROJECT_ROOT / "data" / "vectors"
+
+CHUNK_SIZE = 1600
+CHUNK_OVERLAP = 200
+
+
+def _chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> List[str]:
+    """Splits text into overlapping windows so no content past the old 1500-char
+    cutoff is invisible to embedding, while staying inside the encoder's
+    effective context length."""
+    if len(text) <= size:
+        return [text] if text else [""]
+    chunks = []
+    step = max(size - overlap, 1)
+    for start in range(0, len(text), step):
+        chunk = text[start : start + size]
+        if chunk:
+            chunks.append(chunk)
+        if start + size >= len(text):
+            break
+    return chunks or [""]
 
 
 class VectorStore:
@@ -38,8 +62,15 @@ class VectorStore:
 
     def build_index(self, documents: List[Dict[str, Any]]) -> None:
         """
-        Builds vector index for the provided documents list.
+        Builds a chunked vector index for the provided documents list.
         Each doc must have 'doc_id', 'title', 'text', 'source'.
+
+        Long documents are split into overlapping chunks (see `_chunk_text`)
+        so the full text is embedded rather than only its first 1500 chars —
+        that cutoff was invisible to 93.7% of the corpus's documents. Each
+        chunk gets its own embedding row sharing its parent's doc_id;
+        `search_similar` aggregates chunk scores back to one score per
+        document (max over its chunks) before ranking.
         """
         self.doc_ids = []
         self.doc_metadata = []
@@ -50,16 +81,13 @@ class VectorStore:
             title = doc.get("title", "")
             text = doc.get("text", "")
             source = doc.get("source", "")
-            
-            # Combine title, source and text for rich embedding
-            content = f"[{source.upper()}] {title}\n{text[:1500]}"
-            self.doc_ids.append(did)
-            self.doc_metadata.append({
-                "doc_id": did,
-                "title": title,
-                "source": source,
-            })
-            texts_to_embed.append(content)
+            meta = {"doc_id": did, "title": title, "source": source}
+
+            for chunk in _chunk_text(text):
+                content = f"[{source.upper()}] {title}\n{chunk}"
+                self.doc_ids.append(did)
+                self.doc_metadata.append(meta)
+                texts_to_embed.append(content)
 
         model = self._get_model()
         if model != "fallback":
@@ -104,6 +132,12 @@ class VectorStore:
     def search_similar(self, query: str, top_k: int = 5) -> List[Tuple[str, float, Dict[str, Any]]]:
         """
         Returns list of (doc_id, score, metadata) ranked by cosine similarity.
+
+        The index holds one row per chunk (see `build_index`), so this
+        aggregates by taking the max score across a document's chunks before
+        ranking — a document should surface because its best-matching
+        passage is relevant, not get diluted by averaging in its other
+        passages.
         """
         if self.embeddings is None or len(self.doc_ids) == 0:
             if not self.load():
@@ -123,8 +157,12 @@ class VectorStore:
             else:
                 scores = np.zeros(len(self.doc_ids))
 
-        top_indices = np.argsort(scores)[::-1][:top_k]
-        results = []
-        for idx in top_indices:
-            results.append((self.doc_ids[idx], float(scores[idx]), self.doc_metadata[idx]))
-        return results
+        best_per_doc: Dict[str, float] = {}
+        for idx, did in enumerate(self.doc_ids):
+            s = float(scores[idx])
+            if did not in best_per_doc or s > best_per_doc[did]:
+                best_per_doc[did] = s
+
+        ranked_doc_ids = sorted(best_per_doc, key=lambda d: -best_per_doc[d])[:top_k]
+        meta_by_doc = {did: meta for did, meta in zip(self.doc_ids, self.doc_metadata)}
+        return [(did, best_per_doc[did], meta_by_doc[did]) for did in ranked_doc_ids]

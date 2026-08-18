@@ -1,10 +1,28 @@
 """
 graph/loader.py — bulk loader for Document, Entity, and Fact nodes into HydraDB.
 
-Obeys HydraDB Cypher rules:
+Obeys HydraDB Cypher rules (verified empirically against a live instance):
 - Integer node `id` property (generated deterministically from string identifiers)
-- One-hop CREATE pattern: (Document)-[:MENTIONS]->(Entity) and (Document)-[:HAS_FACT]->(Fact)
+- Only one-hop edge CREATE patterns are executable: (Document)-[:MENTIONS]->(Entity)
+  and (Document)-[:HAS_FACT]->(Fact). A standalone `CREATE (d:Document {...})`
+  with no edge is rejected outright ("only one-hop edge patterns are executable
+  in Query engine CREATE") -- this was already true in the pre-existing code,
+  just silently swallowed by its bare `except Exception`, so the Document node
+  has only ever actually been created as a side effect of its first
+  MENTIONS/HAS_FACT write, never by a dedicated statement.
+- `MERGE` is rejected if followed by another clause ("MERGE with following
+  clauses is not executable in Query engine"), so idempotent upsert-by-id is
+  not available here -- CREATE is genuinely the only option.
 - Auto-commit RUN queries
+- All writes use $param binding (see graph/topology.py header for why: HydraDB
+  supports it and it avoids hand-rolled string escaping entirely)
+
+HydraDB resolves nodes by `id` and CREATE against an existing id replaces its
+whole property bag (last write wins), which is why every prior write of the
+Document node silently erased its title once a title-less write followed.
+Fixed by carrying `title` (and every other Document property) on *every*
+CREATE of the Document node, not just the first -- so it no longer matters
+which write is last, they all agree.
 """
 
 import logging
@@ -38,57 +56,83 @@ class GraphLoader:
         text_snippet: str,
         extraction: DocumentExtractionResult,
         title: str = "",
-    ) -> None:
+    ) -> Dict[str, int]:
         """
         Loads a document and its extracted entities and facts into HydraDB.
+        Returns write counts ({entities_ok, entities_failed, facts_ok,
+        facts_failed}) rather than swallowing failures silently -- a caller
+        that never checks this would have no way to tell a fully-succeeded
+        ingest from one where HydraDB was down for the entire run, since
+        every individual write failure here is caught and only logged at
+        debug level (necessary because a transient failure on one
+        entity/fact write shouldn't abort the rest of the document).
+
+        A document with zero extracted entities and zero facts will not get a
+        Document node at all -- there is no standalone-node write available on
+        this HydraDB build (see module docstring). This matches the loader's
+        actual behavior before this fix too; it is a pre-existing limitation,
+        not a regression.
         """
+        stats = {"entities_ok": 0, "entities_failed": 0, "facts_ok": 0, "facts_failed": 0}
         doc_int_id = string_to_int_id(f"doc_{doc_id}")
         source_trust = trust_for(source)
+        doc_props = {
+            "doc_int_id": doc_int_id,
+            "doc_id": doc_id,
+            "source": source,
+            "title": title,
+            "created_at": created_at,
+        }
 
-        # 0. Always ensure the Document node itself exists
-        doc_cypher = (
-            f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', "
-            f"title: '{_sanitize(title)}', created_at: '{created_at}'}})"
-        )
-        try:
-            self.client.run_write(doc_cypher)
-        except Exception as e:
-            logger.debug("Document base node write: %s", e)
-
-        # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern
-        for idx, entity in enumerate(extraction.entities):
+        # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
+        # The Document literal carries full properties (including title) on
+        # every write so no write can clobber what an earlier one set.
+        for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
             entity_int_id = string_to_int_id(entity_key)
             label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
 
             cypher = (
-                f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-                f"-[:MENTIONS {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}'}}]->"
-                f"(e:{label} {{id: {entity_int_id}, name: '{_sanitize(entity.name)}', source: '{source}'}})"
+                f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+                f"title: $title, created_at: $created_at}})"
+                f"-[r:MENTIONS {{source: $source, timestamp: $created_at, doc_id: $doc_id}}]->"
+                f"(e:{label} {{id: $entity_int_id, name: $name, source: $source}})"
             )
             try:
-                self.client.run_write(cypher)
+                self.client.run_write(cypher, {
+                    **doc_props,
+                    "entity_int_id": entity_int_id,
+                    "name": entity.name,
+                })
+                stats["entities_ok"] += 1
             except Exception as e:
+                stats["entities_failed"] += 1
                 logger.debug("Failed to write entity %s: %s", entity.name, e)
 
-        # 2. Load facts via one-hop (Document)-[:HAS_FACT]->(Fact) pattern
+        # 2. Load facts via one-hop (Document)-[:HAS_FACT]->(Fact) pattern.
         for idx, fact in enumerate(extraction.facts):
             fact_key = f"fact_{doc_id}_{idx}"
             fact_int_id = string_to_int_id(fact_key)
 
             cypher = (
-                f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-                f"-[:HAS_FACT {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}'}}]->"
-                f"(f:Fact {{id: {fact_int_id}, subject: '{_sanitize(fact.subject)}', attribute: '{_sanitize(fact.attribute)}', value: '{_sanitize(fact.value)}', trust_score: {source_trust}, doc_id: '{doc_id}'}})"
+                f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+                f"title: $title, created_at: $created_at}})"
+                f"-[r:HAS_FACT {{source: $source, timestamp: $created_at, doc_id: $doc_id}}]->"
+                f"(f:Fact {{id: $fact_int_id, subject: $subject, attribute: $attribute, "
+                f"value: $value, trust_score: $trust_score, doc_id: $doc_id}})"
             )
             try:
-                self.client.run_write(cypher)
+                self.client.run_write(cypher, {
+                    **doc_props,
+                    "fact_int_id": fact_int_id,
+                    "subject": fact.subject,
+                    "attribute": fact.attribute,
+                    "value": fact.value,
+                    "trust_score": source_trust,
+                })
+                stats["facts_ok"] += 1
             except Exception as e:
+                stats["facts_failed"] += 1
                 logger.debug("Failed to write fact %s: %s", fact.subject, e)
 
-
-def _sanitize(text: str) -> str:
-    """Escape quotes for safe inline Cypher strings."""
-    if not text:
-        return ""
-    return text.replace("'", "\\'").replace('"', '\\"').replace("\n", " ").replace("\r", "")
+        return stats

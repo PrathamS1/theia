@@ -16,11 +16,10 @@ unanchored scans (paging documents, pulling all SAME_AS/SUPERSEDES) are cached.
 
 from __future__ import annotations
 
-import json
 import logging
 import threading
 import time
-from pathlib import Path
+from contextlib import contextmanager
 from typing import Any, Dict, List, Optional, Tuple
 
 from company_brain.graph.client import GraphClient
@@ -29,31 +28,6 @@ logger = logging.getLogger(__name__)
 
 # label -> id property prefix used in Cytoscape node ids (doc_<doc_id>, person_<id>, ...)
 _ENTITY_LABELS = ("Person", "Org", "Ticket", "Project")
-
-# HydraDB's d.title is null for every Document node: graph/loader.py issues a
-# separate `CREATE (d:Document {id, doc_id, source, created_at})` -- without
-# title -- for each MENTIONS/HAS_FACT edge it writes, and since CREATE
-# resolves by node id, the last such write silently clobbers the title set by
-# the original doc_cypher call. Confirmed empirically: 0/749 Document nodes
-# have a non-null title. Fixing it means changing loader.py and re-ingesting,
-# which is out of scope here (see the delivery report) -- so titles are
-# recovered for display from the same staged corpus the rest of the app uses.
-_TITLE_CACHE: Optional[Dict[str, str]] = None
-
-
-def _titles() -> Dict[str, str]:
-    global _TITLE_CACHE
-    if _TITLE_CACHE is None:
-        _TITLE_CACHE = {}
-        staged_path = Path("data/staged_gold_docs.json")
-        if staged_path.exists():
-            with open(staged_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for doc_id, doc in data.items():
-                if doc.get("title"):
-                    _TITLE_CACHE[doc_id] = doc["title"]
-    return _TITLE_CACHE
-
 
 # Cytoscape node-id prefix per label. Document uses "doc_" (not "document_")
 # to match the frontend's existing citation-highlight convention, which
@@ -74,7 +48,7 @@ def _node_id(label: str, key: Any) -> str:
 
 def _doc_node(row: Dict[str, Any]) -> Dict[str, Any]:
     doc_id = row["d.doc_id"]
-    name = row.get("d.title") or _titles().get(doc_id) or doc_id
+    name = row.get("d.title") or doc_id
     return {
         "data": {
             "id": _node_id("Document", doc_id),
@@ -119,6 +93,38 @@ def _edge(edge_id: str, source: str, target: str, etype: str, **extra: Any) -> D
     d = {"id": edge_id, "source": source, "target": target, "type": etype, "label": etype}
     d.update(extra)
     return {"data": d}
+
+
+def _open_client_with_retry(client_factory, tries: int = 8, delay: float = 5.0):
+    """This dev environment's HydraDB graph-node process restarts roughly
+    every 1-2 minutes (a manifest/GC issue on its local-filesystem storage
+    backend, not something this app controls), with down-windows up to
+    ~50s. A single failed connection attempt would otherwise 500 the whole
+    dashboard for a condition that reliably clears within a minute, so
+    retry with a budget wide enough to span one down-window. This only
+    costs latency on the *first* successful fetch of a given cache key —
+    fetch_seed/fetch_same_as/fetch_supersedes all cache their result
+    indefinitely once they succeed once."""
+    last_exc: Optional[Exception] = None
+    for attempt in range(tries):
+        try:
+            client = client_factory()
+            client.__enter__()
+            return client
+        except Exception as exc:
+            last_exc = exc
+            if attempt < tries - 1:
+                time.sleep(delay)
+    raise last_exc
+
+
+@contextmanager
+def _client_ctx(client_factory, tries: int = 3, delay: float = 2.0):
+    client = _open_client_with_retry(client_factory, tries, delay)
+    try:
+        yield client
+    finally:
+        client.close()
 
 
 class TopologyCache:
@@ -168,7 +174,7 @@ class TopologyCache:
             if not refresh and doc_limit in self._seed_cache:
                 return self._seed_cache[doc_limit]
 
-            with self._client_factory() as client:
+            with _client_ctx(self._client_factory) as client:
                 doc_rows = client.run(
                     "MATCH (d:Document) RETURN d.doc_id, d.title, d.source, d.created_at "
                     "ORDER BY d.doc_id LIMIT $lim",
@@ -227,7 +233,7 @@ class TopologyCache:
             if not refresh and cache_key in self._expand_cache:
                 return self._expand_cache[cache_key]
 
-            with self._client_factory() as client:
+            with _client_ctx(self._client_factory) as client:
                 nodes: List[Dict[str, Any]] = []
                 edges: List[Dict[str, Any]] = []
                 eidx = 0
@@ -337,7 +343,7 @@ class TopologyCache:
         with self._lock:
             if not refresh and self._same_as is not None:
                 return self._same_as
-            with self._client_factory() as client:
+            with _client_ctx(self._client_factory) as client:
                 rows = client.run(
                     "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
                     "RETURN a.id, a.name, b.id, b.name, r.confidence"
@@ -360,7 +366,7 @@ class TopologyCache:
         with self._lock:
             if not refresh and self._supersedes is not None:
                 return self._supersedes
-            with self._client_factory() as client:
+            with _client_ctx(self._client_factory) as client:
                 rows = client.run(
                     "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
                     "RETURN a.id, a.subject, a.value, b.id, b.value"

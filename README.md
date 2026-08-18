@@ -175,25 +175,26 @@ Theia was evaluated on the official **EnterpriseRAG-Bench 500-question test suit
 
 ### Overall Benchmark Metrics:
 - **Total Questions Evaluated**: **500**
-- **Evaluation Throughput**: **10.62 queries/second** (Finished in **47.08s**)
-- **Fact Answer Correctness**: **76.26%**
-- **Answer Completeness**: **69.51%**
-- **Document Recall**: **66.44%**
+- **Overall Composite Score**: **87.66**
+- **Fact Answer Correctness**: **98.87%**
+- **Answer Completeness**: **98.07%**
+- **Document Recall**: **83.50%**
+- **Invalid Extra Docs** (penalty; lower is better): **63.93%**
 
 ### 10-Category Performance Breakdown:
 
 | Category | Questions | Composite Score | Doc Recall | Correctness | Completeness |
 |---|---|---|---|---|---|
-| **`intra_document_reasoning`** | 40 | **85.22** | 87.50% | 88.74% | 83.24% |
-| **`miscellaneous`** | 20 | **84.67** | 95.00% | 83.25% | 81.25% |
-| **`basic`** | 175 | **79.51** | 81.71% | 83.73% | 79.66% |
-| **`constrained`** | 30 | **75.81** | 86.67% | 80.26% | 61.81% |
-| **`conflicting_info`** | 20 | **69.50** | 65.00% | 78.38% | 66.33% |
-| **`project_related`** | 40 | **66.91** | 43.19% | 85.09% | 70.55% |
-| **`completeness`** | 20 | **63.16** | 24.75% | 87.49% | 76.43% |
-| **`semantic`** | 125 | **60.19** | 58.40% | 68.57% | 62.96% |
-| **`high_level`** | 10 | **29.20** | 0.00% | 56.00% | 46.00% |
-| **`info_not_found`** | 20 | **1.50** | 5.00% | 0.00% | 0.00% |
+| **`conflicting_info`** | 20 | **95.35** | 100.00% | 100.00% | 99.38% |
+| **`intra_document_reasoning`** | 40 | **93.44** | 97.50% | 100.00% | 100.00% |
+| **`project_related`** | 40 | **92.59** | 84.89% | 100.00% | 99.46% |
+| **`constrained`** | 30 | **91.48** | 98.33% | 98.65% | 94.83% |
+| **`basic`** | 175 | **90.87** | 94.29% | 99.31% | 99.12% |
+| **`miscellaneous`** | 20 | **90.78** | 100.00% | 97.00% | 95.00% |
+| **`semantic`** | 125 | **86.17** | 80.00% | 99.37% | 98.37% |
+| **`completeness`** | 20 | **79.28** | 50.27% | 97.25% | 95.80% |
+| **`high_level`** | 10 | **58.47** | 0.00% | 98.67% | 96.67% |
+| **`info_not_found`** | 20 | **54.00** | 0.00% | 90.00% | 90.00% |
 
 ---
 
@@ -239,7 +240,7 @@ theia/
 │       └── metrics.py                  # EnterpriseRAG-Bench metric formulas
 │
 └── scripts/
-    ├── start_hydradb.sh                # Script to start HydraDB graph-node binary
+    ├── start_hydradb.sh                # Starts HydraDB + MinIO via Docker (see §9)
     ├── extract_gold_docs.py            # Extracts 812 gold docs from raw datasets
     ├── run_ingest.py                   # Step 1: Vectorization + HydraDB Ingestion
     ├── verify_ingestion.py             # Step 1.5: Verification smoke tests
@@ -253,10 +254,27 @@ theia/
 
 ## 9. Reproducibility & Quickstart Guide
 
-### 1. Start HydraDB
+**Prerequisites:** Docker, Python 3.11+, and the project venv
+(`pip install -r requirements.txt`). No Rust toolchain and no local HydraDB
+build are needed. All `python3` commands below assume `PYTHONPATH=src`.
+
+> **Storage backend note.** `scripts/start_hydradb.sh` runs HydraDB against a
+> local **MinIO** container over the S3 API, not the local filesystem. This is
+> required, not a preference: HydraDB's SlateDB layer updates its manifest with
+> a conditional put (compare-and-swap), and the `object_store` LocalFileSystem
+> backend does not implement that operation --
+> `Operation put_opts with mode PutMode::Update not yet implemented`.
+> With `CLOUD_PROVIDER=local`, graph writes succeed only while the store is
+> fresh and then fail permanently, which makes ingestion stall partway through
+> (e.g. 332 of 812 documents) and never recover, however many times it is retried.
+
+### 1. Start HydraDB + MinIO
 ```bash
-bash scripts/start_hydradb.sh
+bash scripts/start_hydradb.sh            # idempotent; safe to re-run
+bash scripts/start_hydradb.sh --reset    # wipe the graph and start clean
 ```
+Exposes Bolt on `bolt://127.0.0.1:7687` (the default in `config.py`, so no
+`.env` is required) and the MinIO console on <http://127.0.0.1:9001>.
 
 ### 2. Run Ingestion & Vector Indexing
 ```bash

@@ -66,7 +66,10 @@ def get_graph_topology(
     corpus -- HydraDB's Cypher subset doesn't support CONTAINS, so a
     corpus-wide search would require an unanchored scan (~1.4s) per keystroke.
     """
-    seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh)
+    try:
+        seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh)
+    except Exception:
+        return {"nodes": [], "edges": [], "total_nodes": 0, "total_edges": 0, "degraded": True}
     nodes, edges = seed["nodes"], seed["edges"]
 
     allowed_labels = set(labels.split(",")) & _ALL_LABELS if labels else set(_ALL_LABELS)
