@@ -1,0 +1,82 @@
+/*
+ * Design tokens. Colour is assigned from the domain, not decoration:
+ * accent   -> identity resolution (SAME_AS)
+ * warn     -> temporal staleness (SUPERSEDES, superseded facts)
+ * danger   -> abstention / no grounded evidence
+ * Each is always paired with text or an icon, never colour alone.
+ */
+:root {
+  /* Spacing — 4px scale. Do not invent values between these. */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+
+  /* Radius — a real hierarchy, not max-round everywhere */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Light */
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f2;
+  --surface-3: #ebebe8;
+  --border: #e0e0dc;
+  --border-strong: #c9c9c3;
+  --text: #17181a;
+  --text-muted: #64686f;
+  --text-faint: #8b9099;
+
+  --accent: #0f7d76;
+  --accent-bg: #e4f2f0;
+  --warn: #9a5b0c;
+  --warn-bg: #fbf0dd;
+  --danger: #9c2d2d;
+  --danger-bg: #fbe9e9;
+  --ok: #3f6b32;
+  --ok-bg: #e9f2e5;
+
+  /* Graph entity colours */
+  --n-document: #3b6ea5;
+  --n-person: #0f7d76;
+  --n-fact: #5b7a3f;
+  --n-fact-stale: #9a5b0c;
+  --n-org: #7a4a86;
+  --n-ticket: #a05a2c;
+  --n-project: #4a7a6a;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.08);
+
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+/*
+ * Dark palette -- parked, not deleted. Light-only for now (per request);
+ * re-enabling later is restoring this block under
+ * `@media (prefers-color-scheme: dark) { :root { ... } }` plus the matching
+ * --n-project addition below, and re-adding usePrefersDark() in useAsync.ts
+ * (removed) and its two call sites in GraphCanvas.tsx (removed).
+ *
+ *   --bg: #0f1113;              --surface: #16181b;
+ *   --surface-2: #1d2024;       --surface-3: #262a30;
+ *   --border: #2a2e35;          --border-strong: #3b4048;
+ *   --text: #e8e9ea;            --text-muted: #9aa0a8;      --text-faint: #6e747c;
+ *   --accent: #3fb8ae;          --accent-bg: #12302e;
+ *   --warn: #d99a3c;            --warn-bg: #33270f;
+ *   --danger: #e07575;          --danger-bg: #341a1a;
+ *   --ok: #7fb069;              --ok-bg: #1c2b17;
+ *   --n-document: #6a9fd4;      --n-person: #3fb8ae;        --n-fact: #8fb573;
+ *   --n-fact-stale: #d99a3c;    --n-org: #b085bd;           --n-ticket: #d0895a;
+ *   --n-project: #5a9a8a;
+ *   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+ *   --shadow-md: 0 4px 12px rgb(0 0 0 / 0.5);
+ */

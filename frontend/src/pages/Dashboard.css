@@ -1,0 +1,78 @@
+.dash {
+  display: grid;
+  grid-template-areas:
+    'bar'
+    'toolbar'
+    'canvas'
+    'legend'
+    'side';
+  grid-template-rows: auto auto minmax(24rem, 60vh) auto 1fr;
+  min-height: 100vh;
+}
+
+.dash-toolbar {
+  grid-area: toolbar;
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-set { display: flex; flex-wrap: wrap; gap: var(--s-2); border: 0; margin: 0; padding: 0; }
+.chip {
+  padding: var(--s-1) var(--s-3); font-size: 0.8125rem; cursor: pointer;
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--text-muted);
+  transition: background 110ms ease-out, color 110ms ease-out;
+}
+.chip:hover { background: var(--surface-2); }
+.chip-on { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); font-weight: 500; }
+.chip:has(:focus-visible) { box-shadow: var(--focus); }
+
+.tb-search { flex: 1 1 12rem; min-width: 0; }
+.tb-layout { display: flex; gap: var(--s-1); }
+.btn-on { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.tb-count { font-size: 0.75rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+.dash-canvas { grid-area: canvas; position: relative; padding: var(--s-3) var(--s-4); min-height: 0; }
+
+.canvas-state {
+  height: 100%; min-height: 18rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--s-3); text-align: center;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface-2);
+}
+.canvas-sk { width: 60%; height: 40%; }
+
+.legend { grid-area: legend; }
+
+.dash-side {
+  grid-area: side;
+  display: flex; flex-direction: column; min-height: 0;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.side-divider { border-top: 1px solid var(--border); }
+
+/* Desktop: canvas and side panel sit side by side, each scrolling independently. */
+@media (min-width: 1024px) {
+  .dash {
+    grid-template-areas:
+      'bar     bar'
+      'toolbar side'
+      'canvas  side'
+      'legend  side';
+    grid-template-columns: minmax(0, 1fr) 25rem;
+    grid-template-rows: auto auto 1fr auto;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .dash-side {
+    border-top: 0; border-left: 1px solid var(--border);
+    overflow-y: auto;
+  }
+  .dash-canvas { overflow: hidden; }
+}
+
+@media (min-width: 1440px) {
+  .dash { grid-template-columns: minmax(0, 1fr) 28rem; }
+}
