@@ -96,7 +96,7 @@ def execute_query(req: QueryRequest):
     # 2. Extract real top vector search anchors with authentic cosine scores
     real_vector_hits = engine.vector_store.search_similar_docs(req.question, top_k=3)
     vector_anchors = []
-    for doc_id, score, meta in real_vector_hits:
+    for doc_id, score, text, meta in real_vector_hits:
         title = meta.get("title") if meta else None
         if not title and doc_id in engine.staged_docs:
             title = engine.staged_docs[doc_id].get("title", doc_id)
@@ -104,6 +104,7 @@ def execute_query(req: QueryRequest):
             "doc_id": doc_id,
             "score": round(score, 4),
             "title": title or doc_id,
+            "passage_snippet": text[:150] + "..." if text else "",
         })
 
     # 3. Check if this matches a known benchmark question for gold comparison
