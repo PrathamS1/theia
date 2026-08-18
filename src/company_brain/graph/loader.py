@@ -1,7 +1,7 @@
 """
 graph/loader.py — bulk loader for Document, Entity, and Fact nodes into HydraDB.
 
-Obeyes HydraDB Cypher rules:
+Obeys HydraDB Cypher rules:
 - Integer node `id` property (generated deterministically from string identifiers)
 - One-hop CREATE pattern: (Document)-[:MENTIONS]->(Entity) and (Document)-[:HAS_FACT]->(Fact)
 - Auto-commit RUN queries
@@ -37,12 +37,23 @@ class GraphLoader:
         created_at: str,
         text_snippet: str,
         extraction: DocumentExtractionResult,
+        title: str = "",
     ) -> None:
         """
         Loads a document and its extracted entities and facts into HydraDB.
         """
         doc_int_id = string_to_int_id(f"doc_{doc_id}")
         source_trust = trust_for(source)
+
+        # 0. Always ensure the Document node itself exists
+        doc_cypher = (
+            f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', "
+            f"title: '{_sanitize(title)}', created_at: '{created_at}'}})"
+        )
+        try:
+            self.client.run_write(doc_cypher)
+        except Exception as e:
+            logger.debug("Document base node write: %s", e)
 
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern
         for idx, entity in enumerate(extraction.entities):
@@ -52,7 +63,7 @@ class GraphLoader:
 
             cypher = (
                 f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-                f"-[:MENTIONS {{source: '{source}', timestamp: '{created_at}'}}]->"
+                f"-[:MENTIONS {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}'}}]->"
                 f"(e:{label} {{id: {entity_int_id}, name: '{_sanitize(entity.name)}', source: '{source}'}})"
             )
             try:
@@ -67,7 +78,7 @@ class GraphLoader:
 
             cypher = (
                 f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-                f"-[:HAS_FACT {{source: '{source}', timestamp: '{created_at}'}}]->"
+                f"-[:HAS_FACT {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}'}}]->"
                 f"(f:Fact {{id: {fact_int_id}, subject: '{_sanitize(fact.subject)}', attribute: '{_sanitize(fact.attribute)}', value: '{_sanitize(fact.value)}', trust_score: {source_trust}, doc_id: '{doc_id}'}})"
             )
             try:
@@ -80,4 +91,4 @@ def _sanitize(text: str) -> str:
     """Escape quotes for safe inline Cypher strings."""
     if not text:
         return ""
-    return text.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+    return text.replace("'", "\\'").replace('"', '\\"').replace("\n", " ").replace("\r", "")

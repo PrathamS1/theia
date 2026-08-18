@@ -1,0 +1,4878 @@
+{
+  "doc_ids": [
+    "dsid_45e2a8ccc16c4c048894f98c6cd8833c",
+    "dsid_42c3e2d70229415d82cac2f9b795bf1d",
+    "dsid_a0e951c043154b07b1b5bd332ac47763",
+    "dsid_826b680a80e74a1a81273f1dbeb0d3d8",
+    "dsid_0447408b8e874f2b977d2c9238f32664",
+    "dsid_fa2d9f0bda0e4d6b9174ae6b15f7b37e",
+    "dsid_27bd877a9fb74bcaa4e93871f28f3f4d",
+    "dsid_f608b4d739f240c0b56d4d4b151b8cd3",
+    "dsid_be67d91a95e24fe690cba692cb1762c6",
+    "dsid_1d487c52d79a44c2b40eb19a0db51122",
+    "dsid_3ab4d00190a1485da19d929f9f71bb5a",
+    "dsid_d680e052f220485eb985434b56f20ba2",
+    "dsid_0767a662eacd463aaf0935750dba509e",
+    "dsid_d555b86d66ab43a48018e16e0ec90eb0",
+    "dsid_72b2bd3c2a094fdca6d5f3187a752c24",
+    "dsid_7c0157af909c4a6190e00e1fc6b92b73",
+    "dsid_0aebc4d1e7264c6c90136b6b780a0c67",
+    "dsid_fa7dba9ea186436281a953c7b376bf11",
+    "dsid_0d7ec9095f1b41fba11cca1c8887bc2c",
+    "dsid_45a3a022cf094f93b2590f8ef19c8aa7",
+    "dsid_be03b2f295574a9081065a0500ef605e",
+    "dsid_321eee6325824623833bbe754bf83a0b",
+    "dsid_993a77869d244d36972f5efc39dbc59a",
+    "dsid_ab50b630b14e4bfda87847286157b739",
+    "dsid_4a1ec9242b1745ec96f51861a127e53d",
+    "dsid_402f0ac3cd174f30b3a306c2e4def472",
+    "dsid_8c707328a7fc444f84a8e00f90021866",
+    "dsid_f97baf7b89b34cac9fc2fcde251a2502",
+    "dsid_ae2e969d0b924ebbb19ab2f5d1b95125",
+    "dsid_34f267b98745435b8d95e883b29ded9d",
+    "dsid_09cfdc4bec864c209affc45969e80012",
+    "dsid_ca551ed1cadc413e84df7821a4455418",
+    "dsid_94095ba27ce5414db28e599562c12908",
+    "dsid_96088536cbcc449eb676e94bf800486a",
+    "dsid_107621ec137a40e5a966e429a531125e",
+    "dsid_0714b09be5344489884cc5ee734e5f25",
+    "dsid_a5503307a8bc45d1b2155968543598df",
+    "dsid_70fffe7de6d545bcbbc47b448b17164d",
+    "dsid_199789e68ef741bca44a24d535ed6c00",
+    "dsid_2d829921c58b4e3db4be1d60fc0ceb3a",
+    "dsid_bb6f267d73a64a1b947a524dd602daa0",
+    "dsid_d1d341864dcf4af9877d3dcd91e448bc",
+    "dsid_3ab32ce7a21947de8fa071e06243b6a8",
+    "dsid_30b0460f0ef74192b50be29ea518aef1",
+    "dsid_924e4e8724c140799fef68bd384a0412",
+    "dsid_db9c549c8c1740778e29b4351689b9c5",
+    "dsid_bdf2a80ff4b94ad89ce86f7930b11be6",
+    "dsid_98d534e949ce4fdd8ed5d651ec5ebe4b",
+    "dsid_3a052bc2335c4211923e8220c7f3c2fa",
+    "dsid_e34b1f14719d45d98b175cb1351fb540",
+    "dsid_9a3def814b274050b3d834a66deeb1b5",
+    "dsid_451cad750f4548568ebfe6a5d2074f48",
+    "dsid_81744edbad5543b98dd551f883ac6772",
+    "dsid_4b6a0f839f514ca794314398409fc883",
+    "dsid_813ed70fec1a471d9b96984993bd2438",
+    "dsid_68650923209a49918491e54f4d4ab329",
+    "dsid_a195d5d938574d9db61438653a5f652d",
+    "dsid_c6a07633c306457ca67a9d7bd9fb8001",
+    "dsid_73b60918db2b467c88af9d57635402a4",
+    "dsid_8ae540be8e4c458ca15e122040ea2418",
+    "dsid_9dff54e0ef8e4710926767a81224d475",
+    "dsid_18b209d55ea04c16b687b468e4e5f2e6",
+    "dsid_4cfe0c490c974065bd497f06ad4a1105",
+    "dsid_88510552fc494d968943d4eab777e82a",
+    "dsid_0143493e1a514c28a39f1cf55744d37b",
+    "dsid_b72bd7e0c91a4f8c9d9a13daf6ff3d28",
+    "dsid_42fcb5c1e0394276b37ecf4308e227ac",
+    "dsid_adaebcf9535f47b5903bbaa5e48fd0e6",
+    "dsid_87ef890a0795443bb74815e8a6378405",
+    "dsid_b64f6bb160574675932dacbbfaa59965",
+    "dsid_96e315a4f8644c8bbafe05c2e0c0b775",
+    "dsid_98525cb72fd948ef9797c6d35b504b9d",
+    "dsid_21c9dba0568449d89fba4d57dc3dd442",
+    "dsid_a1d8ea3adc68431ebd90cc40a51b5627",
+    "dsid_a227a7f316c4452eab4c05567edb9404",
+    "dsid_3e0b3c67d6d647c185afb1c7633ac292",
+    "dsid_c91a34ed8dcb44aeacf7713c5aab8dea",
+    "dsid_e56d8d932da04590b336dbc60ad25f41",
+    "dsid_b8f2f50607a0406f9733f2e9ba4281c8",
+    "dsid_85482a6b56e747e29edb35ebec10ab67",
+    "dsid_38963978d7944613855e7413fa3a3838",
+    "dsid_bbce440e846642f3983104c786157597",
+    "dsid_af49172aba97474aa215a460a817a2f7",
+    "dsid_c6a6396159964deeb021d646eaaf2b0c",
+    "dsid_1b3840b2c6804e22bd5017390fdc36c2",
+    "dsid_a4ab40c6ecf249239d4b426892299048",
+    "dsid_e052daca29064eb5ba2b1b0f046fbb84",
+    "dsid_5f46d65ae298435889c524bf559f4948",
+    "dsid_a4bf9cb21b004bc9b12b8905c66896a4",
+    "dsid_1507ad6f9a704d4fb86aac359ade8c51",
+    "dsid_86b915e7a2a3492c82224174383cd9f9",
+    "dsid_a1e0ff30870f40d7b692aa27bbedc194",
+    "dsid_675719b813ed4030b65514ca79e67ef8",
+    "dsid_a92fe998fc534d57a1d54d5a6294c938",
+    "dsid_86f033ed92b84f3a8b381d09b0b95357",
+    "dsid_942ffdd8280a4cb893aca73dcb376ee5",
+    "dsid_94f011e1d2d04c89a4edc1d68ed9d855",
+    "dsid_c2ddd5240eb04e16806d82103f7646dd",
+    "dsid_c20138cf05ac4491a4ce0810cab02748",
+    "dsid_b89d7b362a2c480993502fb443c144c9",
+    "dsid_a5cec1a368344e6fa3884ad47cd7d175",
+    "dsid_c23a3d9d049d4fe79acf83653b564e0b",
+    "dsid_29fbaa51102242e5a1efe670e7214591",
+    "dsid_243dfdca4bbe4872946fb3a5f686edca",
+    "dsid_8e838ab6a98f4cbcb672d41f210ff89c",
+    "dsid_3be2b45196414cad9b187551da3ed448",
+    "dsid_6a29c54058c041cf8db781f195e6b1cc",
+    "dsid_614b42d654ba42e1abaa5163da75bc13",
+    "dsid_6091c41379e04d07adcf0a5646c65909",
+    "dsid_326387eb70834053ab4447fc1596da38",
+    "dsid_10d018b9cd334ababafa960517492a77",
+    "dsid_020bac2fb6ac4de28d5afb63e39a0c10",
+    "dsid_9b826592387b47b29b25018823296577",
+    "dsid_214ba4ea822e4d328287194a5e27e632",
+    "dsid_d11b935761d94f10911c358aba04f4df",
+    "dsid_a07c9545aad04538877d041a649400d9",
+    "dsid_98d7acbda29a4260a413c8d6da7207a3",
+    "dsid_f09cf2d633174b7ab7105ef0a7498e74",
+    "dsid_5f0ab47fe8de47a89bb6668f8722becf",
+    "dsid_6fc6a90cd2d044e5add05493803e64d1",
+    "dsid_590dd1330a4046e28ac0a2f43b7910cc",
+    "dsid_d8f3577836ad4646a404dc043115156d",
+    "dsid_2491c9e9f38049e1aed89328cafd0098",
+    "dsid_85deb10a652742baaf28af6149600001",
+    "dsid_497e2620f4ab45f29db9aa4193cf9e2b",
+    "dsid_84ec014ad9f14f1481b45484da41181a",
+    "dsid_97750eeb49894690aa3d425669af4de0",
+    "dsid_c822087705aa426a8c8bd9bf8724d384",
+    "dsid_27da22aa63b3446387fffc29b45a0883",
+    "dsid_cf6a4a313c144536a3cfd09f6a9ee12a",
+    "dsid_8d5e9e0968d34002809cc34c8b78e526",
+    "dsid_b395ebb516614698bcd038cdb7933d4b",
+    "dsid_972d8c39ddf54536bb62bae1c8bbe881",
+    "dsid_ca11386edd264e5c841365093fedf640",
+    "dsid_c4afa7bd5d104c43b45567c799121342",
+    "dsid_4842bf4dbbd84d60830cf3e9704fb203",
+    "dsid_7d925287f5224f72b641acbd515beb2a",
+    "dsid_74cd6ebda84547e2a534f8f6d1b49739",
+    "dsid_c563b97cd7314d1396553dfd8034e819",
+    "dsid_5611f05242ae4e6b9ae68d3c3e91bd54",
+    "dsid_618649e367d24a1eb3bdcacc0a2d7da7",
+    "dsid_3b1c14ab4cc647369b783b7abdfc32f3",
+    "dsid_36bdca5b925c4550b5eca1990f2d798b",
+    "dsid_a8f0c8524573431c9b789291d63b716a",
+    "dsid_6b7484308b0248dc8b62b81639787925",
+    "dsid_e04776cee2964731b96192cae88e9e6b",
+    "dsid_182c34ee62c54118b48c1390e77cd3ba",
+    "dsid_7159e8c7b7a84c45aa51b71fdfc837fc",
+    "dsid_410b731e6ab84ea2b1e17ece1db407bf",
+    "dsid_9291e4abdec54e108c37f0c0918f5972",
+    "dsid_a2d5f7ee89c14d4ab02e82aa94f22c18",
+    "dsid_a2c7dc70aacc470894c953b6c7499228",
+    "dsid_b9c347b4608541aabe8b7d2f7f90339e",
+    "dsid_303196c831af4d1bb38a1e2546228a09",
+    "dsid_5402831508734a51adf649603be4b075",
+    "dsid_b17470b55308417887920a77bc20a1b5",
+    "dsid_e6c0f4ec1f2d4937925ce9b9ef2c3057",
+    "dsid_a98ada14af2142a7a46266584d05c846",
+    "dsid_e9f22ba025e34bb6b7b8c61d26a38a19",
+    "dsid_f039509796f842cd84ba3bfb895c7132",
+    "dsid_cf2557c60954460bb002ad1f17ad4369",
+    "dsid_6e44a32c61cb464cb7a702a8ddcf04b6",
+    "dsid_59ff5fe3de4c4a3691700ce678801bd2",
+    "dsid_2d0330be987e4163bfd9c42c69bc1e40",
+    "dsid_ca18eee975d34f4da7b1b880ea5ac271",
+    "dsid_e81281549cba44a9ba83dafe47c61937",
+    "dsid_a3fdfc45905f46f3988ad13f55ecce93",
+    "dsid_061c09d8eef649eba85cd1421e28a41a",
+    "dsid_39e191ec758c41a8adecd223951b8b93",
+    "dsid_929598314f834ad08cf48642b88bde16",
+    "dsid_f3af4a0db68c4b15983439460cc73006",
+    "dsid_4680a1c924c24f0b9369809e0038ea31",
+    "dsid_5324918997644ea090703e088b166214",
+    "dsid_e5298124a9fd4bee8242a18bdb3829e0",
+    "dsid_740a2ab43b2d41e690c2cfe88d2a7567",
+    "dsid_78fcc2207a7a41e0baa0025286e243b5",
+    "dsid_2e5aaaa6db404ec19cb15a6f92be66a3",
+    "dsid_1867cdf06a00437194b3250c75321a92",
+    "dsid_f3c46e1166f34b9c92a83034450fe021",
+    "dsid_3fd6af404fae48e6b8ea5a57875ef78f",
+    "dsid_3bd8736badbb4bfd9fd95abd9a78b16e",
+    "dsid_fad07fd45c964078ba757dfd8d79ee51",
+    "dsid_462ab0251b704d878310f53e13d6f515",
+    "dsid_e04cbb2104804b25bc9d1eca19b432a6",
+    "dsid_50e057c2be0c4c2687226715198909f7",
+    "dsid_ef18282e01d7410a8dc142d4ad0b7bd2",
+    "dsid_14a447cb5b1140709c7cb3cc9a88c430",
+    "dsid_8381e16639f148c7863aa3d393cb64da",
+    "dsid_f02a338c2dd546b3b025b5d5d429ad4e",
+    "dsid_c5288dd4874345adb80f4a71c9a18773",
+    "dsid_cf4696a68a924cc3aaf48ba4a2c1fab1",
+    "dsid_bc47b415ef06458098e0c7a76a7e588c",
+    "dsid_a27715e7309c494d812c75cf03bcf916",
+    "dsid_8412db85d95a45f7bbfb14dacedb4d8b",
+    "dsid_5fbf425415da4b7487f0ebbf289a39d6",
+    "dsid_c90bd544f3b5437fba711492db31aeea",
+    "dsid_54525a33e2d44d4a9b665feaf8fab624",
+    "dsid_ef0efd89151944dc91bbd43d90d094ce",
+    "dsid_3e7cf5be42d84f2880858c726b65998f",
+    "dsid_a60c5dc02e074f8da2a6687e568102ab",
+    "dsid_b4443ecc53154934902652d496c9d12e",
+    "dsid_7a094ff98c3b4c96a77f3949aedeb749",
+    "dsid_11fffe94d564452da1c06eb998e18cd3",
+    "dsid_c2b97fe24375413ca538402166ed8482",
+    "dsid_6d099bac73c44ab194d1721089703c1a",
+    "dsid_6f69a170c5ab486588cf0bd92e0d53db",
+    "dsid_1a40ab782f8b4d80929a9668462912e2",
+    "dsid_9cde32cd0645459b80ec513df27d1eb6",
+    "dsid_f26abd197dd24e2599bb353af3a00ff0",
+    "dsid_d921e1d4282b45a7b4990e2366bedc05",
+    "dsid_1d6c84263b40491988b1e7e98ccf4559",
+    "dsid_d9ca33382713461aa726403f8ff7dea0",
+    "dsid_7a7c04eebb914edab49f734c8e814beb",
+    "dsid_d67b4ea2d8834799ae617b1ccddf1f6e",
+    "dsid_85b3118bafe84954a004fdf63ff364ba",
+    "dsid_d7aeb7de2b6c4ae88f46f4b0e4f2aacb",
+    "dsid_a55032c4c2064671a4b0abf975438e1a",
+    "dsid_f94b93a4bc7948ddab45c371187dc6c6",
+    "dsid_c53d4b486a1e485186a7e4b9d1c3f3ef",
+    "dsid_1f81f208f51a4aacaca226109bbedc72",
+    "dsid_6713194be8d54a0f8de8f8d89347ecf6",
+    "dsid_bec90d2205534ca9a016f244e13884e5",
+    "dsid_f0567bbb5dbd4a52aef951e11ec13f2b",
+    "dsid_de82a5f7140142f89781f2bf2d56cdca",
+    "dsid_702bc520c52040428799fed41c63c8ca",
+    "dsid_184be937d34a412ab5e61366d54d8ed6",
+    "dsid_89e9c8a4822b471a8e132d6c2b188b80",
+    "dsid_9eda2ec9cbda4188936246d888df1d0b",
+    "dsid_2ffb84ee56464340885a9e484cfc6f5d",
+    "dsid_089917448e654911bd186650ed12feb9",
+    "dsid_5085c9f4b4484f298dabd02c99d9ce03",
+    "dsid_acaf490041914b5bb3c275eaf13c3501",
+    "dsid_9eb81841e34147c8a764f9e630c6fa41",
+    "dsid_b5aa04cac9af4d4c8c99fdbd5a7fed7b",
+    "dsid_cfc80f61d84848c58d961b49d1b3a774",
+    "dsid_9776bd75ffbb4ca7b10669be1512daa3",
+    "dsid_c83811391709468fa9534e6495c205e3",
+    "dsid_426b86ef54164d9f8d7972acc3e2fefa",
+    "dsid_7e82d2ac51114ca2b1c33ce55a96e499",
+    "dsid_fc36d1d60e7e4b4abc7db84629563b7a",
+    "dsid_b015d86d5dfd4334b402811e7fe509e8",
+    "dsid_8a085e12606b4ea79f43ee176cba2ccb",
+    "dsid_0b0595a6d39247ada6238d8311b587f8",
+    "dsid_7b2f4b37dfb642e19d78c5f9d2c43f16",
+    "dsid_b78080193f474c3b99811541b7be74d3",
+    "dsid_ada1b8ab101f4d3d91f8f42d98b3c693",
+    "dsid_95c7aa5238f94570a8e0a8684736b666",
+    "dsid_8ffbd9fe82df457ca67d4fbc9ff1090c",
+    "dsid_6e790a04abe54ce9a92877679790f915",
+    "dsid_22b0987227cd4fdb94d67e5a62bbde40",
+    "dsid_e5a26c404092453ab2ce88abc76d2ebf",
+    "dsid_4587f467ecf646b7926dbd6b886f9f23",
+    "dsid_dc8da53aae4c4a81be13ae8e519cd42d",
+    "dsid_fef1f9ccfa934c0a8d96f4b64595d942",
+    "dsid_9d923c50817b4989b96dad5c7ad7c8a8",
+    "dsid_1878e91704a24813a12f69b40444f168",
+    "dsid_67a8c3300752435296938175e9a1daf5",
+    "dsid_3986d90d7a5348048d989c17fe8dfd83",
+    "dsid_10559147d3014931898864f22c311e47",
+    "dsid_3c3ab5813b264367877e0d02f652ca32",
+    "dsid_6279854275e44cce9115af8286fdf38b",
+    "dsid_a8a5eac6e7a243319426769963506277",
+    "dsid_5c05d2a74c484906852925d1cf1daa70",
+    "dsid_ae7131f5d64f4f37af677f702dc60d2b",
+    "dsid_23c10bc09bb345d987d7464224247263",
+    "dsid_81323a96121047cf98e958463e33d80a",
+    "dsid_38ddce87e36046df9749d9883dbfeeda",
+    "dsid_113f5cc6931640c3b82adcc07142d829",
+    "dsid_6d38a7bff5c84270adff95742a3eebce",
+    "dsid_0ea5ce154cb842ee969d8a89d03edd2d",
+    "dsid_2271ae6c393d409093b11b5a6d5b96ed",
+    "dsid_48b40afb54b84af28b13cebf017c0616",
+    "dsid_acc33ff059404020b0ff26e19ad2b107",
+    "dsid_1581d9f44c9f453c8d2e912758cf3a2f",
+    "dsid_3413f1905a0740d88b66c196b54f4df5",
+    "dsid_0ae9b752fef446ec86e376e2dea49c28",
+    "dsid_d85fcb5f989b44f8a51723a07be79e45",
+    "dsid_b9542668ae9b4163a932e4d16d26cd42",
+    "dsid_e528bed025b44f71bc37a54f5a9aefcd",
+    "dsid_d295b7207fec4a6fb656f3e2a565d4e6",
+    "dsid_bf8681ce9427455299245cb2ee67b4a0",
+    "dsid_c9435a0a83724528bfd39f530d0c972a",
+    "dsid_5fc2dba9f6ac4af2b49b4f546a4298d0",
+    "dsid_9df81e849ade4badbb49776a176bd4cb",
+    "dsid_4e89403dcf74496c8a8516bfd64e351f",
+    "dsid_f7a0934d387d4b129077a8515e60801c",
+    "dsid_cb89198715bc4be5b363a0d052f9407b",
+    "dsid_550ec3c5c6d84d2e86d9071c080e90ca",
+    "dsid_88f1c9800dd54a75bad05653b7f07a93",
+    "dsid_72ec4a9962ba43e88acd61abbba1052d",
+    "dsid_7a2cfe4b7e574e6995f33e64bbdbf426",
+    "dsid_eab7ef95052c4016aff7a3df422131f0",
+    "dsid_f8b3bf0c730f44f4a24981a3d4cd9c49",
+    "dsid_02a6857f487642dca0732a4ac480ea5f",
+    "dsid_89c0c31e220c4777b15c3c6ff0eff61d",
+    "dsid_834de01417d04878b4257f0f03ccbb88",
+    "dsid_ef492479c7dc4a3c9dd55d6771e5df54",
+    "dsid_ad14c3cb06c4494093dfcfff5098d89d",
+    "dsid_03af1e44970d4d6db6e85bc2c5fce8de",
+    "dsid_e9dd560753924c1e8438cdf9c2afcf68",
+    "dsid_7dd51da16fde43c1978be8af72a7221c",
+    "dsid_c669e9bde8764a1a9636674fce02ff52",
+    "dsid_71541c628f0348cb8955b72503e3857e",
+    "dsid_1d13149e585f4be398015d748e24e449",
+    "dsid_398e6e782364403a9fcfc73cac68ac5c",
+    "dsid_d79518c427654533a01173792f51f986",
+    "dsid_7e3d8cd8246142a0b803eddffbeaed87",
+    "dsid_18297e25b2ea45a987e7e435dee83d08",
+    "dsid_f8529277bd964d6086d49ca2a30c9ac7",
+    "dsid_8ca703d991844bd195b4b8fdc16040fd",
+    "dsid_1a4563b5332f41a499464ea69f92c9b0",
+    "dsid_eea41d353de049aa89be98b6f9cf5de1",
+    "dsid_db931dec10bf4b10829175533605aa0f",
+    "dsid_c9e70cb6eee1471baba213a976a8dd05",
+    "dsid_8e601c6ffc9e4bc881f24554436427c2",
+    "dsid_d9a7de9e7cfc4fe0b7b57765b6d25ad9",
+    "dsid_1faf80f5afa8490ea64c77c7cb2fdf8f",
+    "dsid_4331f37f2b8d4e2cb0f5c5719a033e2f",
+    "dsid_c336dcdf965d44b0bcf4c8e3930af440",
+    "dsid_30a16502953a4088b59266c8990d52d6",
+    "dsid_e75bbf328fe349d2bb39e29b1ed7c9d5",
+    "dsid_a15c0247e9de4e128293bd820fc4c659",
+    "dsid_f76e99464c07482e8ed4084d67c54a72",
+    "dsid_5d161fbc61f94eaeb6098a9f9275d38f",
+    "dsid_4c1c5fb53ca2432995ea42adc4330fca",
+    "dsid_6df6cca7e7124f20850ebe9077fd5958",
+    "dsid_15dd15bfbd0f42c485a9b5b9ace6a3d1",
+    "dsid_3bc3170ead63470eaef9a53ca835cec0",
+    "dsid_45638a5688314bcb969154b2a9dcbe13",
+    "dsid_4b0f5e573e5e4ce8bbbcf370c3ea7eaa",
+    "dsid_8f5b801cebc34eb4b233bd0ef7c1b546",
+    "dsid_7711da5856a8485e80e0085ebd193690",
+    "dsid_9f92a42dc8d24c93a0a696a0727063b9",
+    "dsid_b65f12db881f41dc9239fe044f4754dd",
+    "dsid_c264b5d312534f44a97cce8b6eb104b6",
+    "dsid_a45c07f3daaf47c18b7bc75d3cbf2112",
+    "dsid_cb58379b249f4e7dab5e716bbeb11b29",
+    "dsid_509b34ee9a334f68a693e61dfbf558c4",
+    "dsid_51183030e764419caca09cfe647048e7",
+    "dsid_676625b7b7064b30a00da4f53fd24f88",
+    "dsid_b9eb7e39bc2e4f65814c42358089d49b",
+    "dsid_e1cc205e55b648bfbe75b17dc1fa873c",
+    "dsid_4dbd418a9a0840739750cfcd5dfb34d6",
+    "dsid_f4fbc3f2bcc24bb29f9da2c81e43661f",
+    "dsid_98abe7c857dc40e29fcce7daee0e24a2",
+    "dsid_09b9eb1e827e4fbbb3186fc0b026257e",
+    "dsid_a9d76bcb3bc1475abc9d6f8f83a6eba8",
+    "dsid_c3be99dbca144db488c037dd2f0831ef",
+    "dsid_aa97b7293f9f4f3c8180f645e4fe5911",
+    "dsid_7d9551aa21124d70b0e247c390d88622",
+    "dsid_6c4c1c875e704f09b4d791d64d7bc7e5",
+    "dsid_9ed01291d81947f49500df5fb28ab724",
+    "dsid_862bb899faac43feab4f92a12d320e7c",
+    "dsid_3c9fe2220c204f13b878bd7d3a168f91",
+    "dsid_05faa1ab6427403888a06d7083c7f0a9",
+    "dsid_3fc14ed9048e4e1f861e0632b06fc39b",
+    "dsid_912991a0a2ce4000a55b1f67bda8c3a3",
+    "dsid_cc2f84330d014d03b8c49f8e92063b07",
+    "dsid_51bac931bc704d7cb04438c33a2938da",
+    "dsid_e37e7b7723e34b8087ef051804bfe85e",
+    "dsid_5013219e53bb483cb9244fc16828d88c",
+    "dsid_c875ada2f9164277aa9500daa4753c68",
+    "dsid_100d6362c85946ab97758b63509bc182",
+    "dsid_7203cedfce0f4a149573d79592022d9f",
+    "dsid_b9025f196ac14b2cb7a2905654dd42d7",
+    "dsid_3fa62946c32f47a489cf4aa2c4fc578b",
+    "dsid_85045318e1fd484b8a6ad5d724dd6e7c",
+    "dsid_e3ae91c7f83f46e492209ffec2c7f2b8",
+    "dsid_ccc31ea69f9d45e68b803d2a8c6c655f",
+    "dsid_e0cd6ae5755943258ef361ce2a1c0295",
+    "dsid_8b08f13ec64b4c6883819c73a284d836",
+    "dsid_9bf09a549d22494c9672ecdd79896878",
+    "dsid_c054271735b541ba91e42c4dbe8a4883",
+    "dsid_c637bbc9afd344e6aebde62826284a06",
+    "dsid_f4e0ec9fc27c4e52a55b34af90fcd1b0",
+    "dsid_9c63777c789c4f7db9e391024dd887ae",
+    "dsid_1415c2463492415693a3d4758847630b",
+    "dsid_2c9dcc3afa3249f39c725884e5be5c72",
+    "dsid_aea4790d4bcc45859208d7d705f682a1",
+    "dsid_045c297ec2ef495abd66cb1f09921fc4",
+    "dsid_22a7e9af2760474dbdf611c2c21cd231",
+    "dsid_8a12a904ffe741a1a11f2a6d99e3e389",
+    "dsid_9d1624818a004c53b3b7020412275cc0",
+    "dsid_1c53affffb4f477ca476bec3138b60eb",
+    "dsid_7d7a89d91c3d4c1c854cc513e76316aa",
+    "dsid_9ad34d10c60a4c88931642a247aeb063",
+    "dsid_d6b6bd4b3a6b4d06a46d3c94cb308191",
+    "dsid_426ca69578a84dd4af512e5a2782086e",
+    "dsid_dc9df99fcfd64f5f89791781b699610c",
+    "dsid_cc9fd576760d4a058a896155657eff06",
+    "dsid_a193f9b7483248ad86c52e684d98a760",
+    "dsid_1b7a5d6230f84eb0a38a97da0e0ce05c",
+    "dsid_415b72b7d40a405e87b9671946e894d8",
+    "dsid_908e8464927742829dcdfe0c6165299b",
+    "dsid_9550250a59e74f1bbd5612480b2e7100",
+    "dsid_2fb08b7571444bdf894607549642498f",
+    "dsid_fa1c733deb77445da7bc55dc472d233d",
+    "dsid_ae068ee4aa9640159427cd941bef0238",
+    "dsid_caf02469a41c46cf8387713b83c628f3",
+    "dsid_7764c4d15ed141ecbeaaecf606098288",
+    "dsid_1653d1ed11a1403ca8e44bef03a610a9",
+    "dsid_d04ffbe63ea44224892533eb0fe95bc6",
+    "dsid_730ed8ee5fc84e0b9be761003b9a60d3",
+    "dsid_4135d0353771426186fb9f159a693cd9",
+    "dsid_96912c22b0b04024b573606105bd5ea0",
+    "dsid_28cba7bfda2e412ca7a0f9143d4bb3df",
+    "dsid_d1c20b7c16a442b4be718f04c78a8cd1",
+    "dsid_f5f3b87014fc40a69f42353860a7c2c7",
+    "dsid_c84c8581594e47d49e82d024a6da915d",
+    "dsid_b253f5cc715f4d47bdd578edd6f2f19e",
+    "dsid_49215834c17d4f0c98d4ad11f62f0c9a",
+    "dsid_0abbd8a3a39e4cfda70dcc403b22f64c",
+    "dsid_8779ac72d6504759b701178632772f6c",
+    "dsid_47fa00c889fb4446b0481efea384a7ce",
+    "dsid_c7860fdbc17a48b0b6c5f9a0c5e3d054",
+    "dsid_6f0be39ff1ae49c19ce0662bdd6de352",
+    "dsid_49d64735870b48b79f1e6f2724f1e7e2",
+    "dsid_6c58ddb8ecf543d89fca8352351dea29",
+    "dsid_74db6122bce044a5aa79bd3701082b3e",
+    "dsid_302783937bc849ecb7ef7323233d1efe",
+    "dsid_88b39d13bd584ef8b1422d76994808c7",
+    "dsid_ee6c23c178dc428bbd71af6526c70251",
+    "dsid_5d54f5f89bbc48a5b06b8dead39729b3",
+    "dsid_aa532b5a3c634229b9a068654b945c6c",
+    "dsid_707ad933d7fd447197439ed606abfb26",
+    "dsid_1e575156b8a642cfa909b92e0111e7fb",
+    "dsid_c1a6a71323c04c1ba5445aadea340362",
+    "dsid_c6efd46ecc6449ac8be1e53ed3803e92",
+    "dsid_1f13ed74ef87494b81a2fc2617ab7746",
+    "dsid_3eb3b5da0ee540839a98c48f54fd1d5f",
+    "dsid_5b0c65ca162a43a0938bebabe9b1d53f",
+    "dsid_12c56622cee749969076c8dbac19da4d",
+    "dsid_81208556437644a0a4dedf168baf81b5",
+    "dsid_99c13a4a518442b1819aa5cf02a52f3f",
+    "dsid_5cd60d30f77441c082187f1a47547637",
+    "dsid_4c0d5d098d224e7495667823169b521e",
+    "dsid_514b8181941d47cb85e460c68e9d30a2",
+    "dsid_b8691ba2e29542838afae93928ad816a",
+    "dsid_1159814f66a340d79536516db194f623",
+    "dsid_a560a94faf9c40ec9782d125d94fc009",
+    "dsid_b837e1140d1a4c3d8efd2f42d9b6a799",
+    "dsid_105c8412280b4fe9abddec455c092216",
+    "dsid_fee94d81c032494cbfce8094468f0973",
+    "dsid_7a516d063b50468fa0d1a543ece71e1b",
+    "dsid_939eea1a52f84393b0f87492b9aba8c2",
+    "dsid_4b2ac6984bdf4737a18520e158b04453",
+    "dsid_ae455bffe226412c9973991ef2d34a72",
+    "dsid_faca41898b0d4aa28b811a890d3e94df",
+    "dsid_38e7aac0d2ed4545b7a92c2c441825a1",
+    "dsid_44cf2d75d70d4365914aa46947a94b1d",
+    "dsid_bab6aba4c06e41e9ae46b9355f644a7a",
+    "dsid_6ff09cf76a40402f933dae499a528307",
+    "dsid_b5a4ac6f13d545b6b085fb74e971ff27",
+    "dsid_960a2981de674ebf844f7dc19d2e3cc0",
+    "dsid_0f9c8d82259c4d5a95bc5865fc492919",
+    "dsid_9a088141571b435f995568199ec4bcc9",
+    "dsid_a673ed031ece43c5bc4a0d27a284c8dc",
+    "dsid_84a6d354dca5476b85a34c38d4edfa14",
+    "dsid_a56c6ba5a2094d8b83c6c70d025d940e",
+    "dsid_8c60fea2755245de913a78b2e29c617e",
+    "dsid_259d17a11ddc4e28b559aa9fb1111270",
+    "dsid_59cb294da8964683bb165a3bb615df71",
+    "dsid_1d5a3cde61104276b218c05dc101a546",
+    "dsid_8f80516053a24beba08e603cb1831dd6",
+    "dsid_3ac2c680a56a44e39ddcfd257804de28",
+    "dsid_37c24c697d9d462fad0e3afeeea9d8c0",
+    "dsid_5f3a672da4974781a5577b0f3d4993e9",
+    "dsid_a0f25cffcb264f0ea6eba5e501de0e08",
+    "dsid_db87c0dec8444b1d83b06cbbe725d3a8",
+    "dsid_9e2548df3b06466e96f75c6d1618642b",
+    "dsid_a8ea8c81885c44ab8aa6b0395360657c",
+    "dsid_ca09c9594d0f4293b971c96fa9ed647c",
+    "dsid_18621ce91fd14b408a2be95336bb4ab0",
+    "dsid_d8fc4155a8d54c9ca7a5f58552eeca62",
+    "dsid_4a2ce3e1be4d4f00a089ccc00ac92b8c",
+    "dsid_1980f45c3fb4455f943a2b030892ae90",
+    "dsid_13a33311928a4555b16c654cb25251bf",
+    "dsid_3f7f32874e9b4ba49ff4fe28c0ef5de0",
+    "dsid_e728a420a02a4ddcb125e6adb09d211e",
+    "dsid_8138b96e181940418cc5067b2630064e",
+    "dsid_9a2f440e8f7e4801b76233767fcef945",
+    "dsid_0c1f1c83e8d44d2fa3a9f6c7b2d7b9f1",
+    "dsid_ccaf626687b940f3a7309e09c1ed5c1b",
+    "dsid_03b2db544a6d4cf886fb9869058a05f2",
+    "dsid_6df52fdb96ae4edcb76464738bca3340",
+    "dsid_695df5a2d3f645cdb6882332092cd838",
+    "dsid_fe7a496e795b4baca997e655f9316fc5",
+    "dsid_f7dc91cc70e14c94a6215a13cd829cbf",
+    "dsid_dab17ee5c3924a9998b17b3591bbae28",
+    "dsid_9619c1f3ff3c4626a2bd029e907e1f76",
+    "dsid_b793b06789ae4147884e94681c6beae1",
+    "dsid_23626a14ac9847f1b3349ad6e1909bd7",
+    "dsid_6933f9241ef140da9d3bf98be52be867",
+    "dsid_65b12644ea52428b9c032d2cd9b75d8a",
+    "dsid_3b9483f629fd423d81ac49a7efff89c9",
+    "dsid_795498b20e9c4d38883c8c46ab3336b4",
+    "dsid_6952f7cb64304c04bdf72562e5154724",
+    "dsid_4036a41749864632bcda458ed967cf0f",
+    "dsid_62ff534dc35a425896b265216f94f69a",
+    "dsid_429267fe79c74918a26272f6c0e48f10",
+    "dsid_8e77536c5e0f4521b756d7b79b640e24",
+    "dsid_3d745c88c7e4426c9548350824f0d9b8",
+    "dsid_d8a18c9f03de414faeacfda3ad53e315",
+    "dsid_3f4010bdd3c44b99bb1c1ad2326f5eda",
+    "dsid_b097ab5d9e4c41609f47432dfcb1508b",
+    "dsid_e91e68b31a6f4935b87d6f74dd07e1f6",
+    "dsid_61ad31f35c0d487e8f56b59c833d5b55",
+    "dsid_052d0c27569145c5896b910eb6f3c063",
+    "dsid_e20c31eb5466411ab6c7be17d08d02f5",
+    "dsid_6f37b2b4341947028019bd41748eaff9",
+    "dsid_1eba87b0b11b4f31a006f0cf164b8509",
+    "dsid_e17e3ec88d4947bbb53c8190ccc90c54",
+    "dsid_a990e708840f481795741cfd3fb55691",
+    "dsid_ef7f1d5cba204b728e1f4d7cddda7daa",
+    "dsid_cfc93aaf69bf456cb669f5b99c09b7fa",
+    "dsid_b85f3628bbda46558141d3a935bce2c1",
+    "dsid_89d75953da0c4bc186eb95fe169de462",
+    "dsid_663ae6b555814a779d9abffba8339e84",
+    "dsid_ab988030fc0c4544846f0e1f667453a3",
+    "dsid_19b05c958acb478a90cab25257366a29",
+    "dsid_312eed72d5d04d27a52717f94e178341",
+    "dsid_51895b7e9f2942898291b66b72886b15",
+    "dsid_64212a1689814ac19deff834ce203ebd",
+    "dsid_425340806ab84e2cb48e99e95bac36e1",
+    "dsid_e7d8c585e8594fe481975515246d04f2",
+    "dsid_a592f24d2f3b4c21ba507b20c832d069",
+    "dsid_8590bba128564aa7a60be6067b6be779",
+    "dsid_abfb68dde21f4fd2aa7d70c472447f89",
+    "dsid_4ecb42b192a1421885f6fbe8a7cbde8b",
+    "dsid_30b76ac074c841ef9afcb34c178c40d7",
+    "dsid_0bebeaedbe794ec38ae1d6f4ddd5c2b6",
+    "dsid_23438eef0a4c47f1a8921f4a74353a2b",
+    "dsid_5147667611a54584aa272d1469d8f6a7",
+    "dsid_5d8045f7d37d41b99605880834c17329",
+    "dsid_58220c63dc384549a60a5eb8e400d55a",
+    "dsid_7fd136dd100c4c9cbbe1958c94c26152",
+    "dsid_f90b68cdda834c6fb4c76508d359c72f",
+    "dsid_b87d81a8f52646f98e614d2a6394d7a3",
+    "dsid_4b15b253ca294377a12d12651ada2168",
+    "dsid_a5a5235d973e421c870e11ceea4887ed",
+    "dsid_0c8ea3b2a7fd4392b1f480fe5f0c4725",
+    "dsid_1d53445cc74b4d7db325cd585736f87f",
+    "dsid_019864ee09fa428e919e9a0de11ca467",
+    "dsid_a45bf5a85c7948dda06a42fc9f8b3ae3",
+    "dsid_521553a072244d199d06a34dd6e1aca0",
+    "dsid_cc49c932507c42959ba9e4824f0d6b7f",
+    "dsid_e4b8a2a6b6594d77b1880327d506619d",
+    "dsid_19354d85a1d14a469274135ccb314a20",
+    "dsid_fd73df34040d4e0f8f944ccc9f0b5e70",
+    "dsid_21d6b99dc771418287d61444f373852e",
+    "dsid_c8e1d531048848c58247e00983096499",
+    "dsid_f3e6edec6f4947a5bd5aa7fd557d7d2b",
+    "dsid_6bd66c03cd3242a99006b44429dd0a8e",
+    "dsid_0c504258cd0c432d898e6711fb90eaf6",
+    "dsid_3fb8a400e0cf42d0b19dc134e2b7f46c",
+    "dsid_f983fca1510e4cf492c0f39a4984d80c",
+    "dsid_5410b45665284cfcb01f72410fff33c4",
+    "dsid_2f1f0358b85148f19d38f619891bfb15",
+    "dsid_be8d2802cf3245088a7e7f861f317b31",
+    "dsid_97992c0043184c7b9c10ed2106482ae1",
+    "dsid_21486610d7314d84980518cb355b6a97",
+    "dsid_df40f9a66b914f29839322d19f8922bb",
+    "dsid_8c15ff526e00491e9ccbde5ef4a4458c",
+    "dsid_81b534f370e44872be8651f9c75e18bd",
+    "dsid_5cf1a6657f1848968b2fd154066950ae",
+    "dsid_3a5484e7e7164e389e76d188bce9f86e",
+    "dsid_d04dea2d736445c3af6934b900a12ef9",
+    "dsid_8dff963a50774cdd84131d9ae5e4f4f3",
+    "dsid_cd46e89bb40a4dd7b243aabf43c98086",
+    "dsid_b993fa19b3d44382b709e3107ab1ba77",
+    "dsid_85ee9562e05d457b9e32785343777359",
+    "dsid_6e8ba53c201b4e5b8d77a4fe9e634648",
+    "dsid_f70e8011de994a9d956fca708445fb5e",
+    "dsid_a8af533a3f89402ca739bfdc5322b42e",
+    "dsid_9adc7c1c81f54e0a88d0e0bee59a6588",
+    "dsid_94f568e4161d4d78b0db60af2b611746",
+    "dsid_1ffa3f05e342408382daa57107ec4297",
+    "dsid_63a1c6c12e1e4d9cae67056673633192",
+    "dsid_ad3961a5bbd846d09d101bfa951ab739",
+    "dsid_876b1a31bcc7409ab560b9ccbe5a0d41",
+    "dsid_5e87f57f0e424a3a9e79a3032d63eab8",
+    "dsid_6e528fa402c34043897649be6aa6df3d",
+    "dsid_1a160e1c00934f108e17183f44e3ca77",
+    "dsid_df79433aa56c489d93efd96e27dc1fc8",
+    "dsid_0fa69b4e576f417ab759af8e33cb049f",
+    "dsid_4ed037e2747b42abb6726f26c41c9545",
+    "dsid_a7baddf163ef4946a97b4765bf1cf08b",
+    "dsid_e62a534321a24da2a93a003a9546804b",
+    "dsid_43ecb807903f46848e8d099b6c8beb04",
+    "dsid_5d509e588f994166a2ccc6e39cbf6cb5",
+    "dsid_f1b208f3637e4987aeab371242a5bea5",
+    "dsid_840703a1cc37438a84e9beb68029d80b",
+    "dsid_8c3d5e26a1c841199d3bcd7aea5d495e",
+    "dsid_cf06e75be4f94156ac338f62e3ee028b",
+    "dsid_b96ce0f550a9437e902636a7628160ca",
+    "dsid_b8ab9778e36543159da49dba3ad9c76d",
+    "dsid_189583d1a5ed4513a4d709a037098a24",
+    "dsid_36cc238e32514fc09cfad6e7d1ce7364",
+    "dsid_4b145e62988d40bab07d2bc3e66206a0",
+    "dsid_f8b651a683044ad8964f34f881c63152",
+    "dsid_f877499fe0e946199ceb2486f0ad5ec3",
+    "dsid_ac2fdba09cc24cd98ba60f5da114780c",
+    "dsid_f6e3b7ad413142019dbb5a5fed07f548",
+    "dsid_2e4183d040b341cf843366e2c15402af",
+    "dsid_b8e35b6af506467d96a92946c0a16c28",
+    "dsid_2f9c99fc8ec74495b4b08c49a6083ba8",
+    "dsid_8f0301d7b2414031b392da5566f98ce6",
+    "dsid_d8d194e311b9482cb38c61134b6d26fa",
+    "dsid_ad70fa7335294e2988193e2a6645a5ba",
+    "dsid_05841423a55e4c35abd276d9899b7134",
+    "dsid_b52a8760cae1451a9504edcf9ff58e31",
+    "dsid_5cde26f232454906879617dab1800fae",
+    "dsid_10a7359bb6ad4b959ad2171abdb9f620",
+    "dsid_117e5a150aa94adc86295786bd6b7843",
+    "dsid_e044274a9d184700bb8cdf9ddb6d9d02",
+    "dsid_b4bd83b46612452e858bc02b380082e2",
+    "dsid_a2bf755670ad44e09b42c11e9d73e5d3",
+    "dsid_a898d2541b944cdebeec03ec9d9ba130",
+    "dsid_5323aeb9f89042c9a62505d409c4d94a",
+    "dsid_d7f0edbaa28147da807b5b85ea495bd1",
+    "dsid_c175ab6b52fe4226baac85697c562c7d",
+    "dsid_01eaeaf6045941beaeaf74e6170aceea",
+    "dsid_865449ae95b044768f33773263bfeaad",
+    "dsid_9f2e6aa7f6c14b1db1c6f922a1d4b4d7",
+    "dsid_150b485e7fd54251b937ab3d08a850dc",
+    "dsid_e5fe3fd0cf444668a64970ec00818f46",
+    "dsid_3e991a24c7bc4e91b99eb5846b927558",
+    "dsid_81a7e3e0204d4c6984e0a503d5423314",
+    "dsid_85ade33e53334639be778b9c7aabe637",
+    "dsid_2dab968306594149a14ef27b2a1641d1",
+    "dsid_80e095c2dc1745af86b80d24e27a9857",
+    "dsid_3638bd02227d4882ad0605f1e8b767c0",
+    "dsid_bd7caad8adb2405eaa7ad78c4ffb59d7",
+    "dsid_d3edd63b9ec54523ad12bd9be3d7e996",
+    "dsid_bf7e79dc1331447598c4eebdc5d2897d",
+    "dsid_5e65a1cb22b6464e9f36d0fa2d1f4317",
+    "dsid_02f0cd8c874b431cbdec5455721ce8c1",
+    "dsid_7d347905549f4456b0d2226b47e4aa68",
+    "dsid_ed145ed8c9234a6681359188e2f43345",
+    "dsid_faf3246a6ce845e6b5df0ae52f439399",
+    "dsid_15a9d93cc59c4241a97a7e72f749a216",
+    "dsid_a277ed2dc74c4bad82bc71b534b6356f",
+    "dsid_d373a0708d4144d684e495c52c16448a",
+    "dsid_98943148c00b42db859ec2d84649fe04",
+    "dsid_58bdb9f3bb4241e089f4f2b102765db4",
+    "dsid_ec406aef8d0342c78ae27025670daedf",
+    "dsid_e190b0de0d27466fa91bfc18b0815311",
+    "dsid_ac94dcaf2e1e4674b2351a8b4177db9e",
+    "dsid_0e0ac7276c864c63a02586fa07ae85e1",
+    "dsid_4e016427a93c49ffadd31fcdc1dca792",
+    "dsid_ad148b222d31473f8a3d279d679935eb",
+    "dsid_6ecddbbad4fa4fe985d855676b96cd91",
+    "dsid_c0c93abadf4c438189e23cb45256c6e9",
+    "dsid_91d7f359508c4476a6f717ea2b33aecc",
+    "dsid_0a23e8e094d5445b8a1af748598300ca",
+    "dsid_fc356e32e9a64c3199be174cb91432eb",
+    "dsid_b885123ef2c04d508ee071328a4e5aa7",
+    "dsid_50f47a9662ea40858feb7bd975071c96",
+    "dsid_852961d22e0e48b194d7a3f8ccf17173",
+    "dsid_a6efecc786c9436499eb000b8489ae52",
+    "dsid_e82eadf0700f4e6db8eecc460c4cac44",
+    "dsid_04b24bf957c047f4b7d8ceefdfde8290",
+    "dsid_6d3e0fd1c48b466e9f5a4a5b0a1127a0",
+    "dsid_a3f94972391244f38ef773c05926af83",
+    "dsid_610d2c74a60441e886fcc39e351a4176",
+    "dsid_d32eb5051b554e038222c3bf399acef8",
+    "dsid_9a5968363fce4f79af38d7702465a121",
+    "dsid_d64b62cc422c45108871fb097066e6f8",
+    "dsid_2c8a0d14578d4789ae96d9f993d04ae1",
+    "dsid_8c24fd15fe5b473eb71341751d292b6e",
+    "dsid_9762ad5c4f7b45e3af5dda76b48752e4",
+    "dsid_92d0d471ddc941288bcb51b3ded6ec36",
+    "dsid_06682ba9559b4b2192ffe6dee7a7abba",
+    "dsid_eca097630e444b2d8e30da4b08fcbc4e",
+    "dsid_36d7605113204cdca94405cb30fc2c10",
+    "dsid_329e7ecd6b304c30b61a30e07919e008",
+    "dsid_ba7d1565b0694e359983bccaa4bf5977",
+    "dsid_d9d0ca701cc54d58adae135f69cc83d7",
+    "dsid_7f6bde5cefa543a7b1943ffaf5a8a9f1",
+    "dsid_319db001cae246bbbb16f441b64d9b82",
+    "dsid_2b7848a8491749f8b9b9a8c13f78445f",
+    "dsid_89889daf6b89426ca90049f313d4324f",
+    "dsid_452dc45d76754cbca8a3674170599633",
+    "dsid_c52c609c0cdf4211a7e8c57bb1da72e4",
+    "dsid_f2f019c122154edc8b21f56879661043",
+    "dsid_37befab212ae4ed9be7ebe612d942658",
+    "dsid_602422b841b94f5c8089555015df0ed8",
+    "dsid_d93aed75845e4a0b8126a80d8a7a5a41",
+    "dsid_dbd29f9393f149fbb696c9a5614dc875",
+    "dsid_f952b60df24d4736b831a643993aee67",
+    "dsid_69e745b76aa34eab8721ba0c88482ec0",
+    "dsid_b02e6ce0d9814b35af846c309c25e551",
+    "dsid_b41df051e6dc46c48b36a99c366ee5c5",
+    "dsid_ad58457891774bd7ba480e0bcd13df3a",
+    "dsid_9964e71da61e4a92bf3f53699cabbf95",
+    "dsid_db1c1f64721b468dafb35c2e0080a8f8",
+    "dsid_40e1a761f7644c388c1bccb73d6bd427",
+    "dsid_2aa88546569b4fc6a1a5eee4a97ffda9",
+    "dsid_553e1651575a416dae6b92d019d2f9f4",
+    "dsid_693c023c88264795a7e98c7737e6459e",
+    "dsid_96151fd86fcd4aef83e13a706768dd11",
+    "dsid_cb0d800639e84d68ae035596c7f6f1f8",
+    "dsid_005f7a937cad4b3cbb30d9d93199e22a",
+    "dsid_0a2cd37d53ff47d4aced289cd9a76fe8",
+    "dsid_8cb8070d41604b67901e60da07713d92",
+    "dsid_c1a652436b2e4c949f5de9f5da227cd7",
+    "dsid_bb14e2f3925b4e27829c4f3c1aea3af1",
+    "dsid_5af1ed23fd2a4bb3984ec368d0e3b23e",
+    "dsid_a2983978ba0d4d70a795eb7e13de8670",
+    "dsid_3ad691e18be849d897506f5276c24a75",
+    "dsid_bced6413bb6f414a882fb9cbaf8c7448",
+    "dsid_77351104a57140ac8e065d0a6bcf2046",
+    "dsid_981f4a0281054f9aaaec7887156eebc4",
+    "dsid_eba5d122d7244ffbb6c20a2487aa1017",
+    "dsid_c198dbbcf28a4c73ad1d705809634176",
+    "dsid_5efc026a36144721a82af3dfb2dcdea8",
+    "dsid_fc009de77554459b89e6b4340e8eca82",
+    "dsid_57a712a7419d4e84bccfcf08c8c010a5",
+    "dsid_c5848fca4e1c4cc48164aa3e53e5741b",
+    "dsid_0a6c6e67d89c4cb4b053a7c04d780d97",
+    "dsid_d64cf51ff0db444c92d57cf1a5981b75",
+    "dsid_4bb945f3de9b4f6aa834d2941fae625f",
+    "dsid_04e98bd61eac4ec89e3fc13c38de1b8e",
+    "dsid_80a4859760ce4cf4af51f7c570903ab8",
+    "dsid_10a589a5ee9048d9a33deb4156037171",
+    "dsid_7c73cb76b80a41edb4959db4b1e7308b",
+    "dsid_bce6ec1b34a044d694dda5607a184d31",
+    "dsid_d844cc30147b49c69ea5275b4993b571",
+    "dsid_acd1d77ed9044f3691d06a9ccc6bf417",
+    "dsid_9835602b1b544034bc6272bf2a8c2969",
+    "dsid_74ebb73359364bc791707a92a3227e3a",
+    "dsid_5094ef74d2e249919de1aa6db7c5d0e7",
+    "dsid_6574ec5483bb44d39fca9eb57d75d0af",
+    "dsid_16996cd96c1c4fa1ab399cbc446b186f",
+    "dsid_5217b3a64c4a433c89ba2a3186dea82a",
+    "dsid_863d0cda2c984154baad1973513ed3da",
+    "dsid_77d70426ff9545c191fa5e64f4a398b2",
+    "dsid_49fa5cfd95624dbeb6eaa535f9959470",
+    "dsid_c70d63e14aa84195aec43820c018f8b9",
+    "dsid_32c5e7ca0e2e4eadac78b01a35cfed7a",
+    "dsid_914d75cb27ee4a06b3f69e445d715ab4",
+    "dsid_b01c12d7b75240c6a712313d764bd8a7",
+    "dsid_9a0982d498384adeb435a2b3938bfd76",
+    "dsid_e33c122264214846a8b7df7701d31482",
+    "dsid_871b6712caf44f8bbfea4d8a15e436b6",
+    "dsid_1214ee9ab5e44de487c800f7a4771d7d",
+    "dsid_06464e95b7cc44de8a9677f3260c336e",
+    "dsid_8f6063b780784a139de5c4d5afa49eb2",
+    "dsid_81f6e00a9f474941ab5c123a64b0b80e",
+    "dsid_d04ead3e1e2d4c9f9cd34c73dca30b5d",
+    "dsid_1f781623f5c14b3686b1129d19b73884",
+    "dsid_8f0b7a8c1dbb4df0b23f6c4e61c9f1a6",
+    "dsid_08585f025bd74d50bafd23843caae7bb",
+    "dsid_25b0de9bfa854d3c9acfa961555c9d45",
+    "dsid_617d538c79334f4b9ddfd5c50c05ee4b",
+    "dsid_8733ed2132dc4232b2797c1d9a167cb9",
+    "dsid_385fd2388669469e87964b25d6428871",
+    "dsid_7c08ef109c804c0bb165184b7d78b18c",
+    "dsid_2bb0a4d1958848b0939ed64cc2b911ff",
+    "dsid_53035d2eb5024effac3aafd3e6ca6e70",
+    "dsid_a8815e6f0b05476a8581f98a718fe89f",
+    "dsid_e2327ad35ceb466489dad854770739bf",
+    "dsid_bf7e0df04c8748458b5515c864c48609",
+    "dsid_377cdf4e378f40bebd7196e3a0ff1c38",
+    "dsid_8c92178c254d467c9854db67aac7c9be",
+    "dsid_40471ba4cd3b430eab3ac0877eef0972",
+    "dsid_33de625fcfc045dd967dbc9bdde3a8b4",
+    "dsid_d9702f193090461480911352de3d4e49",
+    "dsid_44b11e967a5f4029aebb720891f66450",
+    "dsid_a9a67d815b07451e90ed8c3d1734d007",
+    "dsid_e7a4deb2e7ff4361978a272e91e20f15",
+    "dsid_cb839e9e2395455f97b798dc681a069b",
+    "dsid_330be20dd4224d8dad24eb633121ba06",
+    "dsid_03042cec7a2344769bca5a624091092e",
+    "dsid_2db615f2f6f14cbfae67c62b3c976b27",
+    "dsid_2ad75f27c36b492f847d5b9c63492e4b",
+    "dsid_6807c651b55546559733c7c6f8dc133d",
+    "dsid_896272184a6845a19d9bd1a0a4e3e671",
+    "dsid_a54a2f8553804d34986f42a49907b9d0",
+    "dsid_1d6255db99894b2794c36318f654f085",
+    "dsid_2ee4c1a35c5f4dba9b49efd3e97dd265",
+    "dsid_190d9732b59b411d8a6bcc59fd61b309",
+    "dsid_e5b1e464966a48bf9406e6e7197fee0d",
+    "dsid_8116cb3e580543d7bde1c57df351a3f3",
+    "dsid_431b0713c42847bbac15f3354776db68",
+    "dsid_03e22d519f9b40a5ac61a03e5c4620d3",
+    "dsid_a134a3fd3c244a52a8d3e1ff515fdf58",
+    "dsid_ce60931a1aea428b8186228ee40bb497",
+    "dsid_7fc490f8522b486c8f4b665d5189066c",
+    "dsid_5776ac1f724b4f72a084d3e796f0af4a",
+    "dsid_7f2a6f2d2de34f94a5b6f3d5d0d1f6a2",
+    "dsid_c67e1098ee1e4d438a041539a79bfc15",
+    "dsid_46a4cb87db414e769f2df86f01626948",
+    "dsid_4e65166659394a90922be6a5c7b110a8",
+    "dsid_97b25b6f83c542e7b81d6504b5653dcb",
+    "dsid_858fd59a63d64f5e81a2b8482ba64dbf",
+    "dsid_6a8476f19fee43b3af984d2bd790453f",
+    "dsid_ca42a8f18d784c879c5a6fcfe3a484c0",
+    "dsid_2fda4174a0324c149fe70b1ee84e1fc8",
+    "dsid_b43656ed184842b8a54c51137141d3cc",
+    "dsid_90218d9a9af84072bcf3ff7bb90b5fa1",
+    "dsid_12299dbfb9084473856316ff3afcbf3b",
+    "dsid_409618a3958944f9b78362ed7e01bb33",
+    "dsid_78001368bf0e456ea8a4d0417b2c5b01",
+    "dsid_2dc6ac1e1db14588913165002c062961",
+    "dsid_0b129c86cc6240b088a137d6634eef25",
+    "dsid_8d97d64cfcb14cd3b13589b86b0a0c02",
+    "dsid_b632b2d6f86f41c6820e52ae56549a35",
+    "dsid_9c8cb10d65324c03a8ededbd98c1b058",
+    "dsid_dd0fe40a2c71489793d566e46e95bb93",
+    "dsid_91abfa2001d747b3b570e8abce00ef4d",
+    "dsid_2ce9ae40d5d347c1add2b31c4d5a8c3c"
+  ],
+  "doc_metadata": [
+    {
+      "doc_id": "dsid_45e2a8ccc16c4c048894f98c6cd8833c",
+      "title": "1763876000 dedicated h200 eu ap launch",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_42c3e2d70229415d82cac2f9b795bf1d",
+      "title": "1764000123 announce h200 availability",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_a0e951c043154b07b1b5bd332ac47763",
+      "title": "1719000456 kv cache maxctx sizing checkin",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_826b680a80e74a1a81273f1dbeb0d3d8",
+      "title": "1761203456 tor l4 mtu rdma intermittent packetloss",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_0447408b8e874f2b977d2c9238f32664",
+      "title": "2151234567 gha eval smoke runner flapping",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_fa2d9f0bda0e4d6b9174ae6b15f7b37e",
+      "title": "1750345678 tor ecn mtu truncation debug",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_27bd877a9fb74bcaa4e93871f28f3f4d",
+      "title": "1719234567 cost aware routing cheap variants",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_f608b4d739f240c0b56d4d4b151b8cd3",
+      "title": "1713201234 tor l4 loss investigation",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_be67d91a95e24fe690cba692cb1762c6",
+      "title": "1960012345 cross region egress and commitment breakdown",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_1d487c52d79a44c2b40eb19a0db51122",
+      "title": "1751234567 nondet seed top p ci gate",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_3ab4d00190a1485da19d929f9f71bb5a",
+      "title": "1715500000 poc dedicated gpu pool provisioning troubleshoot",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_d680e052f220485eb985434b56f20ba2",
+      "title": "1715001234 eng platform daily checkin gateway routes",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_0767a662eacd463aaf0935750dba509e",
+      "title": "1713571200 new dedicated gpu launch paris mumbai",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_d555b86d66ab43a48018e16e0ec90eb0",
+      "title": "1712004829 pen test intake remediation plan",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_72b2bd3c2a094fdca6d5f3187a752c24",
+      "title": "1919002468 kv prefetch batch trigger block heuristic",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_7c0157af909c4a6190e00e1fc6b92b73",
+      "title": "1729999999 tagging handoff ops checkin",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_0aebc4d1e7264c6c90136b6b780a0c67",
+      "title": "1987654321 paged attn buffer salvage evict strategy",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_fa7dba9ea186436281a953c7b376bf11",
+      "title": "1769005123 api v2 deprecation rollout checkin",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_0d7ec9095f1b41fba11cca1c8887bc2c",
+      "title": "1891234567 qbr exec asklist onboarding gaps renewal ops",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_45a3a022cf094f93b2590f8ef19c8aa7",
+      "title": "1915001111 graphiq onboard escalation",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_be03b2f295574a9081065a0500ef605e",
+      "title": "1819999999 stratacore field marketplace sprint",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_321eee6325824623833bbe754bf83a0b",
+      "title": "3321112222 kselector kvcache noisy tenant surge",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_993a77869d244d36972f5efc39dbc59a",
+      "title": "3412345678 si microcredential exchange pilot",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_ab50b630b14e4bfda87847286157b739",
+      "title": "1709456789 proxy header parse fail 502 streaming repro",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_4a1ec9242b1745ec96f51861a127e53d",
+      "title": "1769640055 marketplace provisioning delay escalation",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_402f0ac3cd174f30b3a306c2e4def472",
+      "title": "2167777777 private debugbundle tls kms upload fallback",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_8c707328a7fc444f84a8e00f90021866",
+      "title": "1739313184",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_f97baf7b89b34cac9fc2fcde251a2502",
+      "title": "1743002167 structured output json schema timeouts",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_ae2e969d0b924ebbb19ab2f5d1b95125",
+      "title": "1771741044 beta customer feedback estimates seem off",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_34f267b98745435b8d95e883b29ded9d",
+      "title": "1723849205",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_09cfdc4bec864c209affc45969e80012",
+      "title": "1709123456 fn params interleaving after canary",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_ca551ed1cadc413e84df7821a4455418",
+      "title": "2165436789 toolcall field ordering and enum shim",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_94095ba27ce5414db28e599562c12908",
+      "title": "3712345678 kv wavefront triage handoff",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_96088536cbcc449eb676e94bf800486a",
+      "title": "1876543210 audit log query snippet and link rot fix",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_107621ec137a40e5a966e429a531125e",
+      "title": "1766543210 mdx fragment ghosting and snippet reshuffle",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_0714b09be5344489884cc5ee734e5f25",
+      "title": "1767000000 office softball signups",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_a5503307a8bc45d1b2155968543598df",
+      "title": "1765000001 office softball league signups",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_70fffe7de6d545bcbbc47b448b17164d",
+      "title": "1769999999 office softball team signups",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_199789e68ef741bca44a24d535ed6c00",
+      "title": "1729456000 office soccer and march bracket",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_2d829921c58b4e3db4be1d60fc0ceb3a",
+      "title": "1777777777 fantasy draft prep 2026",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_bb6f267d73a64a1b947a524dd602daa0",
+      "title": "1764001234 office ff playoffs pickem",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_d1d341864dcf4af9877d3dcd91e448bc",
+      "title": "1764500000 office foosball championship",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_3ab32ce7a21947de8fa071e06243b6a8",
+      "title": "3467890123 tensorpool oom heuristics thread",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_30b0460f0ef74192b50be29ea518aef1",
+      "title": "1739973309 watchdog default timeout values",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_924e4e8724c140799fef68bd384a0412",
+      "title": "1746001234 prefetch threshold ksort triage",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_db9c549c8c1740778e29b4351689b9c5",
+      "title": "1768501140 fast tier p99 regression investigation",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_bdf2a80ff4b94ad89ce86f7930b11be6",
+      "title": "2412345610 performance pip calibration rollout",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_98d534e949ce4fdd8ed5d651ec5ebe4b",
+      "title": "1739400021",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_3a052bc2335c4211923e8220c7f3c2fa",
+      "title": "1770851407 private upgrade rollback loop",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_e34b1f14719d45d98b175cb1351fb540",
+      "title": "1770130402 canary false positive alert storm",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_9a3def814b274050b3d834a66deeb1b5",
+      "title": "2212345678 premerge lint pass and rename coord",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_451cad750f4548568ebfe6a5d2074f48",
+      "title": "1797532468 vendor cadence check gpu launch waves",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_81744edbad5543b98dd551f883ac6772",
+      "title": "1768467711",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_4b6a0f839f514ca794314398409fc883",
+      "title": "3865432109 hotpatch overlay sigterm handling chart lock",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_813ed70fec1a471d9b96984993bd2438",
+      "title": "1976000000 colombia retefuente grossup request",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_68650923209a49918491e54f4d4ab329",
+      "title": "1769994321 euc2 eks spot gpu provisioning",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_a195d5d938574d9db61438653a5f652d",
+      "title": "1739736404",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_c6a07633c306457ca67a9d7bd9fb8001",
+      "title": "1912345678 async batcher rerank singleton wrap auth refresh",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_73b60918db2b467c88af9d57635402a4",
+      "title": "1740864420 template telemetry header causing 4xx in some proxies",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_8ae540be8e4c458ca15e122040ea2418",
+      "title": "1740726110 rollout split mismatch us east",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_9dff54e0ef8e4710926767a81224d475",
+      "title": "1930123456 lb tls dns pageoutage",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_18b209d55ea04c16b687b468e4e5f2e6",
+      "title": "1770937323 private installer rollback loop",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_4cfe0c490c974065bd497f06ad4a1105",
+      "title": "1764823141 rollout sticky region mismatch",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_88510552fc494d968943d4eab777e82a",
+      "title": "1740071820 rollout canary quota exceeded",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_0143493e1a514c28a39f1cf55744d37b",
+      "title": "1777777778 partner s3 transit quarantine rotation",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_b72bd7e0c91a4f8c9d9a13daf6ff3d28",
+      "title": "1739276405 northstar no payload logging",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_42fcb5c1e0394276b37ecf4308e227ac",
+      "title": "1798765432 watchdog latency regression hunt",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_adaebcf9535f47b5903bbaa5e48fd0e6",
+      "title": "1742034007",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_87ef890a0795443bb74815e8a6378405",
+      "title": "1768063011 cardinality risk review shadow dimensions",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_b64f6bb160574675932dacbbfaa59965",
+      "title": "1772045120",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_96e315a4f8644c8bbafe05c2e0c0b775",
+      "title": "4071000000",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_98525cb72fd948ef9797c6d35b504b9d",
+      "title": "1799004321 sse proxy keepalive heartbeat mismatch",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_21c9dba0568449d89fba4d57dc3dd442",
+      "title": "1801234567 export consent and copy flow",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_a1d8ea3adc68431ebd90cc40a51b5627",
+      "title": "1739173199 openai compat tool call differences",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_a227a7f316c4452eab4c05567edb9404",
+      "title": "1851234567 allhands weekly ask and key highlights",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_3e0b3c67d6d647c185afb1c7633ac292",
+      "title": "1711200000 office cat memes",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_c91a34ed8dcb44aeacf7713c5aab8dea",
+      "title": "1711245600 model hallucination memes",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_e56d8d932da04590b336dbc60ad25f41",
+      "title": "2109876543 mini plant rap battle",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_b8f2f50607a0406f9733f2e9ba4281c8",
+      "title": "1769014420 eu data residency objection handling",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_85482a6b56e747e29edb35ebec10ab67",
+      "title": "1782348901 eval onboarding logging roles",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_38963978d7944613855e7413fa3a3838",
+      "title": "2300012345 poc signer rotation burst pricing",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_bbce440e846642f3983104c786157597",
+      "title": "1718209999 milestone cut gateway consensus",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_af49172aba97474aa215a460a817a2f7",
+      "title": "1845604822 capability profile contract negotiation",
+      "source": "slack"
+    },
+    {
+      "doc_id": "dsid_c6a6396159964deeb021d646eaaf2b0c",
+      "title": "20250603 customer escalation private upgrade rollback request",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_1b3840b2c6804e22bd5017390fdc36c2",
+      "title": "20250514 private upgrade beta design partner plan",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a4ab40c6ecf249239d4b426892299048",
+      "title": "20270418 onramp evidence matrix demo slot negotiation",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_e052daca29064eb5ba2b1b0f046fbb84",
+      "title": "20260430 onramp prepay transition safety net and term credits",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_5f46d65ae298435889c524bf559f4948",
+      "title": "20260902 dpa custody provenance ingest handoff playbook",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a4bf9cb21b004bc9b12b8905c66896a4",
+      "title": "20260205 customer escalation sdk retries and 429s",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_1507ad6f9a704d4fb86aac359ade8c51",
+      "title": "20250729 northwind analytics structured output json schema timeouts",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_86b915e7a2a3492c82224174383cd9f9",
+      "title": "20251107 enterprise security review kms rotation materials",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a1e0ff30870f40d7b692aa27bbedc194",
+      "title": "20260503 marketplace payout vat dispute",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_675719b813ed4030b65514ca79e67ef8",
+      "title": "20280624 jupiter activation roadmap",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a92fe998fc534d57a1d54d5a6294c938",
+      "title": "20281004 q3 sprintback metrics readiness and actions",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_86f033ed92b84f3a8b381d09b0b95357",
+      "title": "20270615 po uuid invoice weekly netterms",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_942ffdd8280a4cb893aca73dcb376ee5",
+      "title": "20261218 regional hub bridge and ops backstop",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_94f011e1d2d04c89a4edc1d68ed9d855",
+      "title": "20270504 marketplace technical evidence support rto query",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_c2ddd5240eb04e16806d82103f7646dd",
+      "title": "20261002 req reprioritization band exception",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_c20138cf05ac4491a4ce0810cab02748",
+      "title": "20261012 priority escalation gpu saturation retryloop",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_b89d7b362a2c480993502fb443c144c9",
+      "title": "20270729 cartpilot poc sync and slot",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a5cec1a368344e6fa3884ad47cd7d175",
+      "title": "20260213 rrb 17 rollback loop root cause patch plan",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_c23a3d9d049d4fe79acf83653b564e0b",
+      "title": "20270609 medsecure logs redaction workplan",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_29fbaa51102242e5a1efe670e7214591",
+      "title": "20260709 senior stewardship meeting plan",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_243dfdca4bbe4872946fb3a5f686edca",
+      "title": "20260901 probe basket provisioning cadence",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_8e838ab6a98f4cbcb672d41f210ff89c",
+      "title": "20280503 region fallback priority ops inventory",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_3be2b45196414cad9b187551da3ed448",
+      "title": "20261116 telemetry optout prompt ownership kms routing",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_6a29c54058c041cf8db781f195e6b1cc",
+      "title": "20251004 northwind public case study and logo approval",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_614b42d654ba42e1abaa5163da75bc13",
+      "title": "20270530 executive okrs headcount allocation checklist",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_6091c41379e04d07adcf0a5646c65909",
+      "title": "20260519 dedicated lane options and ramp cadence meridian",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_326387eb70834053ab4447fc1596da38",
+      "title": "20261202 payright dpa initial comments",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_10d018b9cd334ababafa960517492a77",
+      "title": "20261127 postcall eval roadmap streaming coherence checks",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_020bac2fb6ac4de28d5afb63e39a0c10",
+      "title": "20260109 owner mapping dispute routing vs fleet",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_9b826592387b47b29b25018823296577",
+      "title": "20260212 private upgrade rollback stuck acme",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_214ba4ea822e4d328287194a5e27e632",
+      "title": "20270719 service assurance annualization escalation matrix",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_d11b935761d94f10911c358aba04f4df",
+      "title": "20260207 exec escalation acme streaming timeouts",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a07c9545aad04538877d041a649400d9",
+      "title": "20261120 praxishealth network access recommendation",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_98d7acbda29a4260a413c8d6da7207a3",
+      "title": "20250520 trident financial dpa and sla redlines",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_f09cf2d633174b7ab7105ef0a7498e74",
+      "title": "20270809 seedbank restore slas evidence and table ask",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_5f0ab47fe8de47a89bb6668f8722becf",
+      "title": "20251022 quantagov logging retention questionnaire",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_6fc6a90cd2d044e5add05493803e64d1",
+      "title": "20260204 eu data residency questions and approved wording",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_590dd1330a4046e28ac0a2f43b7910cc",
+      "title": "20260212 reengage q followup greenfield",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_d8f3577836ad4646a404dc043115156d",
+      "title": "20260211 customer credit request guidance",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_2491c9e9f38049e1aed89328cafd0098",
+      "title": "20270815 airgap platform surcharge waiver tiers query",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_85deb10a652742baaf28af6149600001",
+      "title": "20250803 license offsets and migration incentive",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_497e2620f4ab45f29db9aa4193cf9e2b",
+      "title": "20270218 talentbridge handshake priya rao scheduling",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_84ec014ad9f14f1481b45484da41181a",
+      "title": "20250212 northstar log retention confirmation",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_97750eeb49894690aa3d425669af4de0",
+      "title": "20261003 conference demo postponement",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_c822087705aa426a8c8bd9bf8724d384",
+      "title": "20260902 cross region demo slotting coordination",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_27da22aa63b3446387fffc29b45a0883",
+      "title": "20270603 migration staffing and customer comms playbook",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_cf6a4a313c144536a3cfd09f6a9ee12a",
+      "title": "20261120 visa start offer docusign envelope",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_8d5e9e0968d34002809cc34c8b78e526",
+      "title": "20290715 capped liability pathway 3p infringement discussion",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_b395ebb516614698bcd038cdb7933d4b",
+      "title": "20270309 scopebound indemnity counteroffer",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_972d8c39ddf54536bb62bae1c8bbe881",
+      "title": "20261014 reservation guardrail sizing plan auroraedge",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_ca11386edd264e5c841365093fedf640",
+      "title": "20260520 data lifecycle exception discussion",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_c4afa7bd5d104c43b45567c799121342",
+      "title": "20250211 token accounting discrepancy feb invoice vs usage",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_4842bf4dbbd84d60830cf3e9704fb203",
+      "title": "20270614 renewal tier consolidation gpu ramp plan",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_7d925287f5224f72b641acbd515beb2a",
+      "title": "20261003 novaretail private offer approval request",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_74cd6ebda84547e2a534f8f6d1b49739",
+      "title": "20281020 architecture review booking next steps cytohealth",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_c563b97cd7314d1396553dfd8034e819",
+      "title": "20270215 vectorhealth modeling handoff",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_5611f05242ae4e6b9ae68d3c3e91bd54",
+      "title": "20260828 crucible inference sitrep",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_618649e367d24a1eb3bdcacc0a2d7da7",
+      "title": "20250411 conversation stream slowdown action summary",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_3b1c14ab4cc647369b783b7abdfc32f3",
+      "title": "20260812 burst commit alloc efficiency tiered surge pricing",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_36bdca5b925c4550b5eca1990f2d798b",
+      "title": "20270601 audit proxy tokenized share ops plan",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_a8f0c8524573431c9b789291d63b716a",
+      "title": "20260414 featureflag licensing review stakeholder sync",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_6b7484308b0248dc8b62b81639787925",
+      "title": "20270315 airpooling hotel block and shift sprint",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_e04776cee2964731b96192cae88e9e6b",
+      "title": "20270502 stakeholder sync procurement route decision",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_182c34ee62c54118b48c1390e77cd3ba",
+      "title": "20280701 priority handshake apac si cosell demo backstop",
+      "source": "gmail"
+    },
+    {
+      "doc_id": "dsid_7159e8c7b7a84c45aa51b71fdfc837fc",
+      "title": "ENG 11097 priv cross tenant audit suppression and kms rotation fix",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_410b731e6ab84ea2b1e17ece1db407bf",
+      "title": "ENG 334888 adaptive log zipper for high throughput loki ingest",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_9291e4abdec54e108c37f0c0918f5972",
+      "title": "ENG 18433 incidents runbook overload behavior tiered batching",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a2d5f7ee89c14d4ab02e82aa94f22c18",
+      "title": "ENG 4844 rollback state machine and idempotency",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a2c7dc70aacc470894c953b6c7499228",
+      "title": "ENG 51782 external saml assertion ordering permission glitch",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_b9c347b4608541aabe8b7d2f7f90339e",
+      "title": "ENG 4879 demo environment observability and alerts",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_303196c831af4d1bb38a1e2546228a09",
+      "title": "ENG 26531 capacity triage forensics and scaling rollback plan",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_5402831508734a51adf649603be4b075",
+      "title": "ENG 158239 rate policy jitter causing tenant capacity starvation",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_b17470b55308417887920a77bc20a1b5",
+      "title": "ENG 683219 schema tug of war constrained decoder experiments",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_e6c0f4ec1f2d4937925ce9b9ef2c3057",
+      "title": "ENG 417289 hosted api grace window and customer fastpath",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a98ada14af2142a7a46266584d05c846",
+      "title": "ENG 4829 sse resume strategy and hosted disconnects",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_e9f22ba025e34bb6b7b8c61d26a38a19",
+      "title": "ENG 72654 incremental token latency allocation tracing",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_f039509796f842cd84ba3bfb895c7132",
+      "title": "ENG 865432 interactive latency canvas model route timelines",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_cf2557c60954460bb002ad1f17ad4369",
+      "title": "ENG 4829 release plan runtime 1 19 tp stability",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_6e44a32c61cb464cb7a702a8ddcf04b6",
+      "title": "ENG 32817 decision breadcrumbs chained routing metrics",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_59ff5fe3de4c4a3691700ce678801bd2",
+      "title": "ENG 712222 slo sentinel prefetch routing and graded circuit breakers",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_2d0330be987e4163bfd9c42c69bc1e40",
+      "title": "ENG 4833 api gateway error contract for residency violations",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_ca18eee975d34f4da7b1b880ea5ac271",
+      "title": "ENG 847213 reservation governor rationalization and noisy tenant surge remedy",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_e81281549cba44a9ba83dafe47c61937",
+      "title": "ENG 4902 fleet safety cap and global circuit breaker",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a3fdfc45905f46f3988ad13f55ecce93",
+      "title": "ENG 428317 conditional multitenant ratelimiter priority skew",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_061c09d8eef649eba85cd1421e28a41a",
+      "title": "ENG 23109 batching backpressure latency isolation",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_39e191ec758c41a8adecd223951b8b93",
+      "title": "ENG 48961 bounded window kv adaptive backpressure and graceful oom fallback",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_929598314f834ad08cf48642b88bde16",
+      "title": "ENG 7420 mixedload queue batching harness analysis",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_f3af4a0db68c4b15983439460cc73006",
+      "title": "ENG 99601 responses bridge handshake and runtime parity roadmap",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_4680a1c924c24f0b9369809e0038ea31",
+      "title": "ENG 18424 fast tier tail latency protection",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_5324918997644ea090703e088b166214",
+      "title": "ENG 4829 remediation sla policy and breach alerting",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_e5298124a9fd4bee8242a18bdb3829e0",
+      "title": "ENG 4827 reconcile stripe netsuite proration edge cases",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_740a2ab43b2d41e690c2cfe88d2a7567",
+      "title": "ENG 4881 support playbook and denial reason codes",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_78fcc2207a7a41e0baa0025286e243b5",
+      "title": "DES 177777 token riverboard ux composition",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_2e5aaaa6db404ec19cb15a6f92be66a3",
+      "title": "DES 12901 consistent spinner overlay and label behavior",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_1867cdf06a00437194b3250c75321a92",
+      "title": "DES 91235 compact workspace chips micro rail prototype",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_f3c46e1166f34b9c92a83034450fe021",
+      "title": "DES 832341 private console network path storyboard rehearsal",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_3fd6af404fae48e6b8ea5a57875ef78f",
+      "title": "DES 72681 develop interactive tone derivatives and kappa elevation scale for data grids",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_3bd8736badbb4bfd9fd95abd9a78b16e",
+      "title": "ENG 33109 embedding quality simulator and telemetry adaptor",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_fad07fd45c964078ba757dfd8d79ee51",
+      "title": "DES 951337 mesh connectivity inspector compact panel",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_462ab0251b704d878310f53e13d6f515",
+      "title": "DES 97431 actionable incident cards cost aware rollout controls",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_e04cbb2104804b25bc9d1eca19b432a6",
+      "title": "ENG 3141600 keystone shortflow compiler",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_50e057c2be0c4c2687226715198909f7",
+      "title": "ENG 76421 robot identity bootstrap workflow",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_ef18282e01d7410a8dc142d4ad0b7bd2",
+      "title": "DES 820213 welcome carousel progressive disclosure",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_14a447cb5b1140709c7cb3cc9a88c430",
+      "title": "DES 100777 adaptive sparkline density and compression mode prototype",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_8381e16639f148c7863aa3d393cb64da",
+      "title": "DES 66120 migrate interaction tokens and fix hover glow",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_f02a338c2dd546b3b025b5d5d429ad4e",
+      "title": "DES 195271 console mini widgets keynav rtl contrast audit",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_c5288dd4874345adb80f4a71c9a18773",
+      "title": "ENG 4721 misc chores office inventory and keycard cleanup",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_cf4696a68a924cc3aaf48ba4a2c1fab1",
+      "title": "PM 663210 dedicated capacity intake heuristic and stakeholder synthesis",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_bc47b415ef06458098e0c7a76a7e588c",
+      "title": "PM 582999 unified inference mini bundle prd launch slate",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a27715e7309c494d812c75cf03bcf916",
+      "title": "PM 189762 acceptance matrix for optimize quality shocks and auto remediation",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_8412db85d95a45f7bbfb14dacedb4d8b",
+      "title": "PM 921999 model resilience propensity index and field probe playbook",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_5fbf425415da4b7487f0ebbf289a39d6",
+      "title": "PM 765981 api behavioral probe matrix and prospectivity playbook",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_c90bd544f3b5437fba711492db31aeea",
+      "title": "PM 210777 cohort driven eval harness and staged failover prd",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_54525a33e2d44d4a9b665feaf8fab624",
+      "title": "PM 24680 cohort comparator and trace linker for deployment health",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_ef0efd89151944dc91bbd43d90d094ce",
+      "title": "PM 14107 progressive traffic quality gates and auto rollback playbook",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_3e7cf5be42d84f2880858c726b65998f",
+      "title": "PM 912 quickstart templates kpi and telemetry requirements",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a60c5dc02e074f8da2a6687e568102ab",
+      "title": "PM 45102 uae dedicated sku tiering gtm orchestration",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_b4443ecc53154934902652d496c9d12e",
+      "title": "PM 84567 resilient streaming fallback stubs and tool relay",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_7a094ff98c3b4c96a77f3949aedeb749",
+      "title": "PM 91829 intake lens minimum implementation slate",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_11fffe94d564452da1c06eb998e18cd3",
+      "title": "PM 84277 graceful tenant throttling and reservation flexibility prd",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_c2b97fe24375413ca538402166ed8482",
+      "title": "ENG 33455 simulated cross region restore scheduler with health validators",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_6d099bac73c44ab194d1721089703c1a",
+      "title": "ENG 428701 data sovereignty routing mosaic",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_6f69a170c5ab486588cf0bd92e0d53db",
+      "title": "PM 773880 activation safeguards and initiative tide for private vpc waves",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_1a40ab782f8b4d80929a9668462912e2",
+      "title": "DES 420888 span beacon correl lens",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_9cde32cd0645459b80ec513df27d1eb6",
+      "title": "ENG 78123 audit retention filtered dump with role aware access",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_f26abd197dd24e2599bb353af3a00ff0",
+      "title": "PM 39124 runway velocity guardrails sso auditlog delivery",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_d921e1d4282b45a7b4990e2366bedc05",
+      "title": "ENG 62670 workload forecast headroom controller",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_1d6c84263b40491988b1e7e98ccf4559",
+      "title": "ENG 4829 audit log ingestion retry buffering",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_d9ca33382713461aa726403f8ff7dea0",
+      "title": "ENG 935412 gateway bifurcation kv checkpointing",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_7a7c04eebb914edab49f734c8e814beb",
+      "title": "ENG 99456 tenant credit allocator and variant shadowing hosted backfill",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_d67b4ea2d8834799ae617b1ccddf1f6e",
+      "title": "PM 1490 error messaging contract for policy blocks",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_85b3118bafe84954a004fdf63ff364ba",
+      "title": "ENG 25088 stabilize embedding metric behavior across clients",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_d7aeb7de2b6c4ae88f46f4b0e4f2aacb",
+      "title": "ENG 4821 guardrails cooldown and fairness enforcement",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_a55032c4c2064671a4b0abf975438e1a",
+      "title": "ENG 86347 compact benchmark store and comparison canvas triage playbook",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_f94b93a4bc7948ddab45c371187dc6c6",
+      "title": "PM 862431 emission stability tool orchestration soft fail acceptance",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_c53d4b486a1e485186a7e4b9d1c3f3ef",
+      "title": "ENG 11783 strip compat proxy unify flag schemas",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_1f81f208f51a4aacaca226109bbedc72",
+      "title": "ENG 776543 kvcache ghost refcount decay rolling heal playbook",
+      "source": "linear"
+    },
+    {
+      "doc_id": "dsid_6713194be8d54a0f8de8f8d89347ecf6",
+      "title": "attestation aware secrets gateway roadmap v0 1 draft",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_bec90d2205534ca9a016f244e13884e5",
+      "title": "routing and controlplane runbook architecture notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_f0567bbb5dbd4a52aef951e11ec13f2b",
+      "title": "zero to poc canvas and 30 60 90 facilitation notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_de82a5f7140142f89781f2bf2d56cdca",
+      "title": "throughput latency phaseportrait mini benchmark heuristic",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_702bc520c52040428799fed41c63c8ca",
+      "title": "span timeline playbook grooming notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_184be937d34a412ab5e61366d54d8ed6",
+      "title": "policy engine failover extensions draft",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_89e9c8a4822b471a8e132d6c2b188b80",
+      "title": "gpu entropy headroom export 2026 06 09",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_9eda2ec9cbda4188936246d888df1d0b",
+      "title": "crypto hierarchy rotation siem runbook",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_2ffb84ee56464340885a9e484cfc6f5d",
+      "title": "dispatch surface playback memo may15 2026",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_089917448e654911bd186650ed12feb9",
+      "title": "quickstarts adoption kpis",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_5085c9f4b4484f298dabd02c99d9ce03",
+      "title": "observability slice storyboard alert finessing notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_acaf490041914b5bb3c275eaf13c3501",
+      "title": "adoption velocity radar",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_9eb81841e34147c8a764f9e630c6fa41",
+      "title": "sre gpu interlock handoff canvas 2029 09 01",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_b5aa04cac9af4d4c8c99fdbd5a7fed7b",
+      "title": "renewal pursuit operations notebook 2026 04",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_cfc80f61d84848c58d961b49d1b3a774",
+      "title": "kernel lattice weekly capture",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_9776bd75ffbb4ca7b10669be1512daa3",
+      "title": "samir rahman account blitz log 2026 05 10",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_c83811391709468fa9534e6495c205e3",
+      "title": "remediation sla options and customer tier mapping",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_426b86ef54164d9f8d7972acc3e2fefa",
+      "title": "slo cadence bootcamp and cross functional rehearsal notebook",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_7e82d2ac51114ca2b1c33ce55a96e499",
+      "title": "saga router fallback matrix",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_fc36d1d60e7e4b4abc7db84629563b7a",
+      "title": "gradient budget lifecycle headcount sensitivity sandbox",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_b015d86d5dfd4334b402811e7fe509e8",
+      "title": "customer journey heuristic qbr onramp lab",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_8a085e12606b4ea79f43ee176cba2ccb",
+      "title": "openai responses v9 streaming tool signal notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_0b0595a6d39247ada6238d8311b587f8",
+      "title": "streaming write stall ttl regression postmortem 2026 04 25",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_7b2f4b37dfb642e19d78c5f9d2c43f16",
+      "title": "fallback experiment matrix cost penalty catalog working notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_b78080193f474c3b99811541b7be74d3",
+      "title": "runtime 1 22 launch brief batching defaults",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_ada1b8ab101f4d3d91f8f42d98b3c693",
+      "title": "h1 2025 capacity quota incidents rollup working",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_95c7aa5238f94570a8e0a8684736b666",
+      "title": "burst capacity retro notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_8ffbd9fe82df457ca67d4fbc9ff1090c",
+      "title": "sliced ingest 429s dedicated pool priority class debug notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_6e790a04abe54ce9a92877679790f915",
+      "title": "ga rollout checklist hosted overload protection",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_22b0987227cd4fdb94d67e5a62bbde40",
+      "title": "taco tuesday fridge inventory wip",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_e5a26c404092453ab2ce88abc76d2ebf",
+      "title": "batching defaults rollout checklist wip",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_4587f467ecf646b7926dbd6b886f9f23",
+      "title": "revrec impact assessment meters vs contracts",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_dc8da53aae4c4a81be13ae8e519cd42d",
+      "title": "usage meter audit 2026 02 working notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_fef1f9ccfa934c0a8d96f4b64595d942",
+      "title": "hubspot workflows and properties spec",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_9d923c50817b4989b96dad5c7ad7c8a8",
+      "title": "one pager legal brieflyai q4 2025",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_1878e91704a24813a12f69b40444f168",
+      "title": "demo tenant qa bugs tracker",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_67a8c3300752435296938175e9a1daf5",
+      "title": "helio health log retention addendum",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_3986d90d7a5348048d989c17fe8dfd83",
+      "title": "one pager fintech lumenmoney q4 2025",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_10559147d3014931898864f22c311e47",
+      "title": "enterprise deal acceleration playbook security faq working draft",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_3c3ab5813b264367877e0d02f652ca32",
+      "title": "copperfield nimbus solutions dedicated sizing and security notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_6279854275e44cce9115af8286fdf38b",
+      "title": "gtm misc assets batch 2026",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_a8a5eac6e7a243319426769963506277",
+      "title": "brand meme and misc asset inventory",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_5c05d2a74c484906852925d1cf1daa70",
+      "title": "role launch hyperonboard template",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_ae7131f5d64f4f37af677f702dc60d2b",
+      "title": "embed robustness noise length probe suite",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_23c10bc09bb345d987d7464224247263",
+      "title": "audit log event taxonomy optimization",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_81323a96121047cf98e958463e33d80a",
+      "title": "fallback replay command log",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_38ddce87e36046df9749d9883dbfeeda",
+      "title": "tideway shipping integration eval kit",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_113f5cc6931640c3b82adcc07142d829",
+      "title": "unified capacity transition migration prd draft",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_6d38a7bff5c84270adff95742a3eebce",
+      "title": "ops daybook gpu rebalance todo",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_0ea5ce154cb842ee969d8a89d03edd2d",
+      "title": "rollout pinboard notes rt",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_2271ae6c393d409093b11b5a6d5b96ed",
+      "title": "niko rogers interaction tiering idea scrapbook",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_48b40afb54b84af28b13cebf017c0616",
+      "title": "risk thread notes aisha 2026",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_acc33ff059404020b0ff26e19ad2b107",
+      "title": "weekly clarity anchor journal maxwell chen",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_1581d9f44c9f453c8d2e912758cf3a2f",
+      "title": "compliance quickfires quirky notes lucien 2026",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_3413f1905a0740d88b66c196b54f4df5",
+      "title": "microbench notelet mar 2026",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_0ae9b752fef446ec86e376e2dea49c28",
+      "title": "fractured context notes derek 2024 08",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_d85fcb5f989b44f8a51723a07be79e45",
+      "title": "nano tiering experiments scratchpad",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_b9542668ae9b4163a932e4d16d26cd42",
+      "title": "latency sculptor notes sanjay",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_e528bed025b44f71bc37a54f5a9aefcd",
+      "title": "template contrapositives workbench",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_d295b7207fec4a6fb656f3e2a565d4e6",
+      "title": "soc2 iso control translation scratchpad paulina",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_bf8681ce9427455299245cb2ee67b4a0",
+      "title": "prompt chaining error catalog",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_c9435a0a83724528bfd39f530d0c972a",
+      "title": "hector alvarez longform reading scratch 2027 06 18",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_5fc2dba9f6ac4af2b49b4f546a4298d0",
+      "title": "shiproom runner personal prep log",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_9df81e849ade4badbb49776a176bd4cb",
+      "title": "early sampler rubric hunchpad indra",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_4e89403dcf74496c8a8516bfd64e351f",
+      "title": "lucas resume download hang notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_f7a0934d387d4b129077a8515e60801c",
+      "title": "laptop gpu driver sync debug notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_cb89198715bc4be5b363a0d052f9407b",
+      "title": "edge runner adapter life cycle scratch",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_550ec3c5c6d84d2e86d9071c080e90ca",
+      "title": "sundown pr heuristics and refactor seedbank hector",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_88f1c9800dd54a75bad05653b7f07a93",
+      "title": "refactor thoughtstream kiran",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_72ec4a9962ba43e88acd61abbba1052d",
+      "title": "rolling bias bisection log jared",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_7a2cfe4b7e574e6995f33e64bbdbf426",
+      "title": "fewshot attenuation heuristics lab",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_eab7ef95052c4016aff7a3df422131f0",
+      "title": "valehealth implementation capture",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_f8b3bf0c730f44f4a24981a3d4cd9c49",
+      "title": "mistral claims connector onramp notes",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_02a6857f487642dca0732a4ac480ea5f",
+      "title": "mini canary solo notebook rp",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_89c0c31e220c4777b15c3c6ff0eff61d",
+      "title": "prompt heuristics experiments scratchpad",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_834de01417d04878b4257f0f03ccbb88",
+      "title": "deterministic playback manifest format draft",
+      "source": "google_drive"
+    },
+    {
+      "doc_id": "dsid_ef492479c7dc4a3c9dd55d6771e5df54",
+      "title": "company saltbloom payments",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_ad14c3cb06c4494093dfcfff5098d89d",
+      "title": "company bramblebox content labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_03af1e44970d4d6db6e85bc2c5fce8de",
+      "title": "company horizon quay ai infrastructure",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_e9dd560753924c1e8438cdf9c2afcf68",
+      "title": "company peregrine crosslingo",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_7dd51da16fde43c1978be8af72a7221c",
+      "title": "company ironbark inference labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_c669e9bde8764a1a9636674fce02ff52",
+      "title": "company granite capital trading ai",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_71541c628f0348cb8955b72503e3857e",
+      "title": "company lodestar retention labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_1d13149e585f4be398015d748e24e449",
+      "title": "company briefpulse llc",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_398e6e782364403a9fcfc73cac68ac5c",
+      "title": "company paperplane cx",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_d79518c427654533a01173792f51f986",
+      "title": "company onyx cloud labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_7e3d8cd8246142a0b803eddffbeaed87",
+      "title": "company birch branch apps",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_18297e25b2ea45a987e7e435dee83d08",
+      "title": "company northstar customer support ai",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_f8529277bd964d6086d49ca2a30c9ac7",
+      "title": "company copper stone analytics",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_8ca703d991844bd195b4b8fdc16040fd",
+      "title": "company copperfield nimbus solutions",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_1a4563b5332f41a499464ea69f92c9b0",
+      "title": "company cerulean support networks",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_eea41d353de049aa89be98b6f9cf5de1",
+      "title": "company silverkite launchpad",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_db931dec10bf4b10829175533605aa0f",
+      "title": "company cobalt brookline analytics",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_c9e70cb6eee1471baba213a976a8dd05",
+      "title": "company daystarter labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_8e601c6ffc9e4bc881f24554436427c2",
+      "title": "company brightfjord labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_d9a7de9e7cfc4fe0b7b57765b6d25ad9",
+      "title": "company stillwater dialogue",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_1faf80f5afa8490ea64c77c7cb2fdf8f",
+      "title": "company deepwell financial intelligence",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_4331f37f2b8d4e2cb0f5c5719a033e2f",
+      "title": "company revvy insights",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_c336dcdf965d44b0bcf4c8e3930af440",
+      "title": "company ironclad support reserve",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_30a16502953a4088b59266c8990d52d6",
+      "title": "company picoprompt labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_e75bbf328fe349d2bb39e29b1ed7c9d5",
+      "title": "company satellite grove assist",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_a15c0247e9de4e128293bd820fc4c659",
+      "title": "company pearlgate embedlabs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_f76e99464c07482e8ed4084d67c54a72",
+      "title": "company ridgeview inference analytics",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_5d161fbc61f94eaeb6098a9f9275d38f",
+      "title": "company copper kite works",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_4c1c5fb53ca2432995ea42adc4330fca",
+      "title": "company sparkbarrel systems",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_6df6cca7e7124f20850ebe9077fd5958",
+      "title": "company echoharbor sales automation",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_15dd15bfbd0f42c485a9b5b9ace6a3d1",
+      "title": "company cobalt campus innovations",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_3bc3170ead63470eaef9a53ca835cec0",
+      "title": "company trialbridge legal smb",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_45638a5688314bcb969154b2a9dcbe13",
+      "title": "company rerankly labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_4b0f5e573e5e4ce8bbbcf370c3ea7eaa",
+      "title": "company northpoint signalworks",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_8f5b801cebc34eb4b233bd0ef7c1b546",
+      "title": "company sidecar streetwear studio",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_7711da5856a8485e80e0085ebd193690",
+      "title": "company stellar sparrow games",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_9f92a42dc8d24c93a0a696a0727063b9",
+      "title": "company diffsmith labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_b65f12db881f41dc9239fe044f4754dd",
+      "title": "company fluentforge mediaworks",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_c264b5d312534f44a97cce8b6eb104b6",
+      "title": "company kestrel helpdesk systems",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_a45c07f3daaf47c18b7bc75d3cbf2112",
+      "title": "company pillarhaven insightworks",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_cb58379b249f4e7dab5e716bbeb11b29",
+      "title": "company silver birch scribeco",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_509b34ee9a334f68a693e61dfbf558c4",
+      "title": "company velora ai solutions",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_51183030e764419caca09cfe647048e7",
+      "title": "company banyan loop ai",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_676625b7b7064b30a00da4f53fd24f88",
+      "title": "company coppertrail saas",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_b9eb7e39bc2e4f65814c42358089d49b",
+      "title": "company mariner prism software",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_e1cc205e55b648bfbe75b17dc1fa873c",
+      "title": "company inkwell copilot solutions",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_4dbd418a9a0840739750cfcd5dfb34d6",
+      "title": "company wildseed coders",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_f4fbc3f2bcc24bb29f9da2c81e43661f",
+      "title": "company nimbus compliance labs",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_98abe7c857dc40e29fcce7daee0e24a2",
+      "title": "company briefwave legal llc",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_09b9eb1e827e4fbbb3186fc0b026257e",
+      "title": "company tidecrest contact resilience",
+      "source": "hubspot"
+    },
+    {
+      "doc_id": "dsid_a9d76bcb3bc1475abc9d6f8f83a6eba8",
+      "title": "2025 03 27 tethys systems si channel cloud gpu fit discovery",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_c3be99dbca144db488c037dd2f0831ef",
+      "title": "2025 01 29 private dr and backup restore technical deep dive finbank",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_aa97b7293f9f4f3c8180f645e4fe5911",
+      "title": "2025 02 11 onprem backup restore and audit log retention security review meddata",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_7d9551aa21124d70b0e247c390d88622",
+      "title": "2026 02 07 marketplace onboarding walkthrough internal dry run",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_6c4c1c875e704f09b4d791d64d7bc7e5",
+      "title": "2026 01 16 gcp marketplace onboarding and billing review",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_9ed01291d81947f49500df5fb28ab724",
+      "title": "2025 05 28 private upgrades technical deep dive",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_862bb899faac43feab4f92a12d320e7c",
+      "title": "2026 02 03 marketplace security review with prospect",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_3c9fe2220c204f13b878bd7d3a168f91",
+      "title": "2026 01 22 enterprise prospect procurement via aws marketplace",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_05faa1ab6427403888a06d7083c7f0a9",
+      "title": "2025 06 12 security review private upgrade auditability",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_3fc14ed9048e4e1f861e0632b06fc39b",
+      "title": "2025 03 11 halotech marketplace ref arch integration sync",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_912991a0a2ce4000a55b1f67bda8c3a3",
+      "title": "2025 05 09 ironcrest bio quickstart hosting pathway discovery",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_cc2f84330d014d03b8c49f8e92063b07",
+      "title": "2026 12 20 orbital networks gtm co sell sprint review",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_51bac931bc704d7cb04438c33a2938da",
+      "title": "2025 02 18 technical deep dive buerowerk residency",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_e37e7b7723e34b8087ef051804bfe85e",
+      "title": "2026 06 25 unit cost investigation zephyrus labs",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_5013219e53bb483cb9244fc16828d88c",
+      "title": "2025 03 03 discovery riverstone bank regional controls",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_c875ada2f9164277aa9500daa4753c68",
+      "title": "2025 02 04 discovery northbridge capital",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_100d6362c85946ab97758b63509bc182",
+      "title": "2027 07 22 runtime inference forensics interactive walkthrough arcadia retail",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_7203cedfce0f4a149573d79592022d9f",
+      "title": "2025 06 18 data sovereignty and logs discovery with constellation bank",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_b9025f196ac14b2cb7a2905654dd42d7",
+      "title": "2026 09 30 onprem cutover readiness egress capacity playbook",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_3fa62946c32f47a489cf4aa2c4fc578b",
+      "title": "2025 02 11 security review crown harbor insurance",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_85045318e1fd484b8a6ad5d724dd6e7c",
+      "title": "2025 02 20 poc scoping orchard signal in country hosting",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_e3ae91c7f83f46e492209ffec2c7f2b8",
+      "title": "2026 11 27 mariner health ops bridge cost uptime standup",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_ccc31ea69f9d45e68b803d2a8c6c655f",
+      "title": "2026 02 14 acme private upgrade escalation rollback",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_e0cd6ae5755943258ef361ce2a1c0295",
+      "title": "2025 08 01 northwind analytics poc check in",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_8b08f13ec64b4c6883819c73a284d836",
+      "title": "2026 04 02 segmentation policy primer demo helix ventures",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_9bf09a549d22494c9672ecdd79896878",
+      "title": "2025 07 29 sandstone search prototype embeddings rerank walkthrough",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_c054271735b541ba91e42c4dbe8a4883",
+      "title": "2026 08 11 internal it finops oncall runbook transfer",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_c637bbc9afd344e6aebde62826284a06",
+      "title": "2026 04 16 jurisdictional hosting exploration with hearthstone mutual",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_f4e0ec9fc27c4e52a55b34af90fcd1b0",
+      "title": "2026 09 03 chatplay onboarding sandbox demo streaming retries",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_9c63777c789c4f7db9e391024dd887ae",
+      "title": "2027 01 19 deployment sterile window and fallback choreography",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_1415c2463492415693a3d4758847630b",
+      "title": "2025 12 03 hardware tuning profiles pack weekly sync",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_2c9dcc3afa3249f39c725884e5be5c72",
+      "title": "2025 02 11 candidate interview senior se",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_aea4790d4bcc45859208d7d705f682a1",
+      "title": "2026 03 21 interview jordan lee",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_045c297ec2ef495abd66cb1f09921fc4",
+      "title": "2026 12 22 crew handover and momentum check",
+      "source": "fireflies"
+    },
+    {
+      "doc_id": "dsid_22a7e9af2760474dbdf611c2c21cd231",
+      "title": "pr 39751 kernel stability thresholds precision annealing kv sync guard",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_8a12a904ffe741a1a11f2a6d99e3e389",
+      "title": "pr 233907 graceful disconnect buffered tool retry policy",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_9d1624818a004c53b3b7020412275cc0",
+      "title": "pr 49512 modernize ci build plugins migrate bash to composite",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_1c53affffb4f477ca476bec3138b60eb",
+      "title": "pr 96123 chat v1 param normalizer role alias stop dedupe stream backpressure",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_7d7a89d91c3d4c1c854cc513e76316aa",
+      "title": "pr 42739 session snapshot client ack stream resume openai compat",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_9ad34d10c60a4c88931642a247aeb063",
+      "title": "pr 33219 defaults suggester batch cache qprofiles",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_d6b6bd4b3a6b4d06a46d3c94cb308191",
+      "title": "pr 96421 reservoir quotas leaky recovery",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_426ca69578a84dd4af512e5a2782086e",
+      "title": "pr 20311 safelock fastpath precision toggle kv eviction",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_dc9df99fcfd64f5f89791781b699610c",
+      "title": "pr 33457 smoother autoscaler signal and gateway backpressure",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_cc9fd576760d4a058a896155657eff06",
+      "title": "pr 91734 deprecate old capability schema add runtime hints and function call credits",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_a193f9b7483248ad86c52e684d98a760",
+      "title": "pr 21807 dynamic scratch fanout kernel selection",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_1b7a5d6230f84eb0a38a97da0e0ce05c",
+      "title": "pr 63789 enrich model endpoints with runtime hints and openai shim",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_415b72b7d40a405e87b9671946e894d8",
+      "title": "pr 998901 introduce session decorator to simplify cross sdk streams and credential rotation shim",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_908e8464927742829dcdfe0c6165299b",
+      "title": "pr 763210 dynamic perchannel requant kv jitter batcher",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_9550250a59e74f1bbd5612480b2e7100",
+      "title": "pr 129874 timebox abort idempotency resume openai compat",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_2fb08b7571444bdf894607549642498f",
+      "title": "pr 246829 openai invoke envelope normalizer",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_fa1c733deb77445da7bc55dc472d233d",
+      "title": "pr 75012 neon orchestrated attn hybrid flash lazykv tiler",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_ae068ee4aa9640159427cd941bef0238",
+      "title": "pr 18421 multipart file validation limits",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_caf02469a41c46cf8387713b83c628f3",
+      "title": "pr 23145 adaptive scratch and deferred ckpt scheduler",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_7764c4d15ed141ecbeaaecf606098288",
+      "title": "pr 63918 kv freelist defragmenter and hotprefix pin",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_1653d1ed11a1403ca8e44bef03a610a9",
+      "title": "pr 84923 per route function call telemetry and jsonl output tags",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_d04ffbe63ea44224892533eb0fe95bc6",
+      "title": "pr 82145 instrument gpu queue depth and scheduler sample probes",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_730ed8ee5fc84e0b9be761003b9a60d3",
+      "title": "pr 874321 traffic escrow and rehearse proxy for staged promotes",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_4135d0353771426186fb9f159a693cd9",
+      "title": "pr 133210 slab concat flashmixer async kv",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_96912c22b0b04024b573606105bd5ea0",
+      "title": "pr 62401 openai resp v9 tool signal proxy backpressure",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_28cba7bfda2e412ca7a0f9143d4bb3df",
+      "title": "pr 101202 token group index and downsampled rollups",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_d1c20b7c16a442b4be718f04c78a8cd1",
+      "title": "pr 31244 proactive slo throttler priority buckets",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_f5f3b87014fc40a69f42353860a7c2c7",
+      "title": "pr 34177 workload profiling prefetch and quant scheduler",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_c84c8581594e47d49e82d024a6da915d",
+      "title": "pr 297345 weight prepack int8 smoothquant allocator",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_b253f5cc715f4d47bdd578edd6f2f19e",
+      "title": "pr 182450 tool result merging and backoff wizardry",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_49215834c17d4f0c98d4ad11f62f0c9a",
+      "title": "pr 75983 deferred aggregation telemetry lattice and path sampling",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_0abbd8a3a39e4cfda70dcc403b22f64c",
+      "title": "pr 221089 introduce invocation cadence probe and token cost ribbons",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_8779ac72d6504759b701178632772f6c",
+      "title": "pr 199842 openai v1 chat compat response sculpting stop coalesce",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_47fa00c889fb4446b0481efea384a7ce",
+      "title": "pr 314159 consolidate sampled context anchors and cost delta annotations",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_c7860fdbc17a48b0b6c5f9a0c5e3d054",
+      "title": "pr 176421 coalescing invoker grace period and structured output",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_6f0be39ff1ae49c19ce0662bdd6de352",
+      "title": "pr 48215 wavefront collective scheduler compact kernel selector",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_49d64735870b48b79f1e6f2724f1e7e2",
+      "title": "pr 19732 reduce gpu workspace via arena checkpointing",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_6c58ddb8ecf543d89fca8352351dea29",
+      "title": "pr 24930 openai resp v3 seed metadata reassembly compat",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_74db6122bce044a5aa79bd3701082b3e",
+      "title": "pr 39501 seed profiles workload segmentation batching",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_302783937bc849ecb7ef7323233d1efe",
+      "title": "pr 182345 variance aware autoscaler intermittent surge fairness",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_88b39d13bd584ef8b1422d76994808c7",
+      "title": "pr 95312 unify handshake consumer ux and retry bump",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_ee6c23c178dc428bbd71af6526c70251",
+      "title": "pr 45102 introduce stepped batcher quant linter smoketests",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_5d54f5f89bbc48a5b06b8dead39729b3",
+      "title": "pr 87103 aggregate artifact origins release index private installer",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_aa532b5a3c634229b9a068654b945c6c",
+      "title": "pr 49924 batch cache policy synthesizer",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_707ad933d7fd447197439ed606abfb26",
+      "title": "pr 76428 typed errors iterable reconnect refactor across sdks",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_1e575156b8a642cfa909b92e0111e7fb",
+      "title": "pr 49721 soft cancel reconnect window openai compat",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_c1a6a71323c04c1ba5445aadea340362",
+      "title": "pr 867001 introduce token stage cohorting and route matrix alerting",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_c6efd46ecc6449ac8be1e53ed3803e92",
+      "title": "pr 233 tolerate trailing newline in api key",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_1f13ed74ef87494b81a2fc2617ab7746",
+      "title": "pr 891 avoid stripping api keys",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_3eb3b5da0ee540839a98c48f54fd1d5f",
+      "title": "pr 635 add conformance test harness",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_5b0c65ca162a43a0938bebabe9b1d53f",
+      "title": "pr 642 surface residency violation errors",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_12c56622cee749969076c8dbac19da4d",
+      "title": "pr 913 overload shedding dashboards and alerts",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_81208556437644a0a4dedf168baf81b5",
+      "title": "pr 311 add dashboard usage insights freshness",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_99c13a4a518442b1819aa5cf02a52f3f",
+      "title": "pr 28458 fast tier admission control and wait budget",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_5cd60d30f77441c082187f1a47547637",
+      "title": "pr 4879 publish northwind customer story and metrics disclaimer",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_4c0d5d098d224e7495667823169b521e",
+      "title": "pr 612 add time windowed exports and filters",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_514b8181941d47cb85e460c68e9d30a2",
+      "title": "pr 421 hackathon inference ui demo",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_b8691ba2e29542838afae93928ad816a",
+      "title": "pr 489 add restore apply workflow and validation",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_1159814f66a340d79536516db194f623",
+      "title": "pr 512 fix edge stream auth header",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_a560a94faf9c40ec9782d125d94fc009",
+      "title": "pr 18472 load shedding retry after and client guidance",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_b837e1140d1a4c3d8efd2f42d9b6a799",
+      "title": "pr 27416 add slo to customer impact classifier and remediation workflow doc",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_105c8412280b4fe9abddec455c092216",
+      "title": "pr 933 add tiered batching dashboards",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_fee94d81c032494cbfce8094468f0973",
+      "title": "pr 22044 savings estimator v0 for batching and caching",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_7a516d063b50468fa0d1a543ece71e1b",
+      "title": "pr 28592 add signal suppression and false positive guardrails",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_939eea1a52f84393b0f87492b9aba8c2",
+      "title": "pr 24108 fix billing double counting on burst retries",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_4b2ac6984bdf4737a18520e158b04453",
+      "title": "pr 19422 fix throughput metric double counting streaming",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_ae455bffe226412c9973991ef2d34a72",
+      "title": "pr 21533 gateway return 409 for residency policy violation",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_faca41898b0d4aa28b811a890d3e94df",
+      "title": "pr 23919 global circuit breaker for burst pools",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_38e7aac0d2ed4545b7a92c2c441825a1",
+      "title": "pr 27463 fix double counting on stream retry",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_44cf2d75d70d4365914aa46947a94b1d",
+      "title": "pr 28521 fix duplicate signup event emission",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_bab6aba4c06e41e9ae46b9355f644a7a",
+      "title": "pr 128765 hetero bandwidth allreduce kv coalesce",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_6ff09cf76a40402f933dae499a528307",
+      "title": "pr 23988 add slo gate to disable burst when nonburst latency regresses",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_b5a4ac6f13d545b6b085fb74e971ff27",
+      "title": "pr 18592 hotfix disable profile on model variant x1 due to quality regression",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_960a2981de674ebf844f7dc19d2e3cc0",
+      "title": "pr 18458 smart routing fallback when breaker open",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_0f9c8d82259c4d5a95bc5865fc492919",
+      "title": "pr 28522 fix regression in long context prefill kernel choice",
+      "source": "github"
+    },
+    {
+      "doc_id": "dsid_9a088141571b435f995568199ec4bcc9",
+      "title": "INT 738210 runner service token leak detection and rotation assist",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a673ed031ece43c5bc4a0d27a284c8dc",
+      "title": "SUP 99340 structured audit delivery and PII redaction evidence request",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_84a6d354dca5476b85a34c38d4edfa14",
+      "title": "SUP 912345 egress provider blocks pmtu frag needed causing large http2 shard streams to hang",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a56c6ba5a2094d8b83c6c70d025d940e",
+      "title": "SUP 135791 connection warmup trailing silence on sse with apple http proxy",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8c60fea2755245de913a78b2e29c617e",
+      "title": "SUP 684321 provisioner migration stripped serviceaccount role annotation blocks batch workers",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_259d17a11ddc4e28b559aa9fb1111270",
+      "title": "INT 784321 ci agent sudoers rule change blocks nightly artifact push",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_59cb294da8964683bb165a3bb615df71",
+      "title": "INT 460811 edge switch arp proxy ip duplication",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_1d5a3cde61104276b218c05dc101a546",
+      "title": "INT 827501 dossierhq ephemeral collaborator pool scim okta billing mapping",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8f80516053a24beba08e603cb1831dd6",
+      "title": "SUP 501603 signed cookie refresh loop ephemeral worker 429s",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3ac2c680a56a44e39ddcfd257804de28",
+      "title": "SUP 927331 terminal suppression during tls renegotiate behind edge proxy",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_37c24c697d9d462fad0e3afeeea9d8c0",
+      "title": "INT 332211 access approval issuer mismatch console provisioning",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_5f3a672da4974781a5577b0f3d4993e9",
+      "title": "SUP 864999 sliced ingest priority class throttle config",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a0f25cffcb264f0ea6eba5e501de0e08",
+      "title": "SUP 212022 eu to apac egress flip during embedding burst",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_db87c0dec8444b1d83b06cbbe725d3a8",
+      "title": "INT 42901 offsite prototyping lab temp access and cross border device return",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_9e2548df3b06466e96f75c6d1618642b",
+      "title": "SUP 845990 retry quarantine and toolcall ack window coordination",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a8ea8c81885c44ab8aa6b0395360657c",
+      "title": "INT 134579 provision integration playground with automation and cicd hooks",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_ca09c9594d0f4293b971c96fa9ed647c",
+      "title": "SUP 812999 tenant stickiness erosion during deferred prewarm",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_18621ce91fd14b408a2be95336bb4ab0",
+      "title": "SUP 700707 bursting 5xx from apigw backpressure and runtime thread exhaustion",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_d8fc4155a8d54c9ca7a5f58552eeca62",
+      "title": "SUP 791005 captive portal tls intercept breaks presigned artifact validation",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_4a2ce3e1be4d4f00a089ccc00ac92b8c",
+      "title": "SUP 126007 client retry window desync burst queueing",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_1980f45c3fb4455f943a2b030892ae90",
+      "title": "SUP 18421 enterprise 429 spike after priority routing rollout",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_13a33311928a4555b16c654cb25251bf",
+      "title": "SUP 847001 hourly window shift rate tier misalignment",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3f7f32874e9b4ba49ff4fe28c0ef5de0",
+      "title": "INT 892311 phased access ramp contractor to employee device hold",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e728a420a02a4ddcb125e6adb09d211e",
+      "title": "INT 738205 wifi bridge nat source rewrite breaks vpn policy",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8138b96e181940418cc5067b2630064e",
+      "title": "INT 821407 provisional license reclaim and grace window policy clarify",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_9a2f440e8f7e4801b76233767fcef945",
+      "title": "SUP 4021 retention policy not applied to request logs us east",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_0c1f1c83e8d44d2fa3a9f6c7b2d7b9f1",
+      "title": "INT 9821 crucible inference latency spike and 5xx inc 9821",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_ccaf626687b940f3a7309e09c1ed5c1b",
+      "title": "INT 34121 supplier credit note posted wrong cost center",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_03b2db544a6d4cf886fb9869058a05f2",
+      "title": "INT 2043 office inventory keycard audit and disposal request",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6df52fdb96ae4edcb76464738bca3340",
+      "title": "INT 7832 cleanup stale test instances and archived volumes access",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_695df5a2d3f645cdb6882332092cd838",
+      "title": "INT 489 rollout canary provisioning blocked by quota",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_fe7a496e795b4baca997e655f9316fc5",
+      "title": "INT 3310 event tracking discrepancy activation funnel",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_f7dc91cc70e14c94a6215a13cd829cbf",
+      "title": "INT 23789 release gpg verification failure after key rotation",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_dab17ee5c3924a9998b17b3591bbae28",
+      "title": "SUP 18477 restore fails onprem missing crds",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_9619c1f3ff3c4626a2bd029e907e1f76",
+      "title": "SUP 721406 connection affinity flip induces half closed stream with partial json choice",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_b793b06789ae4147884e94681c6beae1",
+      "title": "INT 1907 log retention exception helio health",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_23626a14ac9847f1b3349ad6e1909bd7",
+      "title": "INT 556 burst pool scale failures quota exhaustion",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6933f9241ef140da9d3bf98be52be867",
+      "title": "INT 1974 log retention exception quantagov",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_65b12644ea52428b9c032d2cd9b75d8a",
+      "title": "INT 771 sdk auth guardrails bearer prefix and whitespace",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3b9483f629fd423d81ac49a7efff89c9",
+      "title": "SUP 208471 harmonized rate plan credit alloc reconciliation discrepancy",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_795498b20e9c4d38883c8c46ab3336b4",
+      "title": "INT 853214 ephemeral oncall shadow account and device staging checklist",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6952f7cb64304c04bdf72562e5154724",
+      "title": "INT 338201 locale collation encoding error stalls provisioning",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_4036a41749864632bcda458ed967cf0f",
+      "title": "INT 931417 session linkage token mismatch blocks cross account impersonation for support tooling",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_62ff534dc35a425896b265216f94f69a",
+      "title": "INT 918273 observability agent impersonation denied crosscloud conditional binding",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_429267fe79c74918a26272f6c0e48f10",
+      "title": "INT 999999 service cron sso refresh failure blocks nightly model evals",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8e77536c5e0f4521b756d7b79b640e24",
+      "title": "SUP 18421 intermittent 500s during region failover",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3d745c88c7e4426c9548350824f0d9b8",
+      "title": "INT 933333 orchestrated ephemeral research sandboxes",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_d8a18c9f03de414faeacfda3ad53e315",
+      "title": "SUP 777202 sse trimmed terminal whitespace due to h2 priority",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3f4010bdd3c44b99bb1c1ad2326f5eda",
+      "title": "INT 1000456 m1 macbook dep enroll kext conflict blocking profile install",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_b097ab5d9e4c41609f47432dfcb1508b",
+      "title": "INT 772007 role lookup groupid type mismatch modelobservability access",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e91e68b31a6f4935b87d6f74dd07e1f6",
+      "title": "INT 1842 log retention exception northstar bank",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_61ad31f35c0d487e8f56b59c833d5b55",
+      "title": "INT 517 emergency gpu quota bump hosted us east",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_052d0c27569145c5896b910eb6f3c063",
+      "title": "SUP 4127 demo tenant 429 throttling during live demo",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e20c31eb5466411ab6c7be17d08d02f5",
+      "title": "INT 356701 surface arm metric flip breaks wireguard split tunnel",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6f37b2b4341947028019bd41748eaff9",
+      "title": "SUP 4933 python sdk double bearer prefix",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_1eba87b0b11b4f31a006f0cf164b8509",
+      "title": "SUP 28436 disputed status accuracy during us east degradation",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e17e3ec88d4947bbb53c8190ccc90c54",
+      "title": "SUP 4840 dedicated request timeouts after autoscaler scale up us east",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a990e708840f481795741cfd3fb55691",
+      "title": "SUP 376545 cinderlabs session tear retry amplification billing spike postincident",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_ef7f1d5cba204b728e1f4d7cddda7daa",
+      "title": "SUP 100432 falkon embed index reconciliation and auditlog gap major incident",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_cfc93aaf69bf456cb669f5b99c09b7fa",
+      "title": "SUP 904821 kv cache eviction and autoscale window mismatch causing p99 timeouts",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_b85f3628bbda46558141d3a935bce2c1",
+      "title": "SUP 6060606 rate transition lag priority favoring early 429s",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_89d75953da0c4bc186eb95fe169de462",
+      "title": "SUP 29410 python sdk timeouts not honored streaming",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_663ae6b555814a779d9abffba8339e84",
+      "title": "SUP 63219 rbac policy not_in operator absent claim fallthrough grants unexpected access in private",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_ab988030fc0c4544846f0e1f667453a3",
+      "title": "SUP 27411 output quality change after enabling quant profile",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_19b05c958acb478a90cab25257366a29",
+      "title": "SUP 28501 hosted streaming disconnects and slo accounting questions",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_312eed72d5d04d27a52717f94e178341",
+      "title": "SUP 4812 kestrel structured output json schema timeouts",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_51895b7e9f2942898291b66b72886b15",
+      "title": "SUP 1860 credits request after sla breach",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_64212a1689814ac19deff834ce203ebd",
+      "title": "SUP 29505 streaming disconnects behind proxy retry guidance needed",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_425340806ab84e2cb48e99e95bac36e1",
+      "title": "SUP 3392 customer complaint unwanted sales outreach triggered by signal",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e7d8c585e8594fe481975515246d04f2",
+      "title": "SUP 2860 retry after header missing on overload responses",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a592f24d2f3b4c21ba507b20c832d069",
+      "title": "SUP 2841 token accounting discrepancy between streaming usage and invoice export",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8590bba128564aa7a60be6067b6be779",
+      "title": "SUP 28455 noisy neighbor latency during burst window",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_abfb68dde21f4fd2aa7d70c472447f89",
+      "title": "SUP 31842 latency regression on long context after runtime 1 21 canary",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_4ecb42b192a1421885f6fbe8a7cbde8b",
+      "title": "SUP 4189 demo dashboard not populating metrics",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_30b76ac074c841ef9afcb34c178c40d7",
+      "title": "SUP 29438 ts sdk retries on 400 causing duplicate billing concern",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_0bebeaedbe794ec38ae1d6f4ddd5c2b6",
+      "title": "SUP 28577 streaming endpoint returns generic 500 instead of residency error",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_23438eef0a4c47f1a8921f4a74353a2b",
+      "title": "SUP 102998 long poll fallback early close leads to truncated stream tail",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_5147667611a54584aa272d1469d8f6a7",
+      "title": "SUP 18544 audit log missing config rollback event",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_5d8045f7d37d41b99605880834c17329",
+      "title": "SUP 881234 mintlance concurrent session stall truncated responses billing exposure postincident",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_58220c63dc384549a60a5eb8e400d55a",
+      "title": "SUP 591122 sticky snapshot loss during tiered canary",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_7fd136dd100c4c9cbbe1958c94c26152",
+      "title": "SUP 215478 cookie domain rotation evicts pinned sessions during canary",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_f90b68cdda834c6fb4c76508d359c72f",
+      "title": "SUP 100200 console query cache stale after api key rotation",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_b87d81a8f52646f98e614d2a6394d7a3",
+      "title": "SUP 329476 per request sampling proof and siem forwarder integrity request",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_4b15b253ca294377a12d12651ada2168",
+      "title": "SUP 4821 embedding dim mismatch rerank timeouts",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a5a5235d973e421c870e11ceea4887ed",
+      "title": "SUP 18510 streaming throughput metric mismatch",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_0c8ea3b2a7fd4392b1f480fe5f0c4725",
+      "title": "SUP 92247 service account impersonation scoping prevents admin ops",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_1d53445cc74b4d7db325cd585736f87f",
+      "title": "SUP 100012 saved dashboard filter presets reset on report edit",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_019864ee09fa428e919e9a0de11ca467",
+      "title": "SUP 672839 accept queue buildup from prewarm handshake triggering 5xx wave",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a45bf5a85c7948dda06a42fc9f8b3ae3",
+      "title": "SUP 3009 token accounting discrepancy when using cached prefix and tool calls",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_521553a072244d199d06a34dd6e1aca0",
+      "title": "SUP 314158 prorated free tier redistribution on segmented usage",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_cc49c932507c42959ba9e4824f0d6b7f",
+      "title": "SUP 4852 private vpc request timeouts due to nlb idle timeout",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e4b8a2a6b6594d77b1880327d506619d",
+      "title": "SUP 15872 apac egress multipath retries causing inference p99",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_19354d85a1d14a469274135ccb314a20",
+      "title": "SUP 4844 dedicated sporadic upstream timeouts tied to rate limiter",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_fd73df34040d4e0f8f944ccc9f0b5e70",
+      "title": "SUP 1845 private installer upgrade stuck at migrations",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_21d6b99dc771418287d61444f373852e",
+      "title": "SUP 24871 not receiving onboarding emails",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_c8e1d531048848c58247e00983096499",
+      "title": "SUP 29477 go sdk missing retry after handling 429",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_f3e6edec6f4947a5bd5aa7fd557d7d2b",
+      "title": "SUP 28488 billing question burst usage metering",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6bd66c03cd3242a99006b44429dd0a8e",
+      "title": "SUP 350121 proxy ephemeral port pressure 5xx wave",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_0c504258cd0c432d898e6711fb90eaf6",
+      "title": "SUP 3812 northwind dedicated latency spike during interview window",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3fb8a400e0cf42d0b19dc134e2b7f46c",
+      "title": "SUP 356712 saml attribute leading bom breaks group parsing in private",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_f983fca1510e4cf492c0f39a4984d80c",
+      "title": "SUP 1000001 unicode idempotency normalization mismatch multibyte keys",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_5410b45665284cfcb01f72410fff33c4",
+      "title": "SUP 100864 webhook body canonicalization retry signature mismatch",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_2f1f0358b85148f19d38f619891bfb15",
+      "title": "SUP 28463 double charged for retries",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_be8d2802cf3245088a7e7f861f317b31",
+      "title": "SUP 29458 template telemetry header blocked by corporate proxy",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_97992c0043184c7b9c10ed2106482ae1",
+      "title": "SUP 4833 hosted api context deadline exceeded streaming chat us west",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_21486610d7314d84980518cb355b6a97",
+      "title": "SUP 209876 staggered canary burst pin inconsistency causes legacy reroute",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_df40f9a66b914f29839322d19f8922bb",
+      "title": "SUP 425001 cohort signal loss during synced canary flip",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8c15ff526e00491e9ccbde5ef4a4458c",
+      "title": "SUP 1000007 sse keepalive suppression and duplicate heartbeat resume",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_81b534f370e44872be8651f9c75e18bd",
+      "title": "SUP 76432 promote fallbacks during cache warmup",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_5cf1a6657f1848968b2fd154066950ae",
+      "title": "SUP 4827 hosted api increased request timeouts eu west",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_3a5484e7e7164e389e76d188bce9f86e",
+      "title": "SUP 4884 ts sdk authorization header missing edge streaming",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_d04dea2d736445c3af6934b900a12ef9",
+      "title": "SUP 28451 invoice tokens do not match usage api",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_8dff963a50774cdd84131d9ae5e4f4f3",
+      "title": "SUP 4821 hosted api intermittent 504 request timeouts us east",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_cd46e89bb40a4dd7b243aabf43c98086",
+      "title": "SUP 18421 private upgrade failed during db migration",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_b993fa19b3d44382b709e3107ab1ba77",
+      "title": "SUP 3917 audit log export missing event types",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_85ee9562e05d457b9e32785343777359",
+      "title": "SUP 48271 suggestions savings estimate does not match billing",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6e8ba53c201b4e5b8d77a4fe9e634648",
+      "title": "SUP 553780 ephemeral heartbeat jitter fragmentation triggering autoscale misclassification",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_f70e8011de994a9d956fca708445fb5e",
+      "title": "SUP 61595 saml sessionindex stale rolecache causes intermittent 403s",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a8af533a3f89402ca739bfdc5322b42e",
+      "title": "SUP 4821 python sdk 401 after key rotation",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_9adc7c1c81f54e0a88d0e0bee59a6588",
+      "title": "SUP 827459 pinned model demoted by edge rate shedding",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_94f568e4161d4d78b0db60af2b611746",
+      "title": "SUP 48377 canary traffic split not matching config",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_1ffa3f05e342408382daa57107ec4297",
+      "title": "SUP 845327 field level redaction legal basis evidence request",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_63a1c6c12e1e4d9cae67056673633192",
+      "title": "SUP 882473 undo optimizer toggle stepwise fallback walkthrough",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_ad3961a5bbd846d09d101bfa951ab739",
+      "title": "SUP 77321 temporary pause and traffic split mitigation for aggressive opt profiles",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_876b1a31bcc7409ab560b9ccbe5a0d41",
+      "title": "SUP 835120 historical panel staleness after retention compact warmup",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_5e87f57f0e424a3a9e79a3032d63eab8",
+      "title": "SUP 2917 token accounting discrepancy embeddings usage higher than client side tokenization",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_6e528fa402c34043897649be6aa6df3d",
+      "title": "SUP 2892 fallback model not triggering during overload",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_1a160e1c00934f108e17183f44e3ca77",
+      "title": "SUP 4902 go sdk invalid api key trailing newline",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_df79433aa56c489d93efd96e27dc1fc8",
+      "title": "INT 4821 badge access kiosk blocking",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_0fa69b4e576f417ab759af8e33cb049f",
+      "title": "INT 8725 kitchen fridge odour complaint",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_4ed037e2747b42abb6726f26c41c9545",
+      "title": "SUP 94217 unexpected rate limit spike",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_a7baddf163ef4946a97b4765bf1cf08b",
+      "title": "SUP 9184 invoice discrepancy and usage questions",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_e62a534321a24da2a93a003a9546804b",
+      "title": "INT 4829 odd spike in building access logs",
+      "source": "jira"
+    },
+    {
+      "doc_id": "dsid_43ecb807903f46848e8d099b6c8beb04",
+      "title": "kernel snapshot observability contract 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5d509e588f994166a2ccc6e39cbf6cb5",
+      "title": "dedicated cluster hotfix rollout notes",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_f1b208f3637e4987aeab371242a5bea5",
+      "title": "gpu ci credential rotation and image promotion safety",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_840703a1cc37438a84e9beb68029d80b",
+      "title": "runtime release pipeline rollback procedure",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8c3d5e26a1c841199d3bcd7aea5d495e",
+      "title": "hotfix build and signing",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_cf06e75be4f94156ac338f62e3ee028b",
+      "title": "production secret rotation runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b96ce0f550a9437e902636a7628160ca",
+      "title": "dedicated audit log export customer setup",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b8ab9778e36543159da49dba3ad9c76d",
+      "title": "gpu interaccount warm pool handoff protocol",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_189583d1a5ed4513a4d709a037098a24",
+      "title": "tenant egress isolation ci simulator",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_36cc238e32514fc09cfad6e7d1ce7364",
+      "title": "service energy and cost accounting metadata standard 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_4b145e62988d40bab07d2bc3e66206a0",
+      "title": "batching defaults observability dashboard spec",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_f8b651a683044ad8964f34f881c63152",
+      "title": "runtime 1 22 kv cache compaction",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_f877499fe0e946199ceb2486f0ad5ec3",
+      "title": "runtime kv cache compaction runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ac2fdba09cc24cd98ba60f5da114780c",
+      "title": "serving runtime hotfix runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_f6e3b7ad413142019dbb5a5fed07f548",
+      "title": "emergency rollback serving runtime hosted dedicated",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2e4183d040b341cf843366e2c15402af",
+      "title": "adaptive degradation safety verification manual 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b8e35b6af506467d96a92946c0a16c28",
+      "title": "cross layer failure taxonomy and healing playbook 2028",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2f9c99fc8ec74495b4b08c49a6083ba8",
+      "title": "deterministic playback manifest format v1",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8f0301d7b2414031b392da5566f98ce6",
+      "title": "dynamic quant handoff and latency budgeting manifest 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d8d194e311b9482cb38c61134b6d26fa",
+      "title": "quant profile requirements for catalog",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ad70fa7335294e2988193e2a6645a5ba",
+      "title": "quant output degradation detect and repair protocol 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_05841423a55e4c35abd276d9899b7134",
+      "title": "ci eval determinism and flake mitigation",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b52a8760cae1451a9504edcf9ff58e31",
+      "title": "evaluator cli and sidecar plugin spec 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5cde26f232454906879617dab1800fae",
+      "title": "model launch eval gates",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_10a7359bb6ad4b959ad2171abdb9f620",
+      "title": "edge shadow telemetry contract 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_117e5a150aa94adc86295786bd6b7843",
+      "title": "hosted api model intake",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e044274a9d184700bb8cdf9ddb6d9d02",
+      "title": "causal regression investigation handbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b4bd83b46612452e858bc02b380082e2",
+      "title": "probe heatmap rollout decision protocol 2024",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a2bf755670ad44e09b42c11e9d73e5d3",
+      "title": "prompt heuristics templates and failure cases 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a898d2541b944cdebeec03ec9d9ba130",
+      "title": "break glass and emergency access",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5323aeb9f89042c9a62505d409c4d94a",
+      "title": "employee lifecycle operating manual 2024",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d7f0edbaa28147da807b5b85ea495bd1",
+      "title": "cross role tool access governance and self service handbook 2027",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c175ab6b52fe4226baac85697c562c7d",
+      "title": "tribe liaison and status wire protocol incident playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_01eaeaf6045941beaeaf74e6170aceea",
+      "title": "responder rotation synthesis and deferred postmortem protocol 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_865449ae95b044768f33773263bfeaad",
+      "title": "controlled failover test results 2026 01 15",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9f2e6aa7f6c14b1db1c6f922a1d4b4d7",
+      "title": "gpu warm pool cross account handoff runbook 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_150b485e7fd54251b937ab3d08a850dc",
+      "title": "runbook rollout stuck or bad split",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e5fe3fd0cf444668a64970ec00818f46",
+      "title": "sev1 communication requirements",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_3e991a24c7bc4e91b99eb5846b927558",
+      "title": "emergency rotation during incident",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_81a7e3e0204d4c6984e0a503d5423314",
+      "title": "planned maintenance and change comms",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_85ade33e53334639be778b9c7aabe637",
+      "title": "customer incident comms alignment",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2dab968306594149a14ef27b2a1641d1",
+      "title": "status page comms guidance rollout issues",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_80e095c2dc1745af86b80d24e27a9857",
+      "title": "planned maintenance comms sop enterprise",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_3638bd02227d4882ad0605f1e8b767c0",
+      "title": "2026 02 25 p1 metrics pipeline dropped spans postmortem",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_bd7caad8adb2405eaa7ad78c4ffb59d7",
+      "title": "rbac authz failures 2026 03 18",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d3edd63b9ec54523ad12bd9be3d7e996",
+      "title": "2025 03 03 eu west capacity shortage region fallback",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_bf7e79dc1331447598c4eebdc5d2897d",
+      "title": "2025 06 08 dedicated cluster degradation fallback to hosted",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5e65a1cb22b6464e9f36d0fa2d1f4317",
+      "title": "2026 02 09 sev2 dedicated autoscaler stuck",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_02f0cd8c874b431cbdec5455721ce8c1",
+      "title": "inc 2025 0522 private gpu fragmentation capacity drop",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_7d347905549f4456b0d2226b47e4aa68",
+      "title": "2026 02 12 p1 token accounting mismatch postmortem",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ed145ed8c9234a6681359188e2f43345",
+      "title": "dedicated capacity starvation 2026 03 10",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_faf3246a6ce845e6b5df0ae52f439399",
+      "title": "2025 04 19 router policy bug triggered model fallback",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_15a9d93cc59c4241a97a7e72f749a216",
+      "title": "streaming stalls 2026 01 12",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a277ed2dc74c4bad82bc71b534b6356f",
+      "title": "2025 07 22 private vpc egress issue region fallback",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d373a0708d4144d684e495c52c16448a",
+      "title": "2026 02 07 p0 control plane outage postmortem",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_98943148c00b42db859ec2d84649fe04",
+      "title": "kv cache evictions 2026 03 02",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_58bdb9f3bb4241e089f4f2b102765db4",
+      "title": "postmortem perf canary false positive alert storm",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ec406aef8d0342c78ae27025670daedf",
+      "title": "2026 02 20 p0 dedicated cluster routing loop postmortem",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e190b0de0d27466fa91bfc18b0815311",
+      "title": "2026 02 22 sev2 console deploy rollout ui bug",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ac94dcaf2e1e4674b2351a8b4177db9e",
+      "title": "rate limit misconfig 2026 02 14",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_0e0ac7276c864c63a02586fa07ae85e1",
+      "title": "latency regression tokenizer update 2026 01 27",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_4e016427a93c49ffadd31fcdc1dca792",
+      "title": "2025 02 11 hosted api latency fallback activated",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ad148b222d31473f8a3d279d679935eb",
+      "title": "inc 2025 0303 dedicated autoscaler lag quota ceiling",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_6ecddbbad4fa4fe985d855676b96cd91",
+      "title": "inc 2025 0112 hosted api us east gpu pool exhaustion",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c0c93abadf4c438189e23cb45256c6e9",
+      "title": "region failover incompatible variants 2026 02 03",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_91d7f359508c4476a6f717ea2b33aecc",
+      "title": "partial result checkpointing client resume contract 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_0a23e8e094d5445b8a1af748598300ca",
+      "title": "sdk retry timeout standard",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_fc356e32e9a64c3199be174cb91432eb",
+      "title": "adr streaming tool call payload shape",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b885123ef2c04d508ee071328a4e5aa7",
+      "title": "sli specification api gateway and routing",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_50f47a9662ea40858feb7bd975071c96",
+      "title": "audit log export architecture",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_852961d22e0e48b194d7a3f8ccf17173",
+      "title": "input normalization and tokenization guardrails playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a6efecc786c9436499eb000b8489ae52",
+      "title": "quantization profile compatibility and fallbacks",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e82eadf0700f4e6db8eecc460c4cac44",
+      "title": "standard model version readiness requirements",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_04b24bf957c047f4b7d8ceefdfde8290",
+      "title": "adr declarative contract tests and schema fencing 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_6d3e0fd1c48b466e9f5a4a5b0a1127a0",
+      "title": "adr 021 region pinning enforcement boundaries",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a3f94972391244f38ef773c05926af83",
+      "title": "adr perf canary baseline and thresholds",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_610d2c74a60441e886fcc39e351a4176",
+      "title": "adr 008 key rotation strategy dual read and cutover",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d32eb5051b554e038222c3bf399acef8",
+      "title": "adr 015 admission control layering gateway routing runtime",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9a5968363fce4f79af38d7702465a121",
+      "title": "adr 013 incident bot data sources and permissions",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d64b62cc422c45108871fb097066e6f8",
+      "title": "adr 007 kms client wrapper and failure policy",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2c8a0d14578d4789ae96d9f993d04ae1",
+      "title": "adr hubspot routing and ownership rules",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8c24fd15fe5b473eb71341751d292b6e",
+      "title": "adr hosted rollout cohorting and traffic splitting",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9762ad5c4f7b45e3af5dda76b48752e4",
+      "title": "adr 014 hosted overload error taxonomy",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_92d0d471ddc941288bcb51b3ded6ec36",
+      "title": "hosted model performance bar",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_06682ba9559b4b2192ffe6dee7a7abba",
+      "title": "mixed priority cgroup and soft quota playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_eca097630e444b2d8e30da4b08fcbc4e",
+      "title": "prod deployment gates hosted api console",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_36d7605113204cdca94405cb30fc2c10",
+      "title": "operational flows and policy gallery 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_329e7ecd6b304c30b61a30e07919e008",
+      "title": "ops orchestra procedures 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ba7d1565b0694e359983bccaa4bf5977",
+      "title": "entitlements and purchase pathways playbook 2030",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d9d0ca701cc54d58adae135f69cc83d7",
+      "title": "tiered slo to sla mapping hosted and dedicated",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_7f6bde5cefa543a7b1943ffaf5a8a9f1",
+      "title": "private release gating and change management",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_319db001cae246bbbb16f441b64d9b82",
+      "title": "production change management standard v2",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2b7848a8491749f8b9b9a8c13f78445f",
+      "title": "change management policy model and runtime changes",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_89889daf6b89426ca90049f313d4324f",
+      "title": "production change management policy",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_452dc45d76754cbca8a3674170599633",
+      "title": "emergency change policy v3",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c52c609c0cdf4211a7e8c57bb1da72e4",
+      "title": "usage based pricing legal terms playbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_f2f019c122154edc8b21f56879661043",
+      "title": "procurement legal risk escalation sop 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_37befab212ae4ed9be7ebe612d942658",
+      "title": "billing meter spec hosted api tokens and requests",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_602422b841b94f5c8089555015df0ed8",
+      "title": "metering to invoice reconciliation playbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d93aed75845e4a0b8126a80d8a7a5a41",
+      "title": "clearedge health weekly invoicing po fingerprint net terms 2027",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_dbd29f9393f149fbb696c9a5614dc875",
+      "title": "marketplace revrec and invoicing notes",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_f952b60df24d4736b831a643993aee67",
+      "title": "blended cost methodology v1",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_69e745b76aa34eab8721ba0c88482ec0",
+      "title": "unified inference consumption paradigm overview 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b02e6ce0d9814b35af846c309c25e551",
+      "title": "optimize 1 3 release notes performance profiles 2026 02 18",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b41df051e6dc46c48b36a99c366ee5c5",
+      "title": "hosted inference cost fallback 1 2 release notes 2026 06 30",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ad58457891774bd7ba480e0bcd13df3a",
+      "title": "optimize conductor 4 0 release notes and migration guide 2028 09 15",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9964e71da61e4a92bf3f53699cabbf95",
+      "title": "prd integrated fallback analytics cost reconciliation 2026 04 12",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_db1c1f64721b468dafb35c2e0080a8f8",
+      "title": "unified capacity transition prd 2027 06 18",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_40e1a761f7644c388c1bccb73d6bd427",
+      "title": "multimodel pipeline orchestration prd 2026 01 12",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2aa88546569b4fc6a1a5eee4a97ffda9",
+      "title": "dedicated burst capacity prd",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_553e1651575a416dae6b92d019d2f9f4",
+      "title": "optimize cohort evals ab gates staged failover prd 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_693c023c88264795a7e98c7737e6459e",
+      "title": "prd quantization fidelity experimentation lab 2027 03 22",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_96151fd86fcd4aef83e13a706768dd11",
+      "title": "marketplace subscription to org provisioning flow",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_cb0d800639e84d68ae035596c7f6f1f8",
+      "title": "design spec model version rollouts template",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_005f7a937cad4b3cbb30d9d93199e22a",
+      "title": "embedded contractor conversion playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_0a2cd37d53ff47d4aced289cd9a76fe8",
+      "title": "evidence driven offer evaluation and onboarding trigger playbook 2028",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8cb8070d41604b67901e60da07713d92",
+      "title": "office plant care policy 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c1a652436b2e4c949f5de9f5da227cd7",
+      "title": "misc cafeteria beanbag and ambient noise guidelines 2024",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_bb14e2f3925b4e27829c4f3c1aea3af1",
+      "title": "office art and plants guidelines 2024",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5af1ed23fd2a4bb3984ec368d0e3b23e",
+      "title": "devx onramp localization docs ops and canonical fixes 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a2983978ba0d4d70a795eb7e13de8670",
+      "title": "quantization profiles customer docs plan",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_3ad691e18be849d897506f5276c24a75",
+      "title": "streaming event model conventions",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_bced6413bb6f414a882fb9cbaf8c7448",
+      "title": "sdk parity matrix auth retry timeouts streaming",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_77351104a57140ac8e065d0a6bcf2046",
+      "title": "developer shield sdk chaos and recovery lab 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_981f4a0281054f9aaaec7887156eebc4",
+      "title": "slo to customer impact classifier and remediation workflow 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_eba5d122d7244ffbb6c20a2487aa1017",
+      "title": "private audit log export configuration",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c198dbbcf28a4c73ad1d705809634176",
+      "title": "tenant telemetry consent and redaction playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5efc026a36144721a82af3dfb2dcdea8",
+      "title": "optimization config audit events",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_fc009de77554459b89e6b4340e8eca82",
+      "title": "offline bundle format and manifest",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_57a712a7419d4e84bccfcf08c8c010a5",
+      "title": "rollback semantics and hooks",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c5848fca4e1c4cc48164aa3e53e5741b",
+      "title": "backup and restore strategy private",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_0a6c6e67d89c4cb4b053a7c04d780d97",
+      "title": "private deployment optimization config rollback",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d64cf51ff0db444c92d57cf1a5981b75",
+      "title": "private upgrade and rollback overview",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_4bb945f3de9b4f6aa834d2941fae625f",
+      "title": "private upgrades go no go checklist enterprise",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_04e98bd61eac4ec89e3fc13c38de1b8e",
+      "title": "private model version upgrade requirements",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_80a4859760ce4cf4af51f7c570903ab8",
+      "title": "airgapped artifact sync and telemetry proxy 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_10a589a5ee9048d9a33deb4156037171",
+      "title": "private onprem backup restore and audit log retention guide",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_7c73cb76b80a41edb4959db4b1e7308b",
+      "title": "tenant observability evidence contract for regulated vpc deploys 2027",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_bce6ec1b34a044d694dda5607a184d31",
+      "title": "incident review h1 2025 capacity quota exhaustion",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d844cc30147b49c69ea5275b4993b571",
+      "title": "postmortem controlled failover test regression",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_acd1d77ed9044f3691d06a9ccc6bf417",
+      "title": "upgrade related alerts and mitigation",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9835602b1b544034bc6272bf2a8c2969",
+      "title": "error budget recovery psych safety comms runbook 2024",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_74ebb73359364bc791707a92a3227e3a",
+      "title": "post rotation verification checklist",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5094ef74d2e249919de1aa6db7c5d0e7",
+      "title": "private upgrade runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_6574ec5483bb44d39fca9eb57d75d0af",
+      "title": "burst pool overload mitigation runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_16996cd96c1c4fa1ab399cbc446b186f",
+      "title": "incident classification policy",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5217b3a64c4a433c89ba2a3186dea82a",
+      "title": "incident ownership mapping and remediation sla matrix",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_863d0cda2c984154baad1973513ed3da",
+      "title": "incident taxonomy v1 definitions",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_77d70426ff9545c191fa5e64f4a398b2",
+      "title": "dedicated burst slos and alerting",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_49fa5cfd95624dbeb6eaa535f9959470",
+      "title": "hosted api slos enterprise route tiers",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c70d63e14aa84195aec43820c018f8b9",
+      "title": "unit economics pipeline slo",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_32c5e7ca0e2e4eadac78b01a35cfed7a",
+      "title": "rollout slos and alert thresholds",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_914d75cb27ee4a06b3f69e445d715ab4",
+      "title": "change freeze and risk assessment",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b01c12d7b75240c6a712313d764bd8a7",
+      "title": "latency slo tiers definition fast standard cost efficient",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9a0982d498384adeb435a2b3938bfd76",
+      "title": "runtime workload signatures and slo derivation playbook 2024",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e33c122264214846a8b7df7701d31482",
+      "title": "dedicated throughput slo definition",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_871b6712caf44f8bbfea4d8a15e436b6",
+      "title": "planned change slo error budget review",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_1214ee9ab5e44de487c800f7a4771d7d",
+      "title": "deal acceleration playbook and security faq 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_06464e95b7cc44de8a9677f3260c336e",
+      "title": "platform brief saas gtm inference value metrics 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8f6063b780784a139de5c4d5afa49eb2",
+      "title": "helixcare case study q4 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_81f6e00a9f474941ab5c123a64b0b80e",
+      "title": "brightcart case study q4 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d04ead3e1e2d4c9f9cd34c73dca30b5d",
+      "title": "cedarbank case study q4 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_1f781623f5c14b3686b1129d19b73884",
+      "title": "northbridge payments case study q4 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8f0b7a8c1dbb4df0b23f6c4e61c9f1a6",
+      "title": "aws marketplace procurement security faq 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_08585f025bd74d50bafd23843caae7bb",
+      "title": "security faq what we do and dont say",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_25b0de9bfa854d3c9acfa961555c9d45",
+      "title": "ten step restoration sprint and shadow mentoring handbook 2025",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_617d538c79334f4b9ddfd5c50c05ee4b",
+      "title": "adr 022 error contract for residency violations",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8733ed2132dc4232b2797c1d9a167cb9",
+      "title": "audit log export role aware filtered dump 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_385fd2388669469e87964b25d6428871",
+      "title": "customer managed audit log export controls",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_7c08ef109c804c0bb165184b7d78b18c",
+      "title": "incident bot access audit",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2bb0a4d1958848b0939ed64cc2b911ff",
+      "title": "audit log exporter report templates",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_53035d2eb5024effac3aafd3e6ca6e70",
+      "title": "audit events for dedicated rollout actions",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a8815e6f0b05476a8581f98a718fe89f",
+      "title": "tiered eval fidelity contract and shadow mesh playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e2327ad35ceb466489dad854770739bf",
+      "title": "security signoff customer deployments",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_bf7e0df04c8748458b5515c864c48609",
+      "title": "security review requirements for prod changes",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_377cdf4e378f40bebd7196e3a0ff1c38",
+      "title": "key management standard kms integrations",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8c92178c254d467c9854db67aac7c9be",
+      "title": "secret management standard",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_40471ba4cd3b430eab3ac0877eef0972",
+      "title": "third party model risk review",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_33de625fcfc045dd967dbc9bdde3a8b4",
+      "title": "nordbank eu only temporary us failover exception",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_d9702f193090461480911352de3d4e49",
+      "title": "compliance reporting pack baseline",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_44b11e967a5f4029aebb720891f66450",
+      "title": "evidence collection procedure retention and audit logs",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a9a67d815b07451e90ed8c3d1734d007",
+      "title": "abm pilot security evidence pack index",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e7a4deb2e7ff4361978a272e91e20f15",
+      "title": "sensitivity tiered audit ledger and rollback evidence playbook 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_cb839e9e2395455f97b798dc681a069b",
+      "title": "tenant segmentation incident evidence and forensic guidance 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_330be20dd4224d8dad24eb633121ba06",
+      "title": "oncall guide unit economics dashboard",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_03042cec7a2344769bca5a624091092e",
+      "title": "hosted audit log export enablement",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2db615f2f6f14cbfae67c62b3c976b27",
+      "title": "console deploy runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2ad75f27c36b492f847d5b9c63492e4b",
+      "title": "hosted model rollout and fallback",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_6807c651b55546559733c7c6f8dc133d",
+      "title": "hosted rollout and rollback procedure",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_896272184a6845a19d9bd1a0a4e3e671",
+      "title": "runbook retention purge jobs",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a54a2f8553804d34986f42a49907b9d0",
+      "title": "runbook rollouts canary ab fallback",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_1d6255db99894b2794c36318f654f085",
+      "title": "demo tenant reset runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2ee4c1a35c5f4dba9b49efd3e97dd265",
+      "title": "hosted api deploy runbook",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_190d9732b59b411d8a6bcc59fd61b309",
+      "title": "rollback and post change validation",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_e5b1e464966a48bf9406e6e7197fee0d",
+      "title": "rollback procedure quantization profiles",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8116cb3e580543d7bde1c57df351a3f3",
+      "title": "project orion weekly update 2026 02 13",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_431b0713c42847bbac15f3354776db68",
+      "title": "project orion weekly update 2026 02 06",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_03e22d519f9b40a5ac61a03e5c4620d3",
+      "title": "project orion weekly update 2026 01 30",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_a134a3fd3c244a52a8d3e1ff515fdf58",
+      "title": "project orion weekly update 2026 01 16",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ce60931a1aea428b8186228ee40bb497",
+      "title": "project orion weekly update 2026 01 23",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_7fc490f8522b486c8f4b665d5189066c",
+      "title": "project orion weekly update 2026 01 09",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_5776ac1f724b4f72a084d3e796f0af4a",
+      "title": "overload protection dashboards",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_7f2a6f2d2de34f94a5b6f3d5d0d1f6a2",
+      "title": "interactive latency canvas design and instrumentation guide",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_c67e1098ee1e4d438a041539a79bfc15",
+      "title": "tp stall and timeout dashboard",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_46a4cb87db414e769f2df86f01626948",
+      "title": "runbook writing and telemetry bootcamp curriculum 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_4e65166659394a90922be6a5c7b110a8",
+      "title": "operator fallback experiment matrix and cost penalty catalog 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_97b25b6f83c542e7b81d6504b5653dcb",
+      "title": "control plane credential dependencies",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_858fd59a63d64f5e81a2b8482ba64dbf",
+      "title": "unit economics aggregation service",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_6a8476f19fee43b3af984d2bd790453f",
+      "title": "rollout orchestrator service",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_ca42a8f18d784c879c5a6fcfe3a484c0",
+      "title": "overload errors and retry guidance",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2fda4174a0324c149fe70b1ee84e1fc8",
+      "title": "ingress proxy connection entropy workaround 2026",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b43656ed184842b8a54c51137141d3cc",
+      "title": "structured output json schema timeouts",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_90218d9a9af84072bcf3ff7bb90b5fa1",
+      "title": "lexicohealth embedding dimension mismatch rerank timeouts",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_12299dbfb9084473856316ff3afcbf3b",
+      "title": "workaround private installer upgrade stuck migrations",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_409618a3958944f9b78362ed7e01bb33",
+      "title": "dedicated throughput slo escalation",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_78001368bf0e456ea8a4d0417b2c5b01",
+      "title": "customer comms templates",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2dc6ac1e1db14588913165002c062961",
+      "title": "sla policy by customer tier",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_0b129c86cc6240b088a137d6634eef25",
+      "title": "slack bridge and incident channel conventions",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_8d97d64cfcb14cd3b13589b86b0a0c02",
+      "title": "executive escalation protocol",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_b632b2d6f86f41c6820e52ae56549a35",
+      "title": "severity matrix and escalation triggers",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_9c8cb10d65324c03a8ededbd98c1b058",
+      "title": "go live protocols cross org communications escalation 2027",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_dd0fe40a2c71489793d566e46e95bb93",
+      "title": "audit log export request intake",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_91abfa2001d747b3b570e8abce00ef4d",
+      "title": "token accounting discrepancy intake and triage",
+      "source": "confluence"
+    },
+    {
+      "doc_id": "dsid_2ce9ae40d5d347c1add2b31c4d5a8c3c",
+      "title": "support process model rollout customer comms requirements",
+      "source": "confluence"
+    }
+  ]
+}

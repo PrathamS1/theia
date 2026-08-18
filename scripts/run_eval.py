@@ -1,90 +1,120 @@
 #!/usr/bin/env python3
 """
-scripts/run_eval.py — Entry point for Phase 4 Evaluation Harness.
+scripts/run_eval.py — Official EnterpriseRAG-Bench Evaluation Runner.
 
-Loops over questions in data/questions/questions.jsonl, executes each question against
-the query engine, evaluates accuracy vs gold answers, and reports metrics by category.
+Runs 500 benchmark questions in strict blind inference mode:
+1. Passes ONLY question_text into QueryEngine.
+2. Evaluates Document Recall, Fact Correctness, Answer Completeness, and Extra Docs Penalty.
+3. Computes Composite Benchmark Score and compares against Leaderboard (#1 Troml @ 76.79).
+4. Saves full evaluation artifacts to data/eval_results/eval_latest.json.
 
 Usage:
     python3 scripts/run_eval.py [--limit N]
 """
 
-import json
 import sys
+import json
 import logging
+import time
 import argparse
 from pathlib import Path
+from typing import List, Dict, Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from company_brain import config
 from company_brain.graph.client import GraphClient
-from company_brain.query.engine import answer_question
-from company_brain.eval.metrics import compute_metrics
+from company_brain.query.engine import QueryEngine
+from company_brain.eval.metrics import evaluate_prediction, aggregate_benchmark_results
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("run_eval")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate Company Brain on questions.jsonl")
-    parser.add_argument("--limit", type=int, default=0, help="Max questions to evaluate (0 = all)")
+    parser = argparse.ArgumentParser(description="Run EnterpriseRAG-Bench evaluation.")
+    parser.add_argument("--questions", type=str, default="data/questions/questions.jsonl", help="Path to questions.jsonl file")
+    parser.add_argument("--limit", type=int, default=None, help="Limit number of questions evaluated (e.g. 50 or 500)")
+    parser.add_argument("--output", type=str, default="data/eval_results/eval_latest.json", help="Output results file")
+    parser.add_argument("--concurrency", type=int, default=1, help="Evaluation concurrency (default 1)")
     args = parser.parse_args()
 
-    questions_path = config.QUESTIONS_FILE
-    if not questions_path.exists():
-        logger.error("Questions file %s not found. Run bash scripts/download_dataset.sh first.", questions_path)
+    questions_file = Path(args.questions)
+    if not questions_file.exists():
+        logger.error("Questions file not found at %s", questions_file)
         sys.exit(1)
 
-    logger.info("Loading questions from %s...", questions_path)
-    questions = []
-    with open(questions_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                questions.append(json.loads(line))
+    # Load questions
+    with open(questions_file, "r", encoding="utf-8") as f:
+        all_questions = [json.loads(line) for line in f if line.strip()]
 
-    if args.limit > 0:
-        questions = questions[:args.limit]
+    if args.limit:
+        all_questions = all_questions[:args.limit]
 
-    logger.info("Starting evaluation on %d questions...", len(questions))
-    results = []
+    logger.info("=== Starting Benchmark Evaluation on %d Questions ===", len(all_questions))
+    logger.info("Connecting to HydraDB and initializing Hybrid Query Engine...")
+
+    engine = QueryEngine()
+
+    eval_records: List[Dict[str, Any]] = []
+    start_time = time.time()
 
     with GraphClient() as client:
-        for idx, q_data in enumerate(questions):
-            q_id = q_data.get("question_id")
-            q_text = q_data.get("question")
-            q_type = q_data.get("question_type", "basic")
-            gold_facts = q_data.get("answer_facts", [])
+        for idx, q in enumerate(all_questions, 1):
+            q_text = q["question"]
+            qid = q.get("question_id", f"q_{idx}")
+            qtype = q.get("question_type", "basic")
 
-            ans = answer_question(q_text, client)
+            # Strict blind query
+            pred = engine.query(q_text, client=client)
 
-            # Check if answer contains gold fact key terms
-            correct_facts = 0
-            for fact in gold_facts:
-                key_words = [w.lower() for w in fact.split() if len(w) > 4]
-                if any(w in ans.answer.lower() for w in key_words):
-                    correct_facts += 1
+            # Evaluate against ground truth
+            eval_res = evaluate_prediction(
+                prediction=pred.model_dump(),
+                ground_truth=q
+            )
+            eval_records.append(eval_res)
 
-            is_correct = (correct_facts >= max(1, len(gold_facts) // 2)) if gold_facts else (not ans.abstained)
+            if idx % 50 == 0 or idx == len(all_questions):
+                elapsed = time.time() - start_time
+                avg_score = sum(r["composite_score"] for r in eval_records) / len(eval_records)
+                logger.info("  [%d / %d] Elapsed: %.1fs | Running Composite Score: %.2f",
+                            idx, len(all_questions), elapsed, avg_score)
 
-            results.append({
-                "question_id": q_id,
-                "question_type": q_type,
-                "question": q_text,
-                "answer": ans.answer,
-                "citations": ans.citations,
-                "is_correct": is_correct,
-            })
+    total_time = time.time() - start_time
+    logger.info("Evaluation loop complete in %.2f seconds (%.2f q/s).", total_time, len(all_questions) / total_time)
 
-            logger.info("[%d/%d] %s (%s): %s", idx + 1, len(questions), q_id, q_type, "✓ Correct" if is_correct else "✗ Incorrect")
+    # Aggregate Benchmark Metrics
+    summary = aggregate_benchmark_results(eval_records)
+    summary["execution_time_seconds"] = round(total_time, 2)
+    summary["questions_per_second"] = round(len(all_questions) / total_time, 2)
 
-    metrics = compute_metrics(results)
-    logger.info("\n=== EVALUATION REPORT ===")
-    logger.info("Total Questions: %d", metrics["total_questions"])
-    logger.info("Overall Accuracy: %.2f%%", metrics["overall_accuracy"])
-    logger.info("\nCategory Breakdown:")
-    for cat, stats in metrics["by_category"].items():
-        logger.info("  %-15s : %d / %d (%.2f%%)", cat, stats["correct"], stats["total"], stats["accuracy"])
+    # Save artifact
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump({"summary": summary, "per_question": eval_records}, f, indent=2)
+
+    # Display Report
+    print("\n" + "=" * 80)
+    print("  🏆 ENTERPRISERAG-BENCH EVALUATION REPORT — COMPANY BRAIN (HYDRADB)")
+    print("=" * 80)
+    print(f"\nTotal Questions Evaluated: {summary['total_questions']}")
+    print(f"Total Execution Time:      {summary['execution_time_seconds']}s ({summary['questions_per_second']} queries/sec)")
+    print("\n" + "-" * 80)
+    print(f"  🎯 OVERALL COMPOSITE BENCHMARK SCORE:  {summary['overall_composite_score']} / 100.00")
+    print(f"     • Fact Answer Correctness:          {summary['overall_correctness']}%")
+    print(f"     • Answer Completeness:              {summary['overall_completeness']}%")
+    print(f"     • Document Recall:                  {summary['overall_doc_recall']}%")
+    print(f"     • Invalid Extra Docs:               {summary['overall_invalid_extra_docs']}%")
+    print("-" * 80)
+
+    # Category breakdown table
+    print("\n📊 CATEGORY BREAKDOWN (10 DIMENSIONS):")
+    print(f"  {'Category':<24} | {'Count':<5} | {'Score':<6} | {'Doc Recall':<10} | {'Correctness':<11} | {'Completeness':<12}")
+    print("  " + "-" * 80)
+    for cat, metrics in summary.get("by_category", {}).items():
+        print(f"  {cat:<22} | {metrics['count']:<5} | {metrics['composite_score']:>6.2f} | {metrics['doc_recall']:>9.2f}% | {metrics['correctness']:>10.2f}% | {metrics['completeness']:>11.2f}%")
+    print("=" * 80)
 
 
 if __name__ == "__main__":

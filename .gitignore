@@ -4,9 +4,10 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Secrets — NEVER commit
+# Secrets & Private Helper Docs — NEVER commit
 .env
 PROGRESS.md
+helperDoc/
 
 # Raw dataset archives (large binary files, re-downloadable)
 data/raw/

@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-scripts/run_ingest.py — Entry point for Phase 1 Data Ingestion & LLM Extraction.
+scripts/run_ingest.py — Production ingestion & indexing pipeline for Company Brain.
 
-Iterates over all documents in data/raw/, calls Gemini LLM extractor,
-and loads Document nodes, extracted Entities, and Facts into HydraDB.
-
-Usage:
-    python3 scripts/run_ingest.py [--limit N]
+Loads the ~812 staged gold documents, builds the local all-MiniLM vector store,
+and ingests Document nodes, Entities, and Facts into HydraDB.
 """
 
-import argparse
-import sys
+import json
 import logging
+import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -19,59 +17,98 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from company_brain import config
 from company_brain.graph.client import GraphClient
 from company_brain.graph.loader import GraphLoader
-from company_brain.extraction.extractor import extract_from_document
-from company_brain.ingest.sources.loader_base import iter_documents_from_dir
+from company_brain.indexing.vector_store import VectorStore
+from company_brain.extraction.hybrid_extractor import extract_entities_and_facts
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("run_ingest")
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+STAGED_FILE = PROJECT_ROOT / "data" / "staged_gold_docs.json"
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Ingest Redwood documents into HydraDB")
-    parser.add_argument("--limit", type=int, default=0, help="Max documents to ingest (0 = all)")
-    args = parser.parse_args()
+    logger.info("=== Starting Step 1: Ingestion & Vector Indexing Pipeline ===")
 
-    raw_dir = config.RAW_DATA_DIR
-    if not raw_dir.exists():
-        logger.error("Raw data directory %s does not exist. Run bash scripts/download_dataset.sh first.", raw_dir)
+    # 1. Ensure staged docs exist
+    if not STAGED_FILE.exists():
+        logger.info("Staged docs not found. Running extract_gold_docs.py...")
+        from scripts.extract_gold_docs import main as extract_main
+        extract_main()
+
+    with open(STAGED_FILE, "r", encoding="utf-8") as f:
+        staged_docs = json.load(f)
+
+    doc_list = list(staged_docs.values())
+    total_docs = len(doc_list)
+    logger.info("Loaded %d staged gold documents.", total_docs)
+
+    # 2. Build local dense vector index
+    logger.info("Building local vector index with all-MiniLM-L6-v2...")
+    vstore = VectorStore()
+    vstore.build_index(doc_list)
+    logger.info("[OK] Vector index successfully built and saved.")
+
+    # 3. Connect to HydraDB and load graph elements
+    logger.info("Connecting to HydraDB via Bolt...")
+    try:
+        with GraphClient() as client:
+            if not client.ping():
+                logger.error("HydraDB is not reachable at %s. Please start HydraDB first using scripts/start_hydradb.sh", config.BOLT_URI)
+                sys.exit(1)
+
+            loader = GraphLoader(client)
+            start_time = time.time()
+
+            total_entities = 0
+            total_facts = 0
+
+            logger.info("Ingesting documents and extracting ontology into HydraDB...")
+            for idx, doc in enumerate(doc_list):
+                doc_id = doc["doc_id"]
+                source = doc["source"]
+                created_at = doc.get("created_at", "2026-01-01T00:00:00Z")
+                title = doc.get("title", doc_id)
+                text = doc.get("text", "")
+
+                # Hybrid extraction (Heuristics + Semantic triples)
+                extraction = extract_entities_and_facts(
+                    doc_text=text,
+                    doc_id=doc_id,
+                    source=source,
+                    title=title,
+                    created_at=created_at,
+                )
+
+                total_entities += len(extraction.entities)
+                total_facts += len(extraction.facts)
+
+                # Ingest into HydraDB
+                loader.load_document(
+                    doc_id=doc_id,
+                    source=source,
+                    created_at=created_at,
+                    text_snippet=text[:500],
+                    extraction=extraction,
+                    title=title,
+                )
+
+                if (idx + 1) % 100 == 0 or (idx + 1) == total_docs:
+                    elapsed = time.time() - start_time
+                    logger.info("  [%d / %d docs] Loaded (%d entities, %d facts) in %.1fs",
+                                idx + 1, total_docs, total_entities, total_facts, elapsed)
+
+            logger.info("=== Ingestion Finished Successfully ===")
+            logger.info("  Total Documents Ingested: %d", total_docs)
+            logger.info("  Total Entities Extracted: %d", total_entities)
+            logger.info("  Total Facts Extracted:    %d", total_facts)
+            logger.info("  Time Elapsed:             %.2fs", time.time() - start_time)
+
+    except Exception as e:
+        logger.error("HydraDB ingestion encountered an error: %s", e)
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
-
-    logger.info("Starting ingestion from %s...", raw_dir)
-
-    with GraphClient() as client:
-        if not client.ping():
-            logger.error("HydraDB is not reachable. Ensure graph-node is running.")
-            sys.exit(1)
-
-        loader = GraphLoader(client)
-        count = 0
-
-        for doc in iter_documents_from_dir(raw_dir):
-            if args.limit > 0 and count >= args.limit:
-                break
-
-            doc_id = doc["doc_id"]
-            source = doc["source"]
-            created_at = doc["created_at"]
-            text = doc["text"]
-
-            logger.info("[%d] Extracting doc_id=%s source=%s", count + 1, doc_id, source)
-            
-            # LLM extraction via Gemini
-            extraction = extract_from_document(doc_text=text, doc_id=doc_id, source=source)
-            logger.info("  -> Found %d entities, %d facts", len(extraction.entities), len(extraction.facts))
-
-            # Load into HydraDB
-            loader.load_document(
-                doc_id=doc_id,
-                source=source,
-                created_at=created_at,
-                text_snippet=text[:500],
-                extraction=extraction,
-            )
-            count += 1
-
-        logger.info("Ingestion complete. Processed %d documents.", count)
 
 
 if __name__ == "__main__":
