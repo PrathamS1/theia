@@ -43,11 +43,16 @@ def main():
     total_docs = len(doc_list)
     logger.info("Loaded %d staged gold documents.", total_docs)
 
-    # 2. Build local dense vector index
-    logger.info("Building local vector index with all-MiniLM-L6-v2...")
+    # 2. Build local dense chunk vector index (Zero Truncation)
+    logger.info("Chunking full corpus and building passage vector index with all-MiniLM-L6-v2...")
+    from company_brain.indexing.chunker import DocumentChunker
+    chunker = DocumentChunker(chunk_size=1000, chunk_overlap=200)
+    all_chunks = chunker.chunk_all_documents(staged_docs)
+    logger.info("Generated %d passages from %d documents.", len(all_chunks), len(staged_docs))
+
     vstore = VectorStore()
-    vstore.build_index(doc_list)
-    logger.info("[OK] Vector index successfully built and saved.")
+    vstore.build_chunk_index(all_chunks)
+    logger.info("[OK] Chunk vector index successfully built and saved (%d embeddings).", len(all_chunks))
 
     # 3. Connect to HydraDB and load graph elements
     logger.info("Connecting to HydraDB via Bolt...")

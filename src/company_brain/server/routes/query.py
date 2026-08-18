@@ -1,5 +1,8 @@
 """
 server/routes/query.py — Question bank and Hybrid Query Execution endpoints.
+
+Executes 100% authentic hybrid inference and returns real dynamic vector scores,
+citations, traversed graph entities, and facts.
 """
 
 import json
@@ -86,11 +89,24 @@ def execute_query(req: QueryRequest):
     engine = _get_query_engine()
     start_time = time.time()
 
-    # Execute blind inference
+    # 1. Execute real blind inference
     result = engine.query(req.question)
     latency_ms = round((time.time() - start_time) * 1000, 2)
 
-    # Check if this matches a known benchmark question for comparison
+    # 2. Extract real top vector search anchors with authentic cosine scores
+    real_vector_hits = engine.vector_store.search_similar_docs(req.question, top_k=3)
+    vector_anchors = []
+    for doc_id, score, meta in real_vector_hits:
+        title = meta.get("title") if meta else None
+        if not title and doc_id in engine.staged_docs:
+            title = engine.staged_docs[doc_id].get("title", doc_id)
+        vector_anchors.append({
+            "doc_id": doc_id,
+            "score": round(score, 4),
+            "title": title or doc_id,
+        })
+
+    # 3. Check if this matches a known benchmark question for gold comparison
     gold_answer = None
     gold_doc_ids = []
     gold_facts = []
@@ -106,20 +122,11 @@ def execute_query(req: QueryRequest):
                 category = q.get("question_type", "unknown")
                 break
 
-    # Build Structured Execution Trace
+    # 4. Build 100% Real Structured Execution Trace
     trace = {
-        "vector_anchors": [
-            {
-                "doc_id": c,
-                "score": 0.82,
-                "title": f"Document Hub {c[:12]}...",
-            }
-            for c in result.citations
-        ],
-        "traversed_entities": [c[:8] for c in result.citations],
-        "active_facts": [
-            {"subject": "Ground Truth Fact", "status": "active", "text": result.answer[:120] + "..."}
-        ] if not result.abstained else [],
+        "vector_anchors": vector_anchors,
+        "traversed_entities": result.traversed_entities,
+        "active_facts": result.facts_used,
         "abstained": result.abstained,
     }
 

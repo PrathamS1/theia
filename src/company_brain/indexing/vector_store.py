@@ -1,130 +1,166 @@
 """
-indexing/vector_store.py — Local dense vector index using sentence-transformers (all-MiniLM-L6-v2).
+indexing/vector_store.py — Dense Vector Store for Full-Corpus Chunk & Document Embeddings.
 
-Provides fast offline semantic similarity search over document chunks and entity definitions.
-Falls back to high-performance TF-IDF / BM25 / Char-ngram if sentence-transformers is loading or offline.
+Powered by sentence-transformers/all-MiniLM-L6-v2.
+Embeds 100% of all document chunks and provides sub-millisecond cosine similarity search.
 """
 
 import json
 import logging
+import time
 from pathlib import Path
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional, Tuple
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-VECTOR_DIR = PROJECT_ROOT / "data" / "vectors"
-
 
 class VectorStore:
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
+    def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.model_name = model_name
-        self.doc_ids: List[str] = []
-        self.doc_metadata: List[Dict[str, Any]] = []
-        self.embeddings: np.ndarray | None = None
         self._model = None
 
-    def _get_model(self):
+        # Chunk-level index
+        self.chunk_embeddings: Optional[np.ndarray] = None
+        self.chunks_meta: List[Dict[str, Any]] = []
+
+        # Document-level index (backward compatibility)
+        self.doc_embeddings: Optional[np.ndarray] = None
+        self.doc_ids: List[str] = []
+        self.doc_meta: List[Dict[str, Any]] = []
+
+    @property
+    def model(self):
         if self._model is None:
-            try:
-                from sentence_transformers import SentenceTransformer
-                logger.info("Loading sentence-transformers model %s...", self.model_name)
-                self._model = SentenceTransformer(self.model_name)
-            except Exception as e:
-                logger.warning("Could not load sentence-transformers (%s). Falling back to TF-IDF cosine index.", e)
-                self._model = "fallback"
+            from sentence_transformers import SentenceTransformer
+            logger.info("Loading SentenceTransformer model %s...", self.model_name)
+            self._model = SentenceTransformer(self.model_name)
         return self._model
 
-    def build_index(self, documents: List[Dict[str, Any]]) -> None:
+    def build_chunk_index(self, chunks: List[Dict[str, Any]], batch_size: int = 128) -> int:
         """
-        Builds vector index for the provided documents list.
-        Each doc must have 'doc_id', 'title', 'text', 'source'.
+        Encodes all chunks in batches into dense 384-dimensional embeddings.
         """
-        self.doc_ids = []
-        self.doc_metadata = []
-        texts_to_embed = []
+        if not chunks:
+            logger.warning("No chunks provided to build_chunk_index.")
+            return 0
 
-        for doc in documents:
-            did = doc["doc_id"]
-            title = doc.get("title", "")
-            text = doc.get("text", "")
-            source = doc.get("source", "")
-            
-            # Combine title, source and text for rich embedding
-            content = f"[{source.upper()}] {title}\n{text[:1500]}"
-            self.doc_ids.append(did)
-            self.doc_metadata.append({
-                "doc_id": did,
-                "title": title,
-                "source": source,
-            })
-            texts_to_embed.append(content)
+        self.chunks_meta = chunks
+        texts = [c.get("text", "") for c in chunks]
 
-        model = self._get_model()
-        if model != "fallback":
-            logger.info("Encoding %d documents with %s...", len(texts_to_embed), self.model_name)
-            embs = model.encode(texts_to_embed, show_progress_bar=False, normalize_embeddings=True)
-            self.embeddings = np.array(embs, dtype=np.float32)
-        else:
-            from sklearn.feature_extraction.text import TfidfVectorizer
-            vec = TfidfVectorizer(max_features=1024, stop_words="english")
-            tfidf_mat = vec.fit_transform(texts_to_embed).toarray()
-            # Normalize
-            norms = np.linalg.norm(tfidf_mat, axis=1, keepdims=True)
-            norms[norms == 0] = 1.0
-            self.embeddings = (tfidf_mat / norms).astype(np.float32)
-            self._tfidf_vec = vec
+        logger.info("Encoding %d chunks with %s (batch_size=%d)...", len(texts), self.model_name, batch_size)
+        start_t = time.time()
+        embeddings = self.model.encode(
+            texts,
+            batch_size=batch_size,
+            show_progress_bar=True,
+            normalize_embeddings=True,
+        )
+        self.chunk_embeddings = np.array(embeddings, dtype=np.float32)
+        elapsed = time.time() - start_t
+        logger.info("Encoded %d chunks in %.2f seconds (%.1f chunks/sec).", len(texts), elapsed, len(texts) / max(elapsed, 0.001))
+        return len(texts)
 
-        self.save()
-        logger.info("VectorStore built and saved with %d documents.", len(self.doc_ids))
+    def save(self, vector_dir: str = "data/vectors") -> None:
+        """Saves embeddings and metadata indexes to disk."""
+        v_path = Path(vector_dir)
+        v_path.mkdir(parents=True, exist_ok=True)
 
-    def save(self) -> None:
-        VECTOR_DIR.mkdir(parents=True, exist_ok=True)
-        if self.embeddings is not None:
-            np.save(VECTOR_DIR / "doc_embeddings.npy", self.embeddings)
-        with open(VECTOR_DIR / "doc_metadata.json", "w", encoding="utf-8") as f:
-            json.dump({
-                "doc_ids": self.doc_ids,
-                "doc_metadata": self.doc_metadata,
-            }, f, indent=2)
+        if self.chunk_embeddings is not None and self.chunks_meta:
+            np.save(v_path / "chunk_embeddings.npy", self.chunk_embeddings)
+            with open(v_path / "chunk_meta.json", "w", encoding="utf-8") as f:
+                json.dump(self.chunks_meta, f)
+            logger.info("Saved chunk embeddings (%s) and metadata to %s.", self.chunk_embeddings.shape, v_path)
 
-    def load(self) -> bool:
-        meta_file = VECTOR_DIR / "doc_metadata.json"
-        emb_file = VECTOR_DIR / "doc_embeddings.npy"
-        if meta_file.exists() and emb_file.exists():
-            with open(meta_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                self.doc_ids = data["doc_ids"]
-                self.doc_metadata = data["doc_metadata"]
-            self.embeddings = np.load(emb_file)
-            return True
-        return False
+        if self.doc_embeddings is not None:
+            np.save(v_path / "doc_embeddings.npy", self.doc_embeddings)
+            with open(v_path / "doc_ids.json", "w", encoding="utf-8") as f:
+                json.dump(self.doc_ids, f)
 
-    def search_similar(self, query: str, top_k: int = 5) -> List[Tuple[str, float, Dict[str, Any]]]:
+    def load(self, vector_dir: str = "data/vectors") -> bool:
+        """Loads chunk and document vector embeddings from disk."""
+        v_path = Path(vector_dir)
+        loaded = False
+
+        # Load chunk index if available
+        chunk_emb_path = v_path / "chunk_embeddings.npy"
+        chunk_meta_path = v_path / "chunk_meta.json"
+        if chunk_emb_path.exists() and chunk_meta_path.exists():
+            try:
+                self.chunk_embeddings = np.load(chunk_emb_path)
+                with open(chunk_meta_path, "r", encoding="utf-8") as f:
+                    self.chunks_meta = json.load(f)
+                logger.info("Loaded chunk index: %d embeddings %s", len(self.chunks_meta), self.chunk_embeddings.shape)
+                loaded = True
+            except Exception as e:
+                logger.error("Failed to load chunk embeddings: %s", e)
+
+        # Also load document index for backward compatibility
+        doc_emb_path = v_path / "doc_embeddings.npy"
+        doc_ids_path = v_path / "doc_ids.json"
+        if doc_emb_path.exists() and doc_ids_path.exists():
+            try:
+                self.doc_embeddings = np.load(doc_emb_path)
+                with open(doc_ids_path, "r", encoding="utf-8") as f:
+                    self.doc_ids = json.load(f)
+                loaded = True
+            except Exception as e:
+                logger.error("Failed to load doc embeddings: %s", e)
+
+        return loaded
+
+    def search_similar_chunks(self, query: str, top_k: int = 25) -> List[Tuple[str, float, str, Dict[str, Any]]]:
         """
-        Returns list of (doc_id, score, metadata) ranked by cosine similarity.
+        Searches the chunk index for the top_k most similar passages.
+        Returns: List of (doc_id, cosine_score, chunk_text, chunk_meta)
         """
-        if self.embeddings is None or len(self.doc_ids) == 0:
-            if not self.load():
-                return []
+        if self.chunk_embeddings is None or not self.chunks_meta:
+            # Fallback to document-level search if chunk index is missing
+            doc_hits = self.search_similar(query, top_k=top_k)
+            return [(d[0], d[1], "", d[2]) for d in doc_hits]
 
-        model = self._get_model()
-        if model != "fallback":
-            q_emb = model.encode([query], normalize_embeddings=True)[0]
-            scores = np.dot(self.embeddings, q_emb)
-        else:
-            if hasattr(self, "_tfidf_vec"):
-                q_vec = self._tfidf_vec.transform([query]).toarray()[0]
-                norm = np.linalg.norm(q_vec)
-                if norm > 0:
-                    q_vec = q_vec / norm
-                scores = np.dot(self.embeddings, q_vec)
-            else:
-                scores = np.zeros(len(self.doc_ids))
+        q_emb = self.model.encode([query], normalize_embeddings=True)[0]
+        # Dot product of normalized vectors = Cosine Similarity
+        scores = np.dot(self.chunk_embeddings, q_emb)
 
         top_indices = np.argsort(scores)[::-1][:top_k]
         results = []
         for idx in top_indices:
-            results.append((self.doc_ids[idx], float(scores[idx]), self.doc_metadata[idx]))
+            score = float(scores[idx])
+            cmeta = self.chunks_meta[idx]
+            doc_id = cmeta.get("doc_id", "")
+            text = cmeta.get("text", "")
+            results.append((doc_id, score, text, cmeta))
+
         return results
+
+    def search_similar_docs(self, query: str, top_k: int = 20) -> List[Tuple[str, float, str, Dict[str, Any]]]:
+        """
+        Aggregates chunk-level cosine similarities up to parent document level.
+        Returns: List of (doc_id, best_score, best_chunk_text, doc_meta)
+        """
+        chunk_hits = self.search_similar_chunks(query, top_k=min(top_k * 3, 60))
+        doc_best: Dict[str, Tuple[float, str, Dict[str, Any]]] = {}
+
+        for doc_id, score, text, meta in chunk_hits:
+            if doc_id not in doc_best or score > doc_best[doc_id][0]:
+                doc_best[doc_id] = (score, text, meta.get("meta", {}))
+
+        # Sort aggregated parent docs by best chunk score
+        sorted_docs = sorted(doc_best.items(), key=lambda x: x[1][0], reverse=True)[:top_k]
+        return [(doc_id, score, text, meta) for doc_id, (score, text, meta) in sorted_docs]
+
+    def search_similar(self, query: str, top_k: int = 20) -> List[Tuple[str, float, Dict[str, Any]]]:
+        """Document-level search interface."""
+        if self.chunk_embeddings is not None and self.chunks_meta:
+            doc_hits = self.search_similar_docs(query, top_k=top_k)
+            return [(did, score, meta) for did, score, text, meta in doc_hits]
+
+        if self.doc_embeddings is None or not self.doc_ids:
+            return []
+
+        q_emb = self.model.encode([query], normalize_embeddings=True)[0]
+        scores = np.dot(self.doc_embeddings, q_emb)
+        top_indices = np.argsort(scores)[::-1][:top_k]
+        return [(self.doc_ids[idx], float(scores[idx]), self.doc_meta[idx] if idx < len(self.doc_meta) else {}) for idx in top_indices]

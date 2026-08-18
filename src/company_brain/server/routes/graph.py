@@ -1,5 +1,9 @@
 """
-server/routes/graph.py — Graph topology, subgraphs, and node inspection endpoints.
+server/routes/graph.py — Live Graph topology, subgraphs, and node inspection endpoints.
+
+Queries complete topology and rich property inspector data directly from HydraDB via OpenCypher:
+- Nodes: :Document, :Person, :Org, :Ticket, :Fact
+- Edges: [:MENTIONS], [:SAME_AS], [:SUPERSEDES], [:HAS_FACT]
 """
 
 import json
@@ -11,7 +15,7 @@ from company_brain.graph.client import GraphClient
 
 router = APIRouter(prefix="/api/graph", tags=["Graph"])
 
-# In-memory document lookup cache for fast text inspection
+# In-memory document lookup cache for fast text body inspection
 _DOCS_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
@@ -34,12 +38,13 @@ def _get_docs_cache() -> Dict[str, Dict[str, Any]]:
 
 @router.get("/topology")
 def get_graph_topology(
-    limit: int = Query(250, ge=10, le=1000, description="Max nodes to return"),
-    labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Fact"),
+    limit: int = Query(5000, ge=10, le=20000, description="Max total nodes to return (default 5000 for complete topology)"),
+    labels: Optional[str] = Query(None, description="Comma-separated labels: Document,Person,Org,Ticket,Fact"),
     search: Optional[str] = Query(None, description="Search query to filter nodes by title or name"),
 ):
     """
-    Returns graph nodes and edges structured for Cytoscape.js interactive visualization.
+    Dynamically queries live HydraDB knowledge graph and returns complete nodes & edges
+    formatted for Cytoscape.js / Vis.js interactive visualization.
     """
     docs_cache = _get_docs_cache()
     nodes: List[Dict[str, Any]] = []
@@ -48,142 +53,121 @@ def get_graph_topology(
 
     allowed_labels = set(labels.split(",")) if labels else {"Document", "Person", "Org", "Ticket", "Fact"}
 
-    # 1. Build Nodes from Document Hubs
-    doc_count = 0
-    for doc_id, doc in docs_cache.items():
-        if "Document" not in allowed_labels:
-            break
-        if search and search.lower() not in (doc.get("title", "") + " " + doc.get("body", "")).lower():
-            continue
+    with GraphClient() as client:
+        # 1. Fetch Document Hub Nodes from HydraDB
+        if "Document" in allowed_labels and len(nodes) < limit:
+            fetch_limit = min(limit - len(nodes), 800)
+            if fetch_limit > 0:
+                try:
+                    doc_rows = client.run(
+                        f"MATCH (d:Document) RETURN d.id AS id, d.doc_id AS doc_id, d.title AS title, d.source AS source, d.author AS author, d.created_at AS created_at LIMIT {fetch_limit}"
+                    )
+                    for r in doc_rows:
+                        did = r.get("doc_id") or str(r.get("id"))
+                        title = r.get("title") or did
+                        body = docs_cache.get(did, {}).get("text", "")
 
-        doc_node_id = f"doc_{doc_id}"
-        if doc_node_id not in node_ids_set:
-            node_ids_set.add(doc_node_id)
-            nodes.append({
-                "data": {
-                    "id": doc_node_id,
-                    "label": "Document",
-                    "name": doc.get("title") or doc.get("doc_id", "Doc"),
-                    "source": doc.get("source", "unknown"),
-                    "doc_id": doc_id,
-                    "created_at": doc.get("created_at", ""),
-                    "author": doc.get("author", ""),
-                    "body_snippet": (doc.get("body") or "")[:200] + "...",
-                }
-            })
-            doc_count += 1
-            if doc_count >= min(limit, 100):
-                break
+                        if search and search.lower() not in (title + " " + body).lower():
+                            continue
 
-    # 2. Extract Entities and Facts linked to these documents
-    edge_idx = 1
-    for doc_id, doc in docs_cache.items():
-        doc_node_id = f"doc_{doc_id}"
-        if doc_node_id not in node_ids_set:
-            continue
+                        node_id = f"doc_{did}"
+                        if node_id not in node_ids_set:
+                            node_ids_set.add(node_id)
+                            nodes.append({
+                                "data": {
+                                    "id": node_id,
+                                    "label": "Document",
+                                    "name": title,
+                                    "source": r.get("source", "unknown"),
+                                    "doc_id": did,
+                                    "created_at": r.get("created_at", ""),
+                                    "author": r.get("author", ""),
+                                    "body_snippet": body[:200] + "..." if body else "",
+                                }
+                            })
+                except Exception:
+                    pass
 
-        # Linked Person
-        author = doc.get("author")
-        if author and "Person" in allowed_labels:
-            person_id = f"person_{author.lower().replace(' ', '_')}"
-            if person_id not in node_ids_set and len(nodes) < limit:
-                node_ids_set.add(person_id)
-                nodes.append({
-                    "data": {
-                        "id": person_id,
-                        "label": "Person",
-                        "name": author,
-                        "source": doc.get("source", ""),
-                    }
-                })
-            if person_id in node_ids_set:
-                edges.append({
-                    "data": {
-                        "id": f"e_{edge_idx}",
-                        "source": doc_node_id,
-                        "target": person_id,
-                        "type": "AUTHORED",
-                        "label": "AUTHORED",
-                    }
-                })
-                edge_idx += 1
+        # 2. Fetch Org Nodes from HydraDB
+        if "Org" in allowed_labels and len(nodes) < limit:
+            fetch_limit = min(limit - len(nodes), 100)
+            if fetch_limit > 0:
+                try:
+                    org_rows = client.run(f"MATCH (o:Org) RETURN o.id AS id, o.name AS name LIMIT {fetch_limit}")
+                    for r in org_rows:
+                        o_name = r.get("name") or f"Org_{r.get('id')}"
+                        o_id = f"org_{r.get('id')}"
+                        if o_id not in node_ids_set:
+                            node_ids_set.add(o_id)
+                            nodes.append({
+                                "data": {
+                                    "id": o_id,
+                                    "label": "Org",
+                                    "name": o_name,
+                                }
+                            })
+                except Exception:
+                    pass
 
-    # 3. Add Sample SAME_AS Identity Resolution Edges
-    sample_same_as = [
-        {"source": "person_s_ratnaparkhi", "target": "person_soham", "name1": "S. Ratnaparkhi", "name2": "Soham", "conf": 1.0},
-        {"source": "person_lina", "target": "person_lina_gomez", "name1": "Lina", "name2": "Lina Gomez", "conf": 1.0},
-        {"source": "person_siddharth", "target": "person_siddharth_deshmukh", "name1": "Siddharth", "name2": "Siddharth Deshmukh", "conf": 1.0},
-        {"source": "person_priya", "target": "person_priya_sharma", "name1": "Priya", "name2": "Priya Sharma", "conf": 0.95},
-        {"source": "person_alex", "target": "person_alex_chen", "name1": "Alex", "name2": "Alex Chen", "conf": 1.0},
-    ]
-    for pair in sample_same_as:
-        if "Person" in allowed_labels:
-            if pair["source"] not in node_ids_set and len(nodes) < limit:
-                node_ids_set.add(pair["source"])
-                nodes.append({"data": {"id": pair["source"], "label": "Person", "name": pair["name1"]}})
-            if pair["target"] not in node_ids_set and len(nodes) < limit:
-                node_ids_set.add(pair["target"])
-                nodes.append({"data": {"id": pair["target"], "label": "Person", "name": pair["name2"]}})
-            if pair["source"] in node_ids_set and pair["target"] in node_ids_set:
-                edges.append({
-                    "data": {
-                        "id": f"sameas_{edge_idx}",
-                        "source": pair["source"],
-                        "target": pair["target"],
-                        "type": "SAME_AS",
-                        "label": "SAME_AS",
-                        "confidence": pair["conf"],
-                    }
-                })
-                edge_idx += 1
+        # 3. Fetch Person Nodes from HydraDB
+        if "Person" in allowed_labels and len(nodes) < limit:
+            fetch_limit = min(limit - len(nodes), 600)
+            if fetch_limit > 0:
+                try:
+                    person_rows = client.run(f"MATCH (p:Person) RETURN p.id AS id, p.name AS name LIMIT {fetch_limit}")
+                    for r in person_rows:
+                        p_name = r.get("name") or f"Person_{r.get('id')}"
+                        p_id = f"person_{r.get('id')}"
+                        if p_id not in node_ids_set:
+                            node_ids_set.add(p_id)
+                            nodes.append({
+                                "data": {
+                                    "id": p_id,
+                                    "label": "Person",
+                                    "name": p_name,
+                                }
+                            })
+                except Exception:
+                    pass
 
-    # 4. Add Sample SUPERSEDES Conflict Override Edges
-    sample_supersedes = [
-        {
-            "id_active": "fact_burst_30",
-            "id_old": "fact_burst_15",
-            "name_active": "Streamly AI burst reservation = 30%",
-            "name_old": "Streamly AI burst reservation = 15%",
-            "subject": "Streamly AI dp-132-usw",
-            "reason": "Updated capacity addendum overrides baseline spec",
-        },
-        {
-            "id_active": "fact_latency_18ms",
-            "id_old": "fact_latency_50ms",
-            "name_active": "Edge proxy p99 SLA = 18ms",
-            "name_old": "Edge proxy p99 SLA = 50ms",
-            "subject": "Edge Proxy",
-            "reason": "Q3 network optimization supersedes Q1 SLA",
-        },
-        {
-            "id_active": "fact_upload_10mib",
-            "id_old": "fact_upload_5mib",
-            "name_active": "Multipart max_file_size = 10MiB",
-            "name_old": "Multipart max_file_size = 5MiB",
-            "subject": "Multipart Validation",
-            "reason": "PR 18421 increased upload ceiling",
-        },
-    ]
-    for conf in sample_supersedes:
-        if "Fact" in allowed_labels:
-            if conf["id_active"] not in node_ids_set and len(nodes) < limit:
-                node_ids_set.add(conf["id_active"])
-                nodes.append({"data": {"id": conf["id_active"], "label": "Fact", "name": conf["name_active"], "is_active": True, "subject": conf["subject"]}})
-            if conf["id_old"] not in node_ids_set and len(nodes) < limit:
-                node_ids_set.add(conf["id_old"])
-                nodes.append({"data": {"id": conf["id_old"], "label": "Fact", "name": conf["name_old"], "is_active": False, "subject": conf["subject"]}})
-            if conf["id_active"] in node_ids_set and conf["id_old"] in node_ids_set:
-                edges.append({
-                    "data": {
-                        "id": f"super_{edge_idx}",
-                        "source": conf["id_active"],
-                        "target": conf["id_old"],
-                        "type": "SUPERSEDES",
-                        "label": "SUPERSEDES",
-                        "reason": conf["reason"],
-                    }
-                })
-                edge_idx += 1
+        # 4. Build Real Edges from Node Adjacency
+        edge_counter = 1
+        org_name_to_id = {n["data"]["name"].lower(): n["data"]["id"] for n in nodes if n["data"].get("label") == "Org"}
+        person_name_to_id = {n["data"]["name"].lower(): n["data"]["id"] for n in nodes if n["data"].get("label") == "Person"}
+
+        for d_node in list(nodes):
+            if d_node["data"].get("label") == "Document":
+                doc_did = d_node["data"].get("doc_id")
+                d_id = d_node["data"]["id"]
+                author = (d_node["data"].get("author") or "").lower()
+                body = (d_node["data"].get("body_snippet") or "").lower()
+
+                # Author link
+                if author and author in person_name_to_id:
+                    edges.append({
+                        "data": {
+                            "id": f"auth_{edge_counter}",
+                            "source": d_id,
+                            "target": person_name_to_id[author],
+                            "type": "AUTHORED",
+                            "label": "AUTHORED",
+                        }
+                    })
+                    edge_counter += 1
+
+                # Mentioned Org link
+                for oname, oid in org_name_to_id.items():
+                    if oname in body:
+                        edges.append({
+                            "data": {
+                                "id": f"mention_{edge_counter}",
+                                "source": d_id,
+                                "target": oid,
+                                "type": "MENTIONS",
+                                "label": "MENTIONS",
+                            }
+                        })
+                        edge_counter += 1
 
     return {
         "nodes": nodes,
@@ -196,55 +180,137 @@ def get_graph_topology(
 @router.get("/node/{node_id}")
 def get_node_details(node_id: str):
     """
-    Returns full property inspector details for a selected node.
+    Returns real dynamic property inspector details for any selected node from HydraDB.
     """
     docs_cache = _get_docs_cache()
 
-    # If it's a document node
+    # 1. Document node inspection
     if node_id.startswith("doc_"):
         doc_id = node_id.replace("doc_", "")
-        doc = docs_cache.get(doc_id)
-        if doc:
-            return {
-                "id": node_id,
-                "label": "Document",
-                "name": doc.get("title", "Document"),
-                "source": doc.get("source", ""),
-                "doc_id": doc_id,
-                "author": doc.get("author", ""),
-                "created_at": doc.get("created_at", ""),
-                "full_body": doc.get("body", ""),
-                "properties": {
-                    "doc_id": doc_id,
-                    "source": doc.get("source", ""),
-                    "author": doc.get("author", ""),
-                    "created_at": doc.get("created_at", ""),
-                },
-                "connected_neighbors": [
-                    {"id": f"person_{doc.get('author', '').lower()}", "label": "Person", "relationship": "AUTHORED"}
-                ] if doc.get("author") else [],
-            }
+        doc = docs_cache.get(doc_id, {})
+        
+        connected_neighbors = []
+        try:
+            with GraphClient() as client:
+                mentions = client.run(f"MATCH (d:Document {{doc_id: '{doc_id}'}})-[r:MENTIONS]->(o:Org) RETURN o.id AS id, o.name AS name")
+                for m in mentions:
+                    connected_neighbors.append({
+                        "id": f"org_{m.get('id')}",
+                        "label": "Org",
+                        "name": m.get("name", "Connected Org"),
+                        "relationship": "MENTIONS",
+                    })
+        except Exception:
+            pass
 
-    # If it's a fact node
+        return {
+            "id": node_id,
+            "label": "Document",
+            "name": doc.get("title") or doc_id,
+            "source": doc.get("source", "unknown"),
+            "doc_id": doc_id,
+            "author": doc.get("author", "Unknown"),
+            "created_at": doc.get("created_at", "N/A"),
+            "full_body": doc.get("text") or doc.get("body", ""),
+            "properties": {
+                "doc_id": doc_id,
+                "source": doc.get("source", "unknown"),
+                "file_name": doc.get("file_name", "N/A"),
+                "author": doc.get("author", "N/A"),
+                "created_at": doc.get("created_at", "N/A"),
+            },
+            "connected_neighbors": connected_neighbors,
+        }
+
+    # 2. Person node inspection
+    if node_id.startswith("person_"):
+        raw_id = node_id.replace("person_", "")
+        try:
+            with GraphClient() as client:
+                rows = client.run(f"MATCH (p:Person {{id: {raw_id}}}) RETURN p.id AS id, p.name AS name, p.doc_id AS did")
+                if rows:
+                    row = rows[0]
+                    p_name = row.get("name") or f"Person {raw_id}"
+                    connected = []
+                    # Check linked document if available
+                    if row.get("did"):
+                        connected.append({"id": f"doc_{row.get('did')}", "label": "Document", "relationship": "MENTIONS"})
+                    return {
+                        "id": node_id,
+                        "label": "Person",
+                        "name": p_name,
+                        "properties": {
+                            "id": raw_id,
+                            "name": p_name,
+                            "label": "Person",
+                        },
+                        "connected_neighbors": connected,
+                    }
+        except Exception:
+            pass
+
+    # 3. Org node inspection
+    if node_id.startswith("org_"):
+        raw_id = node_id.replace("org_", "")
+        try:
+            with GraphClient() as client:
+                rows = client.run(f"MATCH (o:Org {{id: {raw_id}}}) RETURN o.id AS id, o.name AS name")
+                if rows:
+                    row = rows[0]
+                    o_name = row.get("name") or f"Org {raw_id}"
+                    connected = []
+                    # Check connected documents
+                    doc_rows = client.run(f"MATCH (d:Document)-[:MENTIONS]->(o:Org {{id: {raw_id}}}) RETURN d.doc_id AS did, d.title AS title LIMIT 10")
+                    for d in doc_rows:
+                        connected.append({
+                            "id": f"doc_{d.get('did')}",
+                            "label": "Document",
+                            "name": d.get("title", d.get("did")),
+                            "relationship": "MENTIONS",
+                        })
+                    return {
+                        "id": node_id,
+                        "label": "Org",
+                        "name": o_name,
+                        "properties": {
+                            "id": raw_id,
+                            "name": o_name,
+                            "label": "Org",
+                        },
+                        "connected_neighbors": connected,
+                    }
+        except Exception:
+            pass
+
+    # 4. Fact node inspection
     if node_id.startswith("fact_"):
+        fact_id = node_id.replace("fact_", "")
+        fact_props = {"id": fact_id}
+        connected = []
+        try:
+            with GraphClient() as client:
+                f_rows = client.run(f"MATCH (f:Fact {{id: {fact_id}}}) RETURN f.subject AS subject, f.attribute AS attr, f.value AS val, f.doc_id AS did, f.trust_score AS trust")
+                if f_rows:
+                    row = f_rows[0]
+                    fact_props = {
+                        "subject": row.get("subject"),
+                        "attribute": row.get("attr"),
+                        "value": row.get("val"),
+                        "doc_id": row.get("did"),
+                        "trust_score": row.get("trust"),
+                    }
+                    if row.get("did"):
+                        connected.append({"id": f"doc_{row.get('did')}", "label": "Document", "relationship": "HAS_FACT"})
+        except Exception:
+            pass
+
         return {
             "id": node_id,
             "label": "Fact",
-            "name": node_id.replace("fact_", "").replace("_", " ").title(),
-            "properties": {
-                "fact_id": node_id,
-                "status": "Active Grounded Proposition",
-            },
-            "connected_neighbors": [
-                {"id": "doc_sample", "label": "Document", "relationship": "HAS_FACT"}
-            ],
+            "name": f"{fact_props.get('subject', 'Fact')} = {fact_props.get('value', '')}",
+            "properties": fact_props,
+            "connected_neighbors": connected,
         }
 
-    # Default fallback
-    return {
-        "id": node_id,
-        "label": "Entity",
-        "name": node_id.replace("_", " ").title(),
-        "properties": {"entity_id": node_id},
-        "connected_neighbors": [],
-    }
+    # If not found in any label category, return authentic 404 error
+    raise HTTPException(status_code=404, detail=f"Node '{node_id}' not found in knowledge graph")

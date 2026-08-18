@@ -65,11 +65,18 @@ def main():
             qtype = q.get("question_type", "basic")
 
             # Strict blind query
-            pred = engine.query(q_text, client=client)
+            pred = engine.query(q_text)
+
+            pred_dict = {
+                "question": q_text,
+                "answer": pred.answer,
+                "citations": pred.citations,
+                "abstained": pred.abstained,
+            }
 
             # Evaluate against ground truth
             eval_res = evaluate_prediction(
-                prediction=pred.model_dump(),
+                prediction=pred_dict,
                 ground_truth=q
             )
             eval_records.append(eval_res)

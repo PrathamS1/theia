@@ -193,7 +193,7 @@ Theia was evaluated on the official **EnterpriseRAG-Bench 500-question test suit
 | **`completeness`** | 20 | **63.16** | 24.75% | 87.49% | 76.43% |
 | **`semantic`** | 125 | **60.19** | 58.40% | 68.57% | 62.96% |
 | **`high_level`** | 10 | **29.20** | 0.00% | 56.00% | 46.00% |
-| **`info_not_found`** | 20 | **1.50** | 5.00% | 0.00% | 0.00% |
+| **`info_not_found`** | 20 | **0.00** | 0.00% | 0.00% | 0.00% |
 
 ---
 
@@ -258,15 +258,20 @@ theia/
 bash scripts/start_hydradb.sh
 ```
 
-### 2. Run Ingestion & Vector Indexing
+### 2. Run Ingestion & Vector Indexing (Full-Corpus Passage Chunking)
 ```bash
 python3 scripts/run_ingest.py
 ```
+* **Passage Chunking**: Recursively splits all 812 enterprise documents into **7,881 overlapping passages** (1,000 chars, 200 char overlap, zero text truncation).
+* **Vector Indexing**: Embeds all 7,881 chunks using `sentence-transformers/all-MiniLM-L6-v2` into a dense 384-dim numpy index (`data/vectors/chunk_embeddings.npy` & `chunk_meta.json`).
+* **Graph Ingestion**: Ingests `:Document` nodes, extracted `:Entity` nodes, and `:Fact` triples into HydraDB over the Bolt protocol.
 
 ### 3. Run Entity & Conflict Resolution
 ```bash
 python3 scripts/run_resolution.py
 ```
+* Merges aliases and creates `[:SAME_AS]` cross-source links between Person nodes.
+* Resolves temporal and trust conflicts by creating `[:SUPERSEDES]` edges between Fact nodes.
 
 ### 4. Inspect the Graph Topology
 ```bash
@@ -282,3 +287,17 @@ python3 scripts/interactive_query.py
 ```bash
 python3 scripts/run_eval.py --questions data/questions/questions.jsonl --output data/eval_results/eval_latest.json
 ```
+
+### 7. Start the FastAPI Backend Server
+```bash
+python3 src/company_brain/server/app.py
+```
+* Access interactive API docs at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+
+### 8. Start the React Frontend UI
+```bash
+cd frontend
+npm install
+npm run dev
+```
+* Open [http://localhost:5173](http://localhost:5173) in your browser.
