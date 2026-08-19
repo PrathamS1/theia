@@ -45,8 +45,9 @@ def string_to_int_id(identifier: str) -> int:
 
 
 class GraphLoader:
-    def __init__(self, client: GraphClient) -> None:
+    def __init__(self, client: GraphClient, workspace_id: Optional[str] = None) -> None:
         self.client = client
+        self.workspace_id = workspace_id
 
     def load_document(
         self,
@@ -60,18 +61,7 @@ class GraphLoader:
         """
         Loads a document and its extracted entities and facts into HydraDB.
         Returns write counts ({entities_ok, entities_failed, facts_ok,
-        facts_failed}) rather than swallowing failures silently -- a caller
-        that never checks this would have no way to tell a fully-succeeded
-        ingest from one where HydraDB was down for the entire run, since
-        every individual write failure here is caught and only logged at
-        debug level (necessary because a transient failure on one
-        entity/fact write shouldn't abort the rest of the document).
-
-        A document with zero extracted entities and zero facts will not get a
-        Document node at all -- there is no standalone-node write available on
-        this HydraDB build (see module docstring). This matches the loader's
-        actual behavior before this fix too; it is a pre-existing limitation,
-        not a regression.
+        facts_failed}) rather than swallowing failures silently.
         """
         stats = {"entities_ok": 0, "entities_failed": 0, "facts_ok": 0, "facts_failed": 0}
         doc_int_id = string_to_int_id(f"doc_{doc_id}")
@@ -83,10 +73,12 @@ class GraphLoader:
             "title": title,
             "created_at": created_at,
         }
+        if self.workspace_id:
+            doc_props["workspace_id"] = self.workspace_id
+
+        ws_prop = ", workspace_id: $workspace_id" if self.workspace_id else ""
 
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
-        # The Document literal carries full properties (including title) on
-        # every write so no write can clobber what an earlier one set.
         for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
             entity_int_id = string_to_int_id(entity_key)
@@ -94,9 +86,9 @@ class GraphLoader:
 
             cypher = (
                 f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
-                f"title: $title, created_at: $created_at}})"
-                f"-[r:MENTIONS {{source: $source, timestamp: $created_at, doc_id: $doc_id}}]->"
-                f"(e:{label} {{id: $entity_int_id, name: $name, source: $source}})"
+                f"title: $title, created_at: $created_at{ws_prop}}})"
+                f"-[r:MENTIONS {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                f"(e:{label} {{id: $entity_int_id, name: $name, source: $source{ws_prop}}})"
             )
             try:
                 self.client.run_write(cypher, {
@@ -116,10 +108,10 @@ class GraphLoader:
 
             cypher = (
                 f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
-                f"title: $title, created_at: $created_at}})"
-                f"-[r:HAS_FACT {{source: $source, timestamp: $created_at, doc_id: $doc_id}}]->"
+                f"title: $title, created_at: $created_at{ws_prop}}})"
+                f"-[r:HAS_FACT {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
                 f"(f:Fact {{id: $fact_int_id, subject: $subject, attribute: $attribute, "
-                f"value: $value, trust_score: $trust_score, doc_id: $doc_id}})"
+                f"value: $value, trust_score: $trust_score, doc_id: $doc_id{ws_prop}}})"
             )
             try:
                 self.client.run_write(cypher, {
