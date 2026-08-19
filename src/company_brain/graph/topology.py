@@ -164,28 +164,49 @@ class TopologyCache:
 
         threading.Thread(target=_run, name="topology-warm", daemon=True).start()
 
+    def clear_cache(self, workspace_id: Optional[str] = None) -> None:
+        with self._lock:
+            if workspace_id:
+                keys_to_del = [k for k in self._seed_cache if k.startswith(f"{workspace_id}_")]
+                for k in keys_to_del:
+                    self._seed_cache.pop(k, None)
+            else:
+                self._seed_cache.clear()
+            self._expand_cache.clear()
+            self._same_as = None
+            self._supersedes = None
+            self._loser_ids = None
+
     # ---- seed ----------------------------------------------------------------
 
-    def fetch_seed(self, doc_limit: int = 30, refresh: bool = False) -> Dict[str, Any]:
-        if not refresh and doc_limit in self._seed_cache:
-            return self._seed_cache[doc_limit]
+    def fetch_seed(self, doc_limit: int = 30, refresh: bool = False, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+        cache_key = f"{workspace_id or 'default'}_{doc_limit}"
+        if not refresh and cache_key in self._seed_cache:
+            return self._seed_cache[cache_key]
 
         with self._lock:
-            if not refresh and doc_limit in self._seed_cache:
-                return self._seed_cache[doc_limit]
+            if not refresh and cache_key in self._seed_cache:
+                return self._seed_cache[cache_key]
 
             with _client_ctx(self._client_factory) as client:
-                doc_rows = client.run(
-                    "MATCH (d:Document) RETURN d.doc_id, d.title, d.source, d.created_at "
-                    "ORDER BY d.doc_id LIMIT $lim",
-                    {"lim": doc_limit},
-                )
+                if workspace_id:
+                    doc_rows = client.run(
+                        "MATCH (d:Document {workspace_id: $ws}) RETURN d.doc_id, d.title, d.source, d.created_at "
+                        "ORDER BY d.doc_id LIMIT $lim",
+                        {"ws": workspace_id, "lim": doc_limit},
+                    )
+                else:
+                    doc_rows = client.run(
+                        "MATCH (d:Document) RETURN d.doc_id, d.title, d.source, d.created_at "
+                        "ORDER BY d.doc_id LIMIT $lim",
+                        {"lim": doc_limit},
+                    )
 
                 nodes: List[Dict[str, Any]] = [_doc_node(r) for r in doc_rows]
                 node_ids = {n["data"]["id"] for n in nodes}
                 edges: List[Dict[str, Any]] = []
                 eidx = 0
-                losers = self._get_loser_ids()
+                losers = self._get_loser_ids(workspace_id=workspace_id)
 
                 for r in doc_rows:
                     did = r["d.doc_id"]
@@ -219,7 +240,7 @@ class TopologyCache:
                         edges.append(_edge(f"e{eidx}", doc_nid, nid, "HAS_FACT"))
 
                 result = {"nodes": nodes, "edges": edges}
-                self._seed_cache[doc_limit] = result
+                self._seed_cache[cache_key] = result
                 return result
 
     # ---- expand one node -----------------------------------------------------
@@ -387,9 +408,8 @@ class TopologyCache:
                 self._loser_ids = losers
                 return edges
 
-    def _get_loser_ids(self) -> set:
-        """Fact ids on the losing side of a SUPERSEDES edge (piggybacks on the
-        already-cached fetch_supersedes() result -- no extra HydraDB round trip)."""
+    def _get_loser_ids(self, workspace_id: Optional[str] = None) -> set:
+        """Fact ids on the losing side of a SUPERSEDES edge."""
         if self._loser_ids is None:
             self.fetch_supersedes()
         return self._loser_ids or set()

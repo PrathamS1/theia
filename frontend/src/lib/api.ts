@@ -1,5 +1,6 @@
 import type {
   EvalLatest, ExpandResult, Health, NodeDetail, NodeLabel, QueryResult, QuestionPage, Topology,
+  IntegrationsStatusResponse, ConnectResponse, SyncResponse, GitHubReposResponse,
 } from './types';
 
 export class ApiError extends Error {
@@ -23,6 +24,26 @@ async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function post<T>(path: string, body: any, signal?: AbortSignal): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (e) {
+    if ((e as Error).name === 'AbortError') throw e;
+    throw new ApiError('Cannot reach the API at /api - check that both the Vite dev server and uvicorn (:8000) are running.');
+  }
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null);
+    throw new ApiError(detail?.detail ?? `Request failed (${res.status}) for ${path}`, res.status);
+  }
+  return res.json() as Promise<T>;
+}
+
 export const getHealth = (signal?: AbortSignal) => get<Health>('/api/health', signal);
 
 /* doc_limit controls how many seed documents (and their MENTIONS/HAS_FACT
@@ -30,13 +51,14 @@ export const getHealth = (signal?: AbortSignal) => get<Health>('/api/health', si
  * past what Cytoscape renders usefully, so the canvas starts from this
  * bounded seed and grows via expandNode() as the user clicks. */
 export function getTopology(
-  opts: { docLimit?: number; labels?: string[]; search?: string } = {},
+  opts: { docLimit?: number; labels?: string[]; search?: string; workspaceId?: string | null } = {},
   signal?: AbortSignal,
 ) {
   const p = new URLSearchParams();
   p.set('doc_limit', String(opts.docLimit ?? 30));
   if (opts.labels?.length) p.set('labels', opts.labels.join(','));
   if (opts.search?.trim()) p.set('search', opts.search.trim());
+  if (opts.workspaceId) p.set('workspace_id', opts.workspaceId);
   return get<Topology>(`/api/graph/topology?${p}`, signal);
 }
 
@@ -69,23 +91,48 @@ export const getEvalLatest = (signal?: AbortSignal) =>
 export async function runQuery(
   question: string,
   questionId?: string | null,
+  workspaceId?: string | null,
   signal?: AbortSignal,
 ): Promise<QueryResult> {
-  let res: Response;
-  try {
-    res = await fetch('/api/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, question_id: questionId ?? null }),
-      signal,
-    });
-  } catch (e) {
-    if ((e as Error).name === 'AbortError') throw e;
-    throw new ApiError('Cannot reach the API at /api - check that both the Vite dev server and uvicorn (:8000) are running.');
-  }
-  if (!res.ok) {
-    const detail = await res.json().catch(() => null);
-    throw new ApiError(detail?.detail ?? `Query failed (${res.status})`, res.status);
-  }
-  return res.json();
+  return post<QueryResult>(
+    '/api/query',
+    { question, question_id: questionId ?? null, workspace_id: workspaceId ?? null },
+    signal,
+  );
 }
+
+// ── Integrations APIs ────────────────────────────────────────────────────────
+
+export const getIntegrationsStatus = (userId: string, signal?: AbortSignal) =>
+  get<IntegrationsStatusResponse>(`/api/integrations/status?user_id=${encodeURIComponent(userId)}`, signal);
+
+export const connectSlack = (userId: string, signal?: AbortSignal) =>
+  post<ConnectResponse>('/api/integrations/connect/slack', { user_id: userId }, signal);
+
+export const connectGitHub = (userId: string, signal?: AbortSignal) =>
+  post<ConnectResponse>('/api/integrations/connect/github', { user_id: userId }, signal);
+
+export const getGitHubRepos = (userId: string, signal?: AbortSignal) =>
+  get<GitHubReposResponse>(`/api/integrations/github/repos?user_id=${encodeURIComponent(userId)}`, signal);
+
+export const syncSlack = (userId: string, opts?: { maxChannels?: number; messagesPerChannel?: number }, signal?: AbortSignal) =>
+  post<SyncResponse>('/api/integrations/sync/slack', {
+    user_id: userId,
+    max_channels: opts?.maxChannels ?? 5,
+    messages_per_channel: opts?.messagesPerChannel ?? 30,
+  }, signal);
+
+export const syncGitHub = (userId: string, opts?: { selectedRepos?: string[]; maxRepos?: number; prsPerRepo?: number; issuesPerRepo?: number }, signal?: AbortSignal) =>
+  post<SyncResponse>('/api/integrations/sync/github', {
+    user_id: userId,
+    selected_repos: opts?.selectedRepos,
+    max_repos: opts?.maxRepos ?? 10,
+    prs_per_repo: opts?.prsPerRepo ?? 20,
+    issues_per_repo: opts?.issuesPerRepo ?? 20,
+  }, signal);
+
+export const syncAll = (userId: string, opts?: { selectedRepos?: string[] }, signal?: AbortSignal) =>
+  post<SyncResponse>('/api/integrations/sync/all', {
+    user_id: userId,
+    selected_repos: opts?.selectedRepos,
+  }, signal);

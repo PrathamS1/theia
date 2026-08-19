@@ -54,20 +54,14 @@ def get_graph_topology(
     labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Project,Fact"),
     search: Optional[str] = Query(None, description="Filter documents by title (applies to the currently cached seed only)"),
     refresh: bool = Query(False, description="Bypass the topology cache and re-query HydraDB"),
+    workspace_id: Optional[str] = Query(None, description="Filter topology to a specific user/workspace"),
 ):
     """
     Returns a bounded seed subgraph (documents plus their MENTIONS/HAS_FACT
-    neighbours) from HydraDB, structured for Cytoscape.js. The full graph is
-    ~8k nodes / ~7.3k edges -- far past what a force-directed canvas can
-    render usefully -- so this endpoint returns a fixed-size seed and the
-    client grows it via /expand as the user clicks nodes.
-
-    NOTE: `search` filters the seed already fetched, not the full 749-document
-    corpus -- HydraDB's Cypher subset doesn't support CONTAINS, so a
-    corpus-wide search would require an unanchored scan (~1.4s) per keystroke.
+    neighbours) from HydraDB, structured for Cytoscape.js.
     """
     try:
-        seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh)
+        seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh, workspace_id=workspace_id)
     except Exception:
         return {"nodes": [], "edges": [], "total_nodes": 0, "total_edges": 0, "degraded": True}
     nodes, edges = seed["nodes"], seed["edges"]

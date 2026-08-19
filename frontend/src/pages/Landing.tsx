@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getHealth } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
+import LiveIntegrationsModal from '../components/LiveIntegrationsModal';
 import './Landing.css';
 
 /* Content-first: these are the four failure modes the architecture exists to
@@ -33,7 +35,18 @@ const FAILURES = [
 ];
 
 export default function Landing() {
+  const [userName, setUserName] = useState(() => localStorage.getItem('theia_user_name') || '');
+  const [userId, setUserId] = useState(() => localStorage.getItem('theia_user_id') || '');
+  const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
+
   const { data: health, loading } = useAsync((s) => getHealth(s), []);
+
+  const handleUserChange = (name: string, id: string) => {
+    setUserName(name);
+    setUserId(id);
+    localStorage.setItem('theia_user_name', name);
+    localStorage.setItem('theia_user_id', id);
+  };
 
   const stats = [
     { label: 'Documents', value: health?.total_documents },
@@ -48,7 +61,12 @@ export default function Landing() {
 
       <header className="landing-nav">
         <span className="wordmark">Theia</span>
-        <Link className="btn btn-sm" to="/dashboard">Open dashboard</Link>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <button className="btn btn-sm" onClick={() => setIsIntegrationsOpen(true)}>
+            ⚡ Connect Apps (Slack & GitHub)
+          </button>
+          <Link className="btn btn-sm btn-primary" to="/dashboard">Open dashboard</Link>
+        </div>
       </header>
 
       <main id="main">
@@ -66,6 +84,9 @@ export default function Landing() {
           </p>
           <div className="hero-actions">
             <Link className="btn btn-primary" to="/dashboard">Explore the graph</Link>
+            <button className="btn btn-accent" onClick={() => setIsIntegrationsOpen(true)}>
+              ⚡ Connect Your SaaS Workspace
+            </button>
             <a className="btn" href="/docs" target="_blank" rel="noreferrer">API reference</a>
           </div>
 
@@ -115,6 +136,14 @@ export default function Landing() {
         <span>Theia &middot; built on HydraDB</span>
         <Link to="/dashboard">Open dashboard &rarr;</Link>
       </footer>
+
+      <LiveIntegrationsModal
+        isOpen={isIntegrationsOpen}
+        onClose={() => setIsIntegrationsOpen(false)}
+        userName={userName}
+        userId={userId}
+        onUserChange={handleUserChange}
+      />
     </div>
   );
 }

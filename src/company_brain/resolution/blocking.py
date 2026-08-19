@@ -29,7 +29,7 @@ def generate_candidate_pairs(
         if workspace_id:
             persons = client.run(f"MATCH (p:Person {{workspace_id: '{workspace_id}'}}) RETURN p.id AS id, p.name AS name, p.source AS source")
         else:
-            persons = client.run("MATCH (p:Person) WHERE p.workspace_id IS NULL OR p.workspace_id = 'benchmark' RETURN p.id AS id, p.name AS name, p.source AS source")
+            persons = client.run("MATCH (p:Person) RETURN p.id AS id, p.name AS name, p.source AS source")
     except Exception as e:
         logger.warning("Failed to fetch Person nodes: %s", e)
         persons = []
@@ -50,7 +50,7 @@ def generate_candidate_pairs(
             )
         else:
             doc_mentions = client.run(
-                "MATCH (d:Document)-[:MENTIONS]->(p:Person) WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') RETURN p.id AS person_id, d.doc_id AS doc_id"
+                "MATCH (d:Document)-[:MENTIONS]->(p:Person) RETURN p.id AS person_id, d.doc_id AS doc_id"
             )
         for row in doc_mentions:
             pid = row.get("person_id")

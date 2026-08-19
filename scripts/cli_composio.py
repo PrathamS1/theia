@@ -61,8 +61,31 @@ def cmd_auth_slack(args):
     print(f"  python3 scripts/cli_composio.py status --user-id {args.user_id}\n")
 
 
+def cmd_auth_github(args):
+    """Generates the Composio Connect Link for GitHub."""
+    print("=" * 80)
+    print("  🔗 COMPOSIO GITHUB OAUTH CONNECT")
+    print("=" * 80)
+
+    if not COMPOSIO_API_KEY:
+        print("❌ Error: COMPOSIO_API_KEY is not set in .env!")
+        return
+
+    mgr = ComposioManager()
+    res = mgr.initiate_github_connection(user_id=args.user_id)
+
+    auth_url = res.get("auth_url")
+    print(f"\n✅ Connection Initiated for user_id: '{args.user_id}'")
+    print("\n👉 Please open the following URL in your browser to authorize GitHub:")
+    print("-" * 80)
+    print(f"  {auth_url}")
+    print("-" * 80)
+    print("\nOnce authorized in your browser, run:")
+    print(f"  python3 scripts/cli_composio.py status --user-id {args.user_id}\n")
+
+
 def cmd_status(args):
-    """Checks the live connection status."""
+    """Checks the live connection status for both Slack and GitHub."""
     print("=" * 80)
     print("  📊 COMPOSIO SAAS CONNECTION STATUS")
     print("=" * 80)
@@ -72,22 +95,15 @@ def cmd_status(args):
         return
 
     mgr = ComposioManager()
-    res = mgr.get_connection_status(user_id=args.user_id, toolkit="slack")
+    print(f"\nUser ID:   {args.user_id}\n")
 
-    status = res.get("status", "DISCONNECTED")
-    status_icon = "🟢" if status == "ACTIVE" else ("🟡" if status == "INITIATED" else "⚪")
+    for tk in ["slack", "github"]:
+        res = mgr.get_connection_status(user_id=args.user_id, toolkit=tk)
+        status = res.get("status", "DISCONNECTED")
+        status_icon = "🟢" if status == "ACTIVE" else ("🟡" if status == "INITIATED" else "⚪")
+        print(f"  [{tk.upper():<6}] Status: {status_icon} {status:<12} | Account: {res.get('account_name') or 'N/A'}")
 
-    print(f"\nUser ID:   {args.user_id}")
-    print(f"Toolkit:   Slack")
-    print(f"Status:    {status_icon} {status}")
-    print(f"Acc ID:    {res.get('connected_account_id') or 'N/A'}")
-    print(f"Acc Name:  {res.get('account_name') or 'N/A'}")
-
-    if status != "ACTIVE":
-        print("\n⚠️  Slack is not yet active. Run 'auth-slack' to generate a connection link.")
-    else:
-        print("\n✅ Slack is connected! You can now run:")
-        print(f"  python3 scripts/cli_composio.py sync-slack --user-id {args.user_id}\n")
+    print("\n" + "=" * 80 + "\n")
 
 
 def cmd_sync_slack(args):
@@ -104,7 +120,33 @@ def cmd_sync_slack(args):
 
     if result.get("status") == "SUCCESS":
         print("\n" + "=" * 80)
-        print("  🎉 SYNC COMPLETED SUCCESSFULLY!")
+        print("  🎉 SLACK SYNC COMPLETED SUCCESSFULLY!")
+        print("=" * 80)
+        print(f"  • Documents Synced:     {result.get('documents_synced', 0)}")
+        print(f"  • Chunks Vectorized:    {result.get('chunks_vectorized', 0)}")
+        print(f"  • Facts Extracted:      {result.get('facts_extracted', 0)}")
+        print(f"  • Resolution Summary:   {result.get('resolution')}")
+        print("=" * 80 + "\n")
+    else:
+        print(f"\n❌ Sync Failed: {result.get('message')}\n")
+
+
+def cmd_sync_github(args):
+    """Pulls live GitHub repositories, PRs, and issues and updates HydraDB and vector store."""
+    print("=" * 80)
+    print("  🔄 SYNCING LIVE GITHUB REPOSITORIES INTO COMPANY BRAIN")
+    print("=" * 80)
+
+    worker = LiveSyncWorker(user_id=args.user_id)
+    result = worker.sync_github(
+        max_repos=args.max_repos,
+        prs_per_repo=args.prs_per_repo,
+        issues_per_repo=args.issues_per_repo,
+    )
+
+    if result.get("status") == "SUCCESS":
+        print("\n" + "=" * 80)
+        print("  🎉 GITHUB SYNC COMPLETED SUCCESSFULLY!")
         print("=" * 80)
         print(f"  • Documents Synced:     {result.get('documents_synced', 0)}")
         print(f"  • Chunks Vectorized:    {result.get('chunks_vectorized', 0)}")
@@ -193,25 +235,36 @@ def main():
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # 1. auth-slack
-    p_auth = subparsers.add_parser("auth-slack", help="Generate Slack OAuth Connect Link")
-    p_auth.add_argument("--user-id", default="default_user", help="Workspace / User ID")
+    p_auth_slack = subparsers.add_parser("auth-slack", help="Generate Slack OAuth Connect Link")
+    p_auth_slack.add_argument("--user-id", default="default_user", help="Workspace / User ID")
 
-    # 2. status
-    p_status = subparsers.add_parser("status", help="Check connection status")
+    # 2. auth-github
+    p_auth_gh = subparsers.add_parser("auth-github", help="Generate GitHub OAuth Connect Link")
+    p_auth_gh.add_argument("--user-id", default="default_user", help="Workspace / User ID")
+
+    # 3. status
+    p_status = subparsers.add_parser("status", help="Check connection status (Slack & GitHub)")
     p_status.add_argument("--user-id", default="default_user", help="Workspace / User ID")
 
-    # 3. sync-slack
-    p_sync = subparsers.add_parser("sync-slack", help="Sync live Slack workspace into HydraDB")
-    p_sync.add_argument("--user-id", default="default_user", help="Workspace / User ID")
-    p_sync.add_argument("--max-channels", type=int, default=5, help="Max channels to sync")
-    p_sync.add_argument("--messages-per-channel", type=int, default=30, help="Messages per channel")
+    # 4. sync-slack
+    p_sync_slack = subparsers.add_parser("sync-slack", help="Sync live Slack workspace into HydraDB")
+    p_sync_slack.add_argument("--user-id", default="default_user", help="Workspace / User ID")
+    p_sync_slack.add_argument("--max-channels", type=int, default=5, help="Max channels to sync")
+    p_sync_slack.add_argument("--messages-per-channel", type=int, default=30, help="Messages per channel")
 
-    # 4. query
+    # 5. sync-github
+    p_sync_gh = subparsers.add_parser("sync-github", help="Sync live GitHub repositories into HydraDB")
+    p_sync_gh.add_argument("--user-id", default="default_user", help="Workspace / User ID")
+    p_sync_gh.add_argument("--max-repos", type=int, default=5, help="Max repositories to sync")
+    p_sync_gh.add_argument("--prs-per-repo", type=int, default=20, help="Max PRs per repository")
+    p_sync_gh.add_argument("--issues-per-repo", type=int, default=20, help="Max issues per repository")
+
+    # 6. query
     p_query = subparsers.add_parser("query", help="Query the live knowledge base")
     p_query.add_argument("question", help="The question to ask")
     p_query.add_argument("--user-id", default="default_user", help="Workspace / User ID")
 
-    # 5. chat
+    # 7. chat
     p_chat = subparsers.add_parser("chat", help="Interactive real-time chat with warm in-memory index")
     p_chat.add_argument("--user-id", default="default_user", help="Workspace / User ID")
 
@@ -219,10 +272,14 @@ def main():
 
     if args.command == "auth-slack":
         cmd_auth_slack(args)
+    elif args.command == "auth-github":
+        cmd_auth_github(args)
     elif args.command == "status":
         cmd_status(args)
     elif args.command == "sync-slack":
         cmd_sync_slack(args)
+    elif args.command == "sync-github":
+        cmd_sync_github(args)
     elif args.command == "query":
         cmd_query(args)
     elif args.command == "chat":

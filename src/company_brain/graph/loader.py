@@ -27,7 +27,7 @@ which write is last, they all agree.
 
 import logging
 import zlib
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from company_brain.graph.client import GraphClient
 from company_brain.graph.schema import trust_for
@@ -57,6 +57,7 @@ class GraphLoader:
         text_snippet: str,
         extraction: DocumentExtractionResult,
         title: str = "",
+        workspace_id: Optional[str] = None,
     ) -> Dict[str, int]:
         """
         Loads a document and its extracted entities and facts into HydraDB.
@@ -66,6 +67,8 @@ class GraphLoader:
         stats = {"entities_ok": 0, "entities_failed": 0, "facts_ok": 0, "facts_failed": 0}
         doc_int_id = string_to_int_id(f"doc_{doc_id}")
         source_trust = trust_for(source)
+        effective_ws = workspace_id or self.workspace_id
+
         doc_props = {
             "doc_int_id": doc_int_id,
             "doc_id": doc_id,
@@ -73,10 +76,20 @@ class GraphLoader:
             "title": title,
             "created_at": created_at,
         }
-        if self.workspace_id:
-            doc_props["workspace_id"] = self.workspace_id
+        if effective_ws:
+            doc_props["workspace_id"] = effective_ws
 
-        ws_prop = ", workspace_id: $workspace_id" if self.workspace_id else ""
+        ws_prop = ", workspace_id: $workspace_id" if effective_ws else ""
+
+        # Always ensure Document node exists in HydraDB
+        create_doc_cypher = (
+            f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+            f"title: $title, created_at: $created_at{ws_prop}}})"
+        )
+        try:
+            self.client.run_write(create_doc_cypher, doc_props)
+        except Exception as e:
+            logger.debug("Failed to write Document node: %s", e)
 
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
         for entity in extraction.entities:

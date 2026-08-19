@@ -7,11 +7,12 @@ import './AskPanel.css';
 interface Props {
   presetQuestion: string;
   presetId: string | null;
+  workspaceId?: string | null;
   onClearPreset: () => void;
   onCitations: (docIds: string[]) => void;
 }
 
-export default function AskPanel({ presetQuestion, presetId, onClearPreset, onCitations }: Props) {
+export default function AskPanel({ presetQuestion, presetId, workspaceId, onClearPreset, onCitations }: Props) {
   const [text, setText] = useState('');
   const [result, setResult] = useState<QueryResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,7 @@ export default function AskPanel({ presetQuestion, presetId, onClearPreset, onCi
     setBusy(true);
     setError(null);
     try {
-      const r = await runQuery(q, boundId, ac.signal);
+      const r = await runQuery(q, boundId, workspaceId, ac.signal);
       setResult(r);
       onCitations(r.citations);
     } catch (err) {

@@ -8,6 +8,7 @@ import GraphLegend from '../components/GraphLegend';
 import NodeInspector from '../components/NodeInspector';
 import AskPanel from '../components/AskPanel';
 import QuestionPicker from '../components/QuestionPicker';
+import LiveIntegrationsModal from '../components/LiveIntegrationsModal';
 import './Dashboard.css';
 
 const ALL_LABELS: NodeLabel[] = ['Document', 'Person', 'Org', 'Ticket', 'Project', 'Fact'];
@@ -20,6 +21,12 @@ const LAYOUTS: { id: LayoutName; name: string }[] = [
 ];
 
 export default function Dashboard() {
+  // Multi-tenant user workspace identity (dynamic, persisted in localStorage)
+  const [userName, setUserName] = useState(() => localStorage.getItem('theia_user_name') || '');
+  const [userId, setUserId] = useState(() => localStorage.getItem('theia_user_id') || '');
+  const [workspaceMode, setWorkspaceMode] = useState<'benchmark' | 'live'>('benchmark');
+  const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
+
   const [labels, setLabels] = useState<NodeLabel[]>(ALL_LABELS);
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
@@ -28,21 +35,26 @@ export default function Dashboard() {
   const [preset, setPreset] = useState<{ q: string; id: string } | null>(null);
   const canvasRef = useRef<GraphCanvasHandle>(null);
 
+  const activeWorkspaceId = workspaceMode === 'live' ? userId : null;
+
   const health = useAsync((s) => getHealth(s), []);
   const evalLatest = useAsync((s) => getEvalLatest(s), []);
-  /* A bounded seed, not the full ~8k-node graph -- the user grows it from
-   * here by clicking (or double-clicking) nodes on the canvas. */
+
   const topo = useAsync(
-    (s) => getTopology({ docLimit: DEFAULT_DOC_LIMIT, labels, search }, s),
-    [labels.join(','), search],
+    (s) => getTopology({ docLimit: DEFAULT_DOC_LIMIT, labels, search, workspaceId: activeWorkspaceId }, s),
+    [labels.join(','), search, activeWorkspaceId],
   );
+
+  const handleUserChange = (name: string, id: string) => {
+    setUserName(name);
+    setUserId(id);
+    localStorage.setItem('theia_user_name', name);
+    localStorage.setItem('theia_user_id', id);
+  };
 
   const toggleLabel = (l: NodeLabel) =>
     setLabels((cur) => (cur.includes(l) ? cur.filter((x) => x !== l) : [...cur, l]));
 
-  /* Selecting the first citation surfaces the answer's evidence on the canvas
-   * -- only takes effect if that document happens to be in the current seed
-   * or has already been expanded into view; the seed is bounded by design. */
   const focusCitations = useCallback((docIds: string[]) => {
     if (docIds.length) setSelected(`doc_${docIds[0]}`);
   }, []);
@@ -55,6 +67,37 @@ export default function Dashboard() {
     <div className="dash">
       <a className="skip-link" href="#canvas">Skip to graph</a>
       <StatusBar health={health.data} healthError={health.error} evalData={evalLatest.data} />
+
+      {/* Primary Top Bar: Workspace Selector & Integrations Trigger */}
+      <div className="dash-workspace-bar">
+        <div className="workspace-toggle-group">
+          <button
+            className={`btn btn-sm ${workspaceMode === 'benchmark' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setWorkspaceMode('benchmark')}
+          >
+            🌐 Enterprise Benchmark Corpus
+          </button>
+          <button
+            className={`btn btn-sm ${workspaceMode === 'live' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => {
+              if (!userId) {
+                setIsIntegrationsOpen(true);
+              } else {
+                setWorkspaceMode('live');
+              }
+            }}
+          >
+            {userName ? `👤 ${userName}’s Live Workspace` : '⚡ Live Mode (Connect SaaS)'}
+          </button>
+        </div>
+
+        <button
+          className="btn btn-sm btn-accent"
+          onClick={() => setIsIntegrationsOpen(true)}
+        >
+          ⚙️ Manage Integrations (Slack & GitHub)
+        </button>
+      </div>
 
       <div className="dash-toolbar">
         <fieldset className="filter-set">
@@ -115,11 +158,21 @@ export default function Dashboard() {
 
         {!topo.loading && !topo.error && topo.data && topo.data.nodes.length === 0 && (
           <div className="canvas-state" role="status">
-            <h3>No nodes match</h3>
-            <p className="muted small">Clear the search or re-enable a node type.</p>
-            <button className="btn" onClick={() => { setSearch(''); setDraft(''); setLabels(ALL_LABELS); }}>
-              Reset filters
-            </button>
+            <h3>No nodes in this view</h3>
+            <p className="muted small">
+              {workspaceMode === 'live'
+                ? `No live documents found for workspace '${userId}'. Connect your Slack or GitHub account above to sync real data.`
+                : 'Clear the search or re-enable a node type.'}
+            </p>
+            {workspaceMode === 'live' ? (
+              <button className="btn btn-primary" onClick={() => setIsIntegrationsOpen(true)}>
+                Connect & Sync Apps
+              </button>
+            ) : (
+              <button className="btn" onClick={() => { setSearch(''); setDraft(''); setLabels(ALL_LABELS); }}>
+                Reset filters
+              </button>
+            )}
           </div>
         )}
 
@@ -142,6 +195,7 @@ export default function Dashboard() {
         <AskPanel
           presetQuestion={preset?.q ?? ''}
           presetId={preset?.id ?? null}
+          workspaceId={activeWorkspaceId}
           onClearPreset={() => setPreset(null)}
           onCitations={focusCitations}
         />
@@ -151,6 +205,19 @@ export default function Dashboard() {
           onPick={(q, id) => setPreset({ q, id })}
         />
       </aside>
+
+      {/* Live Integrations Modal */}
+      <LiveIntegrationsModal
+        isOpen={isIntegrationsOpen}
+        onClose={() => setIsIntegrationsOpen(false)}
+        userName={userName}
+        userId={userId}
+        onUserChange={handleUserChange}
+        onSyncComplete={() => {
+          topo.reload();
+          setWorkspaceMode('live');
+        }}
+      />
     </div>
   );
 }

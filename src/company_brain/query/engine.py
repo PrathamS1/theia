@@ -268,26 +268,5 @@ class QueryEngine:
         if not context_parts:
             return "Relevant documentation located in " + ", ".join(citations)
 
-        # 3. If Gemini is available, synthesize a direct conversational answer
-        if question and config.get_gemini_api_key():
-            try:
-                from google import genai
-                client = genai.Client(api_key=config.get_gemini_api_key())
-                prompt = (
-                    f"You are Company Brain, an enterprise AI knowledge assistant.\n"
-                    f"Answer the user's question directly, clearly, and concisely based ONLY on the provided context.\n"
-                    f"If the answer includes members, channels, counts, or requests, state them directly.\n\n"
-                    f"Context:\n" + "\n\n".join(context_parts) + f"\n\n"
-                    f"Question: {question}\n\n"
-                    f"Direct Answer:"
-                )
-                response = client.models.generate_content(
-                    model=config.GEMINI_MODEL,
-                    contents=prompt,
-                )
-                if response.text and response.text.strip():
-                    return response.text.strip()
-            except Exception as e:
-                logger.debug("LLM answer synthesis fallback: %s", e)
-
+        # Return directly grounded facts and passages
         return "\n\n".join(context_parts)

@@ -127,3 +127,58 @@ export interface EvalLatest {
   };
   total_records: number;
 }
+
+export interface IntegrationStatusItem {
+  toolkit: 'slack' | 'github' | string;
+  status: 'ACTIVE' | 'INITIATED' | 'DISCONNECTED' | string;
+  connected_account_id?: string | null;
+  account_name?: string | null;
+}
+
+export interface IntegrationsStatusResponse {
+  user_id: string;
+  configured: boolean;
+  error?: string;
+  integrations: IntegrationStatusItem[];
+}
+
+export interface ConnectResponse {
+  user_id: string;
+  toolkit: string;
+  connection_id?: string;
+  auth_url?: string;
+  status: string;
+}
+
+export interface SyncResponse {
+  status: string;
+  user_id?: string;
+  source?: string;
+  documents_synced?: number;
+  chunks_vectorized?: number;
+  facts_extracted?: number;
+  resolution?: {
+    same_as_edges: number;
+    supersedes_edges: number;
+  };
+  results?: Record<string, any>;
+  message?: string;
+  error?: string;
+}
+
+export interface GitHubRepo {
+  id: number;
+  name: string;
+  full_name: string;
+  description?: string;
+  private?: boolean;
+  html_url?: string;
+  stars?: number;
+  updated_at?: string;
+}
+
+export interface GitHubReposResponse {
+  user_id: string;
+  total_repositories: number;
+  repositories: GitHubRepo[];
+}
