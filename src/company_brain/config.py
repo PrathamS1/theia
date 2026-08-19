@@ -27,9 +27,13 @@ GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 # Model used for extraction and resolution adjudication.
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
+# ── Composio ──────────────────────────────────────────────────────────────────
+COMPOSIO_API_KEY: str = os.getenv("COMPOSIO_API_KEY", "")
+
 # ── Data paths ────────────────────────────────────────────────────────────────
 DATA_DIR: Path = _PROJECT_ROOT / "data"
 RAW_DATA_DIR: Path = DATA_DIR / "raw"
+LIVE_DATA_DIR: Path = DATA_DIR / "live"
 QUESTIONS_DIR: Path = DATA_DIR / "questions"
 QUESTIONS_FILE: Path = QUESTIONS_DIR / "questions.jsonl"
 EXTRA_QUESTIONS_FILE: Path = QUESTIONS_DIR / "extra_questions.jsonl"

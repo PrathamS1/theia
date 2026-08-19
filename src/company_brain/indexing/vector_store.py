@@ -34,8 +34,11 @@ class VectorStore:
     def model(self):
         if self._model is None:
             from sentence_transformers import SentenceTransformer
-            logger.info("Loading SentenceTransformer model %s...", self.model_name)
-            self._model = SentenceTransformer(self.model_name)
+            try:
+                self._model = SentenceTransformer(self.model_name, local_files_only=True)
+            except Exception:
+                logger.info("Loading SentenceTransformer model %s...", self.model_name)
+                self._model = SentenceTransformer(self.model_name)
         return self._model
 
     def build_chunk_index(self, chunks: List[Dict[str, Any]], batch_size: int = 128) -> int:

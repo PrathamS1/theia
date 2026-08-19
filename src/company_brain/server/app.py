@@ -24,6 +24,7 @@ from company_brain.server.routes.health import router as health_router
 from company_brain.server.routes.graph import router as graph_router
 from company_brain.server.routes.query import router as query_router
 from company_brain.server.routes.eval import router as eval_router
+from company_brain.server.routes.integrations import router as integrations_router
 
 app = FastAPI(
     title="Theia: Enterprise Company Brain on HydraDB",
@@ -45,6 +46,7 @@ app.include_router(health_router)
 app.include_router(graph_router)
 app.include_router(query_router)
 app.include_router(eval_router)
+app.include_router(integrations_router)
 
 # Mount Static Files directory if it exists
 static_dir = Path(__file__).resolve().parent / "static"

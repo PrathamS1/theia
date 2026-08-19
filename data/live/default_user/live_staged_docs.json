@@ -1,0 +1,226 @@
+{
+  "slack_5a0d078afc4b54684fafb2b6": {
+    "doc_id": "slack_5a0d078afc4b54684fafb2b6",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BR8ALHN65",
+    "text": "Channel: #all-theia\nAuthor: @U0BR8ALHN65\nTimestamp: 2026-08-19T06:41:31+00:00\n\nHi",
+    "author": "U0BR8ALHN65",
+    "created_at": "2026-08-19T06:41:31+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787121691.351099",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_6683ac26ffa30fd7a15a1193": {
+    "doc_id": "slack_6683ac26ffa30fd7a15a1193",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BRA4N9P6G",
+    "text": "Channel: #all-theia\nAuthor: @U0BRA4N9P6G\nTimestamp: 2026-08-19T06:40:52+00:00\n\n<@U0BRA4N9P6G> has joined the channel",
+    "author": "U0BRA4N9P6G",
+    "created_at": "2026-08-19T06:40:52+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787121652.605389",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_3d72c5b36db1556565aeb65a": {
+    "doc_id": "slack_3d72c5b36db1556565aeb65a",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BR8ALHN65",
+    "text": "Channel: #all-theia\nAuthor: @U0BR8ALHN65\nTimestamp: 2026-08-19T06:40:50+00:00\n\n<@U0BR8ALHN65> has joined the channel",
+    "author": "U0BR8ALHN65",
+    "created_at": "2026-08-19T06:40:50+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787121650.723349",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_8e381e0109a80960a12ce7d8": {
+    "doc_id": "slack_8e381e0109a80960a12ce7d8",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BRA2D1B9S",
+    "text": "Channel: #all-theia\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T06:31:15+00:00\n\nHere we discuss all things",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T06:31:15+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787121075.246539",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_f127c3218e2fcae11c990a2d": {
+    "doc_id": "slack_f127c3218e2fcae11c990a2d",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BRA2D1B9S",
+    "text": "Channel: #all-theia\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T06:28:14+00:00\n\n<@U0BRA2D1B9S> has joined the channel",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T06:28:14+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787120894.168579",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_37131fda068a7e75ec91398f": {
+    "doc_id": "slack_37131fda068a7e75ec91398f",
+    "source": "slack",
+    "title": "#help - message from @U0BRA4N9P6G",
+    "text": "Channel: #help\nAuthor: @U0BRA4N9P6G\nTimestamp: 2026-08-19T06:40:52+00:00\n\n<@U0BRA4N9P6G> has joined the channel",
+    "author": "U0BRA4N9P6G",
+    "created_at": "2026-08-19T06:40:52+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787121652.750439",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_cde2c2507b756f7ceb5164c1": {
+    "doc_id": "slack_cde2c2507b756f7ceb5164c1",
+    "source": "slack",
+    "title": "#help - message from @U0BR8ALHN65",
+    "text": "Channel: #help\nAuthor: @U0BR8ALHN65\nTimestamp: 2026-08-19T06:40:50+00:00\n\n<@U0BR8ALHN65> has joined the channel",
+    "author": "U0BR8ALHN65",
+    "created_at": "2026-08-19T06:40:50+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787121650.799779",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_7a3af88915933a650dbe9074": {
+    "doc_id": "slack_7a3af88915933a650dbe9074",
+    "source": "slack",
+    "title": "#help - message from @Request form",
+    "text": "Channel: #help\nAuthor: @Request form\nTimestamp: 2026-08-19T06:33:59+00:00\n\n<@U0BRA2D1B9S> filed a <https://theia-o287236.slack.com/lists/T0BR4D47X0E/F0BR2L45AMB?record_id=Rec0BQR1V0KRD|request>\n\nSource: Help requests tracker\n\nWhat is the proper procedure of integrating composio?\n\nDetails: Guide me with the flow\n\nRequest: What is the proper procedure of integrating composio?\n\nPriority: High\n\nSubmitted by: @U0BRA2D1B9S",
+    "author": "Request form",
+    "created_at": "2026-08-19T06:33:59+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787121239.416539",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_0f75096eb564e7f06293c7d6": {
+    "doc_id": "slack_0f75096eb564e7f06293c7d6",
+    "source": "slack",
+    "title": "#help - message from @U0BRA2D1B9S",
+    "text": "Channel: #help\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T06:33:17+00:00\n\nrequest form to seek help",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T06:33:17+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787121197.929279",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_1d0da18f69adbee95b29ad5a": {
+    "doc_id": "slack_1d0da18f69adbee95b29ad5a",
+    "source": "slack",
+    "title": "#help - message from @U0BRA2D1B9S",
+    "text": "Channel: #help\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T06:31:02+00:00\n\nHi",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T06:31:02+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787121062.485139",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_2d7adf5b2bf1ad71c7e81153": {
+    "doc_id": "slack_2d7adf5b2bf1ad71c7e81153",
+    "source": "slack",
+    "title": "#help - message from @U0BRA2D1B9S",
+    "text": "Channel: #help\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T06:30:14+00:00\n\n<@U0BRA2D1B9S> has joined the channel",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T06:30:14+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787121014.756719",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_353d787169d815f604083ad2": {
+    "doc_id": "slack_353d787169d815f604083ad2",
+    "source": "slack",
+    "title": "#social - message from @U0BRA4N9P6G",
+    "text": "Channel: #social\nAuthor: @U0BRA4N9P6G\nTimestamp: 2026-08-19T06:40:52+00:00\n\n<@U0BRA4N9P6G> has joined the channel",
+    "author": "U0BRA4N9P6G",
+    "created_at": "2026-08-19T06:40:52+00:00",
+    "metadata": {
+      "channel_id": "C0BR4D4JZ8E",
+      "channel_name": "social",
+      "slack_ts": "1787121652.689639",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_d4db3b7201d7eeef800f1f6c": {
+    "doc_id": "slack_d4db3b7201d7eeef800f1f6c",
+    "source": "slack",
+    "title": "#social - message from @U0BR8ALHN65",
+    "text": "Channel: #social\nAuthor: @U0BR8ALHN65\nTimestamp: 2026-08-19T06:40:50+00:00\n\n<@U0BR8ALHN65> has joined the channel",
+    "author": "U0BR8ALHN65",
+    "created_at": "2026-08-19T06:40:50+00:00",
+    "metadata": {
+      "channel_id": "C0BR4D4JZ8E",
+      "channel_name": "social",
+      "slack_ts": "1787121650.833899",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  },
+  "slack_b7e2c5c1fb5f43c4b6f27715": {
+    "doc_id": "slack_b7e2c5c1fb5f43c4b6f27715",
+    "source": "slack",
+    "title": "#social - message from @U0BRA2D1B9S",
+    "text": "Channel: #social\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T06:28:14+00:00\n\n<@U0BRA2D1B9S> has joined the channel",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T06:28:14+00:00",
+    "metadata": {
+      "channel_id": "C0BR4D4JZ8E",
+      "channel_name": "social",
+      "slack_ts": "1787120894.395829",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "default_user"
+  }
+}
