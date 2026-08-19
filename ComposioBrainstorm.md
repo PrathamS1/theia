@@ -1,288 +1,406 @@
-# Composio.dev Live Enterprise Integration Blueprint
-### Transitioning Company Brain from Static Benchmark to Live Multi-SaaS Ingestion
+# Composio.dev Live Enterprise Integration — Production Architecture & Implementation Plan
+### Building a Full-Fledged, Real-Time Enterprise Memory Platform on HydraDB
 
 ---
 
 ## 1. Executive Summary & Vision
 
-Currently, **Theia (Company Brain)** operates on a curated 812-document enterprise dataset covering 9 sources (Slack, GitHub, Confluence, Jira, Linear, Gmail, Google Drive, Notion, and Zendesk). 
+**Company Brain (Theia)** is designed to serve as the unified context engine and memory layer for modern enterprises. While the initial phase proved the system on the curated 500-question **EnterpriseRAG-Bench** corpus (812 documents across 9 platforms), the ultimate product goal is **Live Enterprise Mode**.
 
-By integrating **Composio** ([composio.dev](https://composio.dev)), Company Brain can transition from an offline benchmark evaluator into an **active, live enterprise memory platform**:
-* Users authenticate their own SaaS platforms (Slack, GitHub, Gmail, Jira, Notion, Linear, Google Drive) via Composio's managed OAuth & tool ecosystem.
-* The ingestion pipeline streams real-time messages, PRs, issues, emails, and documentation directly from the user's workspace.
-* Data is chunked, vectorized, and ingested into **HydraDB** on the fly, enabling real-time knowledge synthesis and conflict resolution over the user's actual company data.
-
----
-
-## 2. Current Setup vs. Composio Live Setup
-
-| Dimension | **Current Setup (Benchmark Mode)** | **Composio Integrated Setup (Live Enterprise Mode)** |
-| :--- | :--- | :--- |
-| **Data Ingestion** | Batch extraction from local raw files (`data/sources/` $\to$ `staged_gold_docs.json`). | Real-time / Scheduled API pulls via Composio managed connectors & webhooks. |
-| **Authentication** | None (Static offline files). | Managed OAuth 2.0 / API Keys handled by Composio (`client.get_entity(user_id)`). |
-| **Corpus Growth** | Fixed 812 documents, 7,881 passage chunks. | Dynamically growing corpus with incremental chunking and graph node upserts. |
-| **Entity Extraction** | Static rule-based & regex extraction on local JSON. | Identical extractor applied to incoming live stream of documents. |
-| **HydraDB Graph** | Single static graph scope (`default/graphs/default`). | Multi-tenant graph scopes (`namespaces/{user_id}/graphs/default`) in HydraDB. |
-| **Query Engine** | Hybrid vector + OpenCypher search on static vectors & graph. | **100% Identical**: Queries the live vector index and HydraDB graph. |
-| **Frontend UI** | Visualizes static topology and benchmark questions. | Allows connecting new integrations via OAuth, syncing data, and querying live company memory. |
+By integrating **Composio** ([composio.dev](https://composio.dev)), Company Brain transforms from an offline benchmark engine into an **active enterprise intelligence platform**:
+1. **User Self-Service SaaS Linking**: Users authenticate their own company tools (Slack, GitHub, Gmail, Jira, Notion, Linear, Google Drive) in 2 clicks via managed OAuth 2.0.
+2. **Automated Continuous Ingestion**: Live messages, pull requests, issue updates, emails, and confluence pages are automatically captured via webhooks and scheduled syncs.
+3. **Real-Time Knowledge Graph & Vector Memory**: Live data is normalized, recursively chunked (zero truncation), vectorized with `all-MiniLM-L6-v2`, and loaded into **HydraDB** over the Bolt protocol.
+4. **Autonomous Entity & Temporal Conflict Resolution**: Cross-source identities (e.g. GitHub handle `@s_ratnaparkhi` $\leftrightarrow$ Slack name `Soham`) are resolved with `[:SAME_AS]` edges, and newer policy/specification updates automatically supersede older facts via `[:SUPERSEDES]` graph edges.
+5. **Multi-Tenant Scope Isolation**: Every company or workspace receives a dedicated, physically isolated HydraDB graph namespace scope (`namespaces/{workspace_id}/graphs/default`), ensuring zero data leakage and strict enterprise security.
 
 ---
 
-## 3. End-to-End System Architecture
+## 2. End-to-End System Architecture
 
 ```mermaid
-flowchart TD
-    subgraph User["User & Frontend UI"]
-        UI["React Frontend (:5173)"]
-        AUTH_BTN["'Connect Slack / GitHub / Gmail' Buttons"]
+flowchart TB
+    subgraph FrontendTier["Frontend User Interface (React / Vite :5173)"]
+        UI_HOME["Workspace Switcher ('Benchmark' vs 'My Live Enterprise')"]
+        UI_INTEGRATIONS["Integrations Drawer (Slack, GitHub, Jira, Gmail cards)"]
+        UI_GRAPH["Interactive Graph Explorer (Cytoscape Canvas)"]
+        UI_QUERY["Live Query Studio & Visual Tracer"]
     end
 
-    subgraph Composio["Composio Cloud / SDK"]
-        COMPOSIO_AUTH["Composio Managed OAuth Provider"]
-        COMPOSIO_ACTIONS["Composio Action Runners (Slack, GitHub, Jira, Gmail)"]
+    subgraph ComposioPlatform["Composio Managed Cloud Platform"]
+        COMP_OAUTH["Managed OAuth 2.0 Handshake & Token Refresh Engine"]
+        COMP_WEBHOOKS["Real-Time SaaS Event Webhooks / Triggers"]
+        COMP_ACTIONS["Managed Tool Executors (Slack, GitHub, Jira, Gmail APIs)"]
     end
 
-    subgraph TheiaBackend["Theia Backend Server (:8000)"]
-        INT_ROUTER["/api/integrations (OAuth Flow & Sync Triggers)"]
+    subgraph BackendTier["FastAPI Backend Server (:8000)"]
+        AUTH_ROUTER["/api/integrations/connect & /callback"]
+        SYNC_WORKER["Background Ingestion Worker (Sync Coordinator)"]
+        WEBHOOK_HANDLER["/api/integrations/webhook (Event Ingest Listener)"]
+        
         ADAPTER["ComposioSourceAdapter (Normalizes to StagedDocument)"]
-        CHUNKER["DocumentChunker (1000 char / 200 overlap)"]
+        CHUNKER["DocumentChunker (1,000 char / 200 char overlap)"]
         VSTORE["VectorStore (all-MiniLM-L6-v2 Embeddings)"]
-        EXTRACTOR["HybridExtractor (Entities, Author, Facts)"]
-        LOADER["GraphLoader (HydraDB Bolt Client)"]
-        RESOLVER["EntityResolver (SAME_AS, SUPERSEDES)"]
+        EXTRACTOR["HybridExtractor (Entities, Author, Triple Facts)"]
+        LOADER["GraphLoader (HydraDB OpenCypher Bolt Client)"]
+        RESOLVER["EntityResolver (SAME_AS Aliasing & SUPERSEDES Conflict Resolution)"]
+        ENGINE["QueryEngine (Hierarchical RRF Fusion + OpenCypher Graph Traversal)"]
     end
 
-    subgraph Storage["HydraDB & Vector Storage"]
-        HYDRADB[("HydraDB (Bolt: 7687)\nNodes: :Document, :Person, :Org, :Fact\nEdges: [:MENTIONS], [:SAME_AS], [:SUPERSEDES]")]
-        VECTORS[("Local Chunk Vectors\n(chunk_embeddings.npy)")]
+    subgraph StorageTier["Durable Object Storage & Indexes (HydraDB + SlateDB)"]
+        subgraph HydraDB_Benchmark["HydraDB Benchmark Scope: namespaces/default/"]
+            BENCH_GRAPH[("Benchmark Graph (749 Docs, 568 Persons, 4,483 Facts)")]
+        end
+        subgraph HydraDB_Live["HydraDB Live Scope: namespaces/{workspace_id}/"]
+            LIVE_GRAPH[("Live Enterprise Graph (Dynamic Nodes & Edges)")]
+        end
+        subgraph LocalVectors["Vector Embedding Storage"]
+            BENCH_VEC[("Benchmark Vectors\ndata/vectors/")]
+            LIVE_VEC[("Live Workspace Vectors\ndata/vectors_live/{workspace_id}/")]
+        end
     end
 
-    subgraph QueryLayer["Live Query Interface"]
-        QUERY_API["POST /api/query"]
-        ENGINE["QueryEngine (Dense Chunks + HydraDB OpenCypher)"]
-    end
+    UI_INTEGRATIONS -->|1. Initiate OAuth| AUTH_ROUTER
+    AUTH_ROUTER -->|2. Get Auth URL| COMP_OAUTH
+    COMP_OAUTH -->|3. User Authorizes| AUTH_ROUTER
+    
+    UI_INTEGRATIONS -->|4. Trigger 'Sync Now'| SYNC_WORKER
+    COMP_WEBHOOKS -->|Real-time Events| WEBHOOK_HANDLER
+    WEBHOOK_HANDLER --> SYNC_WORKER
 
-    UI --> AUTH_BTN
-    AUTH_BTN --> INT_ROUTER
-    INT_ROUTER --> COMPOSIO_AUTH
-    COMPOSIO_AUTH --> COMPOSIO_ACTIONS
-    COMPOSIO_ACTIONS --> ADAPTER
+    SYNC_WORKER -->|Fetch Live Data| COMP_ACTIONS
+    COMP_ACTIONS --> ADAPTER
     ADAPTER --> CHUNKER
     ADAPTER --> EXTRACTOR
     CHUNKER --> VSTORE
-    VSTORE --> VECTORS
+    VSTORE --> LIVE_VEC
     EXTRACTOR --> LOADER
-    LOADER --> HYDRADB
-    LOADER --> RESOLVER
-    RESOLVER --> HYDRADB
+    LOADER --> LIVE_GRAPH
+    SYNC_WORKER --> RESOLVER
+    RESOLVER --> LIVE_GRAPH
 
-    UI --> QUERY_API
-    QUERY_API --> ENGINE
-    ENGINE <--> HYDRADB
-    ENGINE <--> VECTORS
+    UI_QUERY --> ENGINE
+    UI_GRAPH --> LIVE_GRAPH
+    ENGINE <--> LIVE_GRAPH
+    ENGINE <--> LIVE_VEC
 ```
 
 ---
 
-## 4. How Much Differs From the Current Setup?
+## 3. Account Linking & User Authentication Flow
 
-### What Stays 100% REUSED (Zero Changes Needed):
-1. **`DocumentChunker`**: Works identically on any text payload (`title`, `text`, `source`, `created_at`).
-2. **`VectorStore`**: Dense MiniLM vector matrix and cosine similarity dot products remain identical.
-3. **`extract_entities_and_facts()`**: Hybrid entity and triple extraction works out-of-the-box on live messages/PRs.
-4. **`GraphLoader` & HydraDB Schema**: The Bolt ingestion protocol (`:Document`, `:Person`, `:Org`, `:Fact`) is completely source-agnostic.
-5. **`EntityResolver`**: Levenshtein name blocking and temporal supersedes logic work seamlessly on live data.
-6. **`QueryEngine`**: RRF ranking, confidence gating, and OpenCypher queries operate unchanged.
-7. **Graph Explorer & Query Studio UI**: The Cytoscape canvas and Query Studio work directly on the live database.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Enterprise User
+    participant UI as React Frontend (:5173)
+    participant Server as FastAPI Backend (:8000)
+    participant Composio as Composio API / SDK
+    participant SaaS as Third-Party SaaS (Slack/GitHub/Google)
 
-### What is NEW / ADDED:
-1. **`ComposioConnector` Module** (`src/company_brain/integrations/composio_adapter.py`):
-   - Initializes Composio SDK (`from composio import ComposioToolSet, App`).
-   - Fetches data from connected accounts (Slack channels, GitHub repositories, Gmail messages, Jira tickets).
-   - Normalizes raw API responses into standard `StagedDocument` dicts.
-2. **FastAPI Integration Routes** (`src/company_brain/server/routes/integrations.py`):
-   - `GET /api/integrations/list`: Returns connected/available integrations (Slack, GitHub, Jira, Gmail).
-   - `POST /api/integrations/connect/{app_name}`: Initiates Composio OAuth flow and returns connection URL.
-   - `POST /api/integrations/sync`: Triggers background sync to pull recent updates into HydraDB.
-3. **Frontend Integration Management Modal**:
-   - A new settings/integrations drawer in the React UI allowing users to click **"Connect Slack"**, authenticate, and trigger **"Sync Now"**.
-
----
-
-## 5. Composio Data Normalization Blueprint
-
-Composio returns structured JSON payloads for each service. The adapter maps them into our canonical `StagedDocument` schema:
-
-```python
-# src/company_brain/integrations/composio_adapter.py
-
-from typing import Dict, Any, List
-from company_brain.extraction.models import StagedDocument
-import hashlib
-
-class ComposioNormalizer:
-    @staticmethod
-    def from_slack_message(msg: Dict[str, Any], channel_name: str) -> Dict[str, Any]:
-        """Normalizes a live Slack message into a Company Brain document."""
-        msg_id = msg.get("ts") or msg.get("id")
-        doc_id = f"slack_{hashlib.md5(f'{channel_name}_{msg_id}'.encode()).hexdigest()}"
-        
-        user = msg.get("user") or msg.get("username") or "unknown"
-        text = msg.get("text", "")
-        timestamp = msg.get("ts", "") # Unix timestamp
-
-        return {
-            "doc_id": doc_id,
-            "source": "slack",
-            "title": f"#{channel_name} - message by {user}",
-            "text": f"Channel: #{channel_name}\nAuthor: {user}\nTimestamp: {timestamp}\n\n{text}",
-            "author": user,
-            "created_at": timestamp,
-        }
-
-    @staticmethod
-    def from_github_pr(pr: Dict[str, Any]) -> Dict[str, Any]:
-        """Normalizes a live GitHub PR or Issue into a Company Brain document."""
-        pr_number = pr.get("number")
-        repo = pr.get("repo_name", "repo")
-        doc_id = f"gh_{hashlib.md5(f'{repo}_{pr_number}'.encode()).hexdigest()}"
-        
-        title = pr.get("title", f"PR #{pr_number}")
-        body = pr.get("body", "")
-        author = pr.get("user", {}).get("login") or "github_user"
-        created_at = pr.get("created_at", "2026-01-01T00:00:00Z")
-
-        return {
-            "doc_id": doc_id,
-            "source": "github",
-            "title": f"{repo} #{pr_number}: {title}",
-            "text": f"Pull Request #{pr_number}: {title}\nAuthor: {author}\nCreated: {created_at}\n\n{body}",
-            "author": author,
-            "created_at": created_at,
-        }
-
-    @staticmethod
-    def from_gmail_thread(thread: Dict[str, Any]) -> Dict[str, Any]:
-        """Normalizes a live Gmail thread into a Company Brain document."""
-        thread_id = thread.get("id")
-        doc_id = f"gmail_{thread_id}"
-        
-        subject = thread.get("subject", "Email Thread")
-        snippet = thread.get("body") or thread.get("snippet", "")
-        sender = thread.get("from", "unknown")
-        date = thread.get("date", "2026-01-01T00:00:00Z")
-
-        return {
-            "doc_id": doc_id,
-            "source": "gmail",
-            "title": subject,
-            "text": f"Subject: {subject}\nFrom: {sender}\nDate: {date}\n\n{snippet}",
-            "author": sender,
-            "created_at": date,
-        }
+    User->>UI: Clicks "Connect Slack" (or GitHub, Gmail, Jira)
+    UI->>Server: POST /api/integrations/connect/slack {workspace_id: "ws_acme"}
+    Server->>Composio: toolset.initiate_connection(app="slack", entity_id="ws_acme")
+    Composio-->>Server: Returns {connection_id: "conn_123", redirect_url: "https://auth.composio.dev/..."}
+    Server-->>UI: Returns redirect_url
+    UI->>User: Opens Composio OAuth Modal / Redirects to Slack Auth
+    User->>SaaS: Grants permissions (channels, messages, read scopes)
+    SaaS-->>Composio: OAuth callback & tokens stored securely
+    Composio-->>Server: Webhook / Redirect to /api/integrations/callback?status=ACTIVE
+    Server->>Server: Saves active connection record in SQLite/JSON (status: "CONNECTED")
+    Server->>Server: Schedules Initial Ingestion Worker in Background
+    Server-->>UI: Updates integration card status to "CONNECTED (Syncing...)"
+    UI-->>User: Shows green badge & initial progress spinner
 ```
 
 ---
 
-## 6. Incremental Sync Workflow (Live Updates)
+## 4. Ingestion, Extraction & Graph Resolution Pipeline
 
-When a user connects an integration and clicks **"Sync Data"**:
+Once an account is linked, the **Sync Worker** executes the 6-stage enterprise transformation pipeline:
 
-1. **Fetch from Composio**:
-   ```python
-   toolset = ComposioToolSet(entity_id=user_id)
-   # Fetch recent 50 Slack messages
-   slack_data = toolset.execute_action(action=Action.SLACK_GET_CONVERSATION_HISTORY, params={"channel": channel_id})
-   ```
-2. **Normalize**:
-   Convert incoming payloads into normalized documents using `ComposioNormalizer`.
-3. **Passage Chunking**:
-   `DocumentChunker.chunk_document(doc)` produces new structured passage chunks.
-4. **Append Vector Embeddings**:
-   `VectorStore.add_chunks(new_chunks)` generates embeddings with `all-MiniLM-L6-v2` and appends them to `chunk_embeddings.npy`.
-5. **Ingest to HydraDB**:
-   `GraphLoader.load_document(...)` writes the `:Document`, `:Person`, and `:Fact` nodes over Bolt.
-6. **Trigger Resolution**:
-   `EntityResolver.resolve_all()` reconciles aliases and superseding facts.
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        COMPOSIO LIVE INGESTION PIPELINE                                │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│  Stage 1: Fetch & Cursor Management                                                    │
+│  • Reads last_synced_at cursor for this integration.                                  │
+│  • Calls Composio APIs (e.g. SLACK_GET_CONVERSATION_HISTORY, GITHUB_GET_PRS).          │
+│  • Paginates and fetches only new/modified items since the last cursor.                │
+│                                                                                        │
+│  Stage 2: Canonical Normalization (ComposioSourceAdapter)                              │
+│  • Strips provider-specific envelope metadata.                                         │
+│  • Produces standard StagedDocument dictionaries:                                      │
+│    { doc_id, source, title, text, author, created_at, metadata }                      │
+│                                                                                        │
+│  Stage 3: Full-Corpus Recursive Passage Chunking (DocumentChunker)                     │
+│  • Splits full body text on Markdown headers, double newlines, and sentences.          │
+│  • Generates overlapping passages (1,000 chars, 200 overlap, ZERO text truncation).   │
+│                                                                                        │
+│  Stage 4: Dense Vector Embedding & Index Append (VectorStore)                          │
+│  • Generates 384-dimensional dense vectors using sentence-transformers/all-MiniLM-L6.  │
+│  • Appends embeddings to data/vectors_live/{workspace_id}/chunk_embeddings.npy.        │
+│                                                                                        │
+│  Stage 5: HydraDB Graph Ingestion (GraphLoader)                                        │
+│  • Connects over Bolt protocol to bolt://127.0.0.1:7687.                               │
+│  • Ingests :Document, :Person (authors), :Org (mentions), and :Fact nodes.             │
+│  • Establishes [:AUTHORED] and [:MENTIONS] edges dynamically.                         │
+│                                                                                        │
+│  Stage 6: Autonomous Entity & Temporal Conflict Resolution (EntityResolver)            │
+│  • Runs Levenshtein name blocking + co-occurrence to create [:SAME_AS] alias edges.    │
+│  • Analyzes conflicting facts on same subject/attribute:                               │
+│    Newer timestamp + Higher trust score overrides older fact via [:SUPERSEDES] edge.   │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 7. Execution Lifecycle: Who Runs Ingestion & Resolution in Live Mode?
+## 5. HydraDB Storage & Scope Partitioning Model
 
-In the current setup, ingestion and resolution were executed via manual CLI scripts (`python3 scripts/run_ingest.py` and `python3 scripts/run_resolution.py`).
+To ensure **100% strict benchmark integrity** while allowing arbitrary live data, the system leverages HydraDB's native scope hierarchy:
 
-In the **Live Composio Mode**, this entire pipeline is **100% automated by the FastAPI Backend Server**:
-
-```
-[User clicks "Sync" in UI / Webhook triggers]
-                     │
-                     ▼
-       FastAPI Background Task Worker
-                     │
-    ┌────────────────┴────────────────┐
-    ▼                                 ▼
-1. Fetch & Normalize              2. Incremental Graph & Vectors
-   • Composio API calls              • DocumentChunker (1,000 char)
-   • Formats to StagedDocument       • VectorStore.add_chunks()
-                     │
-                     ▼
-3. Ingest into HydraDB (Live Graph Scope)
-   • GraphLoader.load_document() over Bolt
-                     │
-                     ▼
-4. Run Real-time Conflict & Alias Resolution
-   • EntityResolver.resolve_all() creates [:SAME_AS] & [:SUPERSEDES]
-                     │
-                     ▼
-5. Instant Availability in React UI
-   • Graph Explorer & Query Studio query live data immediately
-```
-
-### Ingestion Triggers:
-1. **On-Demand Sync (Manual Trigger)**: User clicks **"Sync Workspace"** in the React UI $\to$ calls `POST /api/integrations/sync` $\to$ FastAPI launches a background ingestion task.
-2. **Webhook Sync (Real-Time Trigger)**: When a new message is posted in Slack or a PR is merged on GitHub, Composio dispatches a webhook to `POST /api/integrations/webhook` $\to$ the backend immediately ingests that single document and updates HydraDB within seconds.
-
----
-
-## 8. Storage Architecture: Where Does Live Data Live?
-
-### HydraDB Scope Isolation (Benchmark vs. Live)
-
-HydraDB is an object-store-native graph database designed with **hierarchical graph scopes**:
 $$\text{Scope Path} = \text{namespaces}/\{\text{tenant\_id}\}/\text{graphs}/\{\text{graph\_id}\}$$
 
-Inside `.hydradb/store/graph/data/namespaces/`, HydraDB physically partitions state into distinct LSM-trees and manifests:
-
+### Directory Partitioning on Disk:
 ```text
-.hydradb/store/graph/data/namespaces/
-├── default/                                # Benchmark Graph Scope
-│   └── graphs/
-│       └── default/                        # 749 Benchmark Docs, 568 Persons, 4,483 Facts
-│           └── cell-0/
-│               ├── SlateDB WAL & SSTs
-│               └── _graph_index/
+/home/pratham/theia/
+├── data/
+│   ├── vectors/                                  # 1. Benchmark Vector Embeddings
+│   │   ├── chunk_embeddings.npy                  # 7,881 passage vectors
+│   │   └── chunk_meta.json                       # Metadata for 812 benchmark docs
+│   │
+│   └── vectors_live/                             # 2. Live Workspace Vector Embeddings
+│       └── ws_acme_corp/                         # Partitioned per workspace
+│           ├── chunk_embeddings.npy              # Dynamic passage vectors
+│           └── chunk_meta.json                   # Live document & chunk metadata
 │
-└── live_workspace/                         # Live Composio Graph Scope
-    └── graphs/
-        └── default/                        # Real Slack, GitHub, Gmail, Jira data
-            └── cell-0/
-                ├── SlateDB WAL & SSTs
-                └── _graph_index/
+└── .hydradb/store/graph/data/namespaces/         # 3. HydraDB SlateDB Storage
+    ├── default/                                  # BENCHMARK SCOPE (Pristine & Untouched)
+    │   └── graphs/default/cell-0/
+    │       ├── SlateDB WAL & SSTs (749 docs, 568 persons, 4483 facts)
+    │       └── _graph_index/
+    │
+    └── ws_acme_corp/                             # LIVE WORKSPACE SCOPE (Isolated)
+        └── graphs/default/cell-0/
+            ├── SlateDB WAL & SSTs (Live Slack, GitHub, Gmail, Jira)
+            └── _graph_index/
 ```
 
-### How Vector Storage is Partitioned:
-* **Benchmark Vectors**: Saved in `data/vectors/` (`chunk_embeddings.npy`, `chunk_meta.json`).
-* **Live Vectors**: Saved in `data/vectors_live/` (or `data/vectors/{user_id}/`).
-
-### Key Advantages of This Storage Model:
-1. **Zero Contamination**: The 500-question benchmark dataset and its evaluation scores remain 100% pristine and unaltered.
-2. **Instant Toggle in UI**: In the React frontend, the user can switch between **"Benchmark Workspace"** and **"My Connected Enterprise"** using a simple workspace dropdown.
-3. **Multi-Tenant Privacy**: If multiple users or teams connect their SaaS platforms, each team gets their own private HydraDB namespace scope (`namespaces/company_a/` vs `namespaces/company_b/`).
+### Protocol & Connection Routing:
+* **Benchmark Queries**: Target `scope="default/graphs/default"`.
+* **Live Workspace Queries**: Target `scope="ws_acme_corp/graphs/default"`.
+* **Zero Cross-Contamination**: Benchmark scoring runs against the `default` namespace; live enterprise searches query the active user's workspace scope.
 
 ---
 
-## 9. Summary of Benefits & Feasibility
+## 6. Detailed File Plan & Code Structure
 
-1. **Seamless Extension**: Because our backend and ingestion pipelines are fully decoupled and source-agnostic, adding Composio does not require rewriting the query engine, vector store, or graph ontology.
-2. **True Live Demo Capability**: Users can connect real accounts in 2 clicks and ask questions about real conversations, PRs, and issues that happened minutes ago.
-3. **Best of Both Worlds**: The platform can support **"Benchmark Mode"** (evaluating on the 500-question gold standard) and **"Live Mode"** (querying connected Composio workspaces) within the same application.
+Here is the exact map of files to create and modify to complete the Composio integration:
+
+```text
+src/company_brain/
+├── config.py                                     # [MODIFIED] Added COMPOSIO_API_KEY, LIVE_VECTOR_DIR
+├── graph/
+│   └── client.py                                 # [MODIFIED] Support passing tenant/scope in GraphClient(scope=...)
+├── indexing/
+│   ├── chunker.py                                # [REUSED] Recursive passage chunker
+│   └── vector_store.py                           # [MODIFIED] Added add_chunks() for incremental appends
+├── extraction/
+│   └── hybrid_extractor.py                       # [REUSED] Triple & entity extractor
+├── resolution/
+│   └── resolve.py                                # [REUSED] Entity & Conflict resolver
+│
+├── integrations/                                 # [NEW DIRECTORY]
+│   ├── __init__.py                               # Package init
+│   ├── composio_client.py                        # Composio SDK wrapper & connection manager
+│   ├── normalizers/                              # SaaS payload normalizers
+│   │   ├── __init__.py
+│   │   ├── slack_normalizer.py                   # Slack channels & thread mapper
+│   │   ├── github_normalizer.py                  # GitHub PRs, issues, commits mapper
+│   │   ├── gmail_normalizer.py                   # Gmail messages & thread mapper
+│   │   └── jira_normalizer.py                    # Jira tickets & comment mapper
+│   └── sync_worker.py                            # Background incremental sync coordinator
+│
+└── server/
+    ├── app.py                                    # [MODIFIED] Mount integrations router
+    └── routes/
+        ├── integrations.py                       # [NEW FILE] REST endpoints for OAuth & Sync
+        ├── health.py                             # [MODIFIED] Check live workspace health
+        ├── graph.py                              # [MODIFIED] Support workspace_id query parameter
+        └── query.py                              # [MODIFIED] Support workspace_id query parameter
+```
+
+---
+
+## 7. REST API Endpoints Specification (Composio Module)
+
+### 1. List Supported & Connected Integrations
+* **`GET /api/integrations/list?workspace_id=ws_acme`**
+* **Response (`200 OK`)**:
+  ```json
+  {
+    "workspace_id": "ws_acme",
+    "integrations": [
+      {
+        "app": "slack",
+        "name": "Slack",
+        "status": "CONNECTED",
+        "account_id": "acc_slack_987",
+        "last_synced_at": "2026-08-18T18:45:00Z",
+        "documents_synced": 142
+      },
+      {
+        "app": "github",
+        "name": "GitHub",
+        "status": "CONNECTED",
+        "account_id": "acc_gh_456",
+        "last_synced_at": "2026-08-18T18:30:00Z",
+        "documents_synced": 89
+      },
+      {
+        "app": "jira",
+        "name": "Jira",
+        "status": "DISCONNECTED",
+        "account_id": null,
+        "last_synced_at": null,
+        "documents_synced": 0
+      }
+    ]
+  }
+  ```
+
+---
+
+### 2. Initiate OAuth Connection
+* **`POST /api/integrations/connect`**
+* **Request Body**:
+  ```json
+  {
+    "workspace_id": "ws_acme",
+    "app": "slack",
+    "redirect_url": "http://localhost:5173/integrations/callback"
+  }
+  ```
+* **Response (`200 OK`)**:
+  ```json
+  {
+    "connection_id": "conn_req_12345",
+    "auth_url": "https://connect.composio.dev/auth?client_id=...&state=...",
+    "status": "INITIATED"
+  }
+  ```
+
+---
+
+### 3. OAuth Callback Verification
+* **`POST /api/integrations/callback`**
+* **Request Body**:
+  ```json
+  {
+    "workspace_id": "ws_acme",
+    "connection_id": "conn_req_12345",
+    "status": "SUCCESS"
+  }
+  ```
+* **Response (`200 OK`)**:
+  ```json
+  {
+    "status": "CONNECTED",
+    "app": "slack",
+    "message": "Slack account linked successfully. Initial sync started."
+  }
+  ```
+
+---
+
+### 4. Trigger Workspace Sync
+* **`POST /api/integrations/sync`**
+* **Request Body**:
+  ```json
+  {
+    "workspace_id": "ws_acme",
+    "app": "all",
+    "force_full_sync": false
+  }
+  ```
+* **Response (`200 OK`)**:
+  ```json
+  {
+    "status": "SYNC_STARTED",
+    "workspace_id": "ws_acme",
+    "job_id": "sync_job_9981",
+    "message": "Background sync worker launched for connected accounts."
+  }
+  ```
+
+---
+
+### 5. Check Sync Status & Ingestion Progress
+* **`GET /api/integrations/sync/status?workspace_id=ws_acme`**
+* **Response (`200 OK`)**:
+  ```json
+  {
+    "status": "SYNCING",
+    "progress_percent": 65,
+    "current_source": "github",
+    "new_documents_ingested": 45,
+    "new_passages_vectorized": 320,
+    "new_facts_extracted": 180,
+    "elapsed_seconds": 12.4
+  }
+  ```
+
+---
+
+## 8. React Frontend UI Integration Plan
+
+The React frontend (`frontend/`) will be enhanced with a dedicated **Integrations Center** and **Workspace Switcher**:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  THEIA — COMPANY BRAIN          [ Workspace: Acme Corp (Live) ▼ ]    (●) 1,420 Nodes   │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  [ 🌐 Graph Explorer ]     [ 💬 Query Studio ]     [ 🔌 Integrations ]     [ 📊 Eval ]  │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│   Connected SaaS Integrations                                [ 🔄 Sync All Now ]       │
+│                                                                                        │
+│  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐          │
+│  │ 🟢 Slack             │  │ 🟢 GitHub            │  │ ⚪ Jira              │          │
+│  │ Connected: #eng-core │  │ Connected: 3 Repos   │  │ Not Connected        │          │
+│  │ 142 Messages Synced  │  │ 89 PRs / Issues      │  │                      │          │
+│  │ Last sync: 2m ago    │  │ Last sync: 5m ago    │  │                      │          │
+│  │ [ Manage ] [ Sync ]  │  │ [ Manage ] [ Sync ]  │  │ [ Connect Jira ]     │          │
+│  └──────────────────────┘  └──────────────────────┘  └──────────────────────┘          │
+│                                                                                        │
+│  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐          │
+│  │ 🟢 Gmail             │  │ ⚪ Notion            │  │ ⚪ Linear            │          │
+│  │ Connected: 4 Threads │  │ Not Connected        │  │ Not Connected        │          │
+│  │ [ Manage ] [ Sync ]  │  │ [ Connect Notion ]   │  │ [ Connect Linear ]   │          │
+│  └──────────────────────┘  └──────────────────────┘  └──────────────────────┘          │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 9. Error Handling, Edge Cases & Production Safeguards
+
+| Failure Mode / Edge Case | Cause | Production Mitigation Strategy |
+| :--- | :--- | :--- |
+| **SaaS Rate Limiting (HTTP 429)** | High-frequency API calls during initial bulk sync. | Exponential backoff + jitter in `ComposioClient`. Sync worker processes in controlled batches of 25 items. |
+| **Revoked OAuth Tokens** | User removes app authorization in Slack/GitHub. | Composio detects 401/403 and sets connection status to `EXPIRED`. UI prompts user to click **"Reconnect"**. |
+| **Corpus Deduplication** | Same PR or message synced multiple times. | Deterministic `doc_id` generation (`gh_{repo}_{pr_number}`, `slack_{channel}_{ts}`). Ingestion uses Cypher `MERGE` to update properties idempotently without creating duplicate nodes. |
+| **Schema Drift in Third-Party APIs** | SaaS platform modifies JSON payload shape. | Resilient dictionary extraction with safe fallbacks (`item.get("body") or item.get("description", "")`). |
+| **HydraDB Disconnection During Sync** | Network timeout or temporary database restart. | Connection pooling with auto-reconnect in `GraphClient`. Uncommitted batches are retried automatically. |
+
+---
+
+## 10. Summary & Strategic Impact
+
+Integrating Composio elevates Company Brain from a research benchmark demonstration to a **commercial-grade, deployable enterprise product**:
+* **Zero Rewrites**: The entire core engine (Passage Chunker, MiniLM Vector Store, HydraDB OpenCypher Loader, Entity Resolver, and Query Engine) remains **100% intact and reused**.
+* **Zero Mocking**: All data flows are authentic, dynamic, and fetched over genuine OAuth connections.
+* **Dual-Mode Capability**: Users can seamlessly toggle between **Benchmark Evaluation Mode** (500 gold questions) and **Live Enterprise Mode** (real company workspace).
