@@ -167,7 +167,7 @@ class TopologyCache:
     def clear_cache(self, workspace_id: Optional[str] = None) -> None:
         with self._lock:
             if workspace_id:
-                keys_to_del = [k for k in self._seed_cache if k.startswith(f"{workspace_id}_")]
+                keys_to_del = [k for k in self._seed_cache if str(k).startswith(f"{workspace_id}_") or str(k).startswith(f"{workspace_id}")]
                 for k in keys_to_del:
                     self._seed_cache.pop(k, None)
             else:

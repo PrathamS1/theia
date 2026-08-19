@@ -102,8 +102,9 @@ export default function Dashboard() {
                   try {
                     const { purgeWorkspace } = await import('../lib/api');
                     await purgeWorkspace(userId);
-                    alert(`Successfully purged workspace '${userId}'! You can now ingest fresh data.`);
+                    setSelected(null);
                     topo.reload();
+                    alert(`Successfully purged workspace '${userId}'! You can now ingest fresh data.`);
                   } catch (err: any) {
                     alert(`Failed to purge workspace: ${err.message || err}`);
                   }
