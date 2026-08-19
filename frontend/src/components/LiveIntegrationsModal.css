@@ -23,7 +23,7 @@
   border: 1px solid var(--border-color, #232f48);
   border-radius: 16px;
   width: 100%;
-  max-width: 680px;
+  max-width: 800px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
@@ -130,15 +130,38 @@
   font-family: monospace;
 }
 
-/* Integrations grid */
+/* Section divider label */
+.integrations-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+  padding-bottom: 0.1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Integrations grid — default 2 cols */
 .integrations-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
-@media (max-width: 600px) {
-  .integrations-grid {
+/* 3-column variant for Discord / Gmail / Drive */
+.integrations-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 720px) {
+  .integrations-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .integrations-grid,
+  .integrations-grid-3 {
     grid-template-columns: 1fr;
   }
 }
@@ -304,6 +327,24 @@
 
 .repo-search-input {
   width: 100%;
+}
+
+/* Small field variant used inside integration cards */
+.field-sm {
+  width: 100%;
+  background: rgba(11, 17, 32, 0.8);
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.field-sm:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18);
 }
 
 .repo-loading,

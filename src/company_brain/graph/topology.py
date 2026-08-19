@@ -213,11 +213,13 @@ class TopologyCache:
                     doc_nid = _node_id("Document", did)
 
                     for label in _ENTITY_LABELS:
-                        rows = client.run(
-                            f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{label}) "
-                            f"RETURN e.id, e.name LIMIT 15",
-                            {"did": did},
-                        )
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: $did, workspace_id: $ws}})-[:MENTIONS]->(e:{label} {{workspace_id: $ws}}) RETURN e.id, e.name LIMIT 15"
+                            params = {"did": did, "ws": workspace_id}
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{label}) RETURN e.id, e.name LIMIT 15"
+                            params = {"did": did}
+                        rows = client.run(query, params)
                         for row in rows:
                             nid = _node_id(label, row["e.id"])
                             if nid not in node_ids:
@@ -226,11 +228,13 @@ class TopologyCache:
                             eidx += 1
                             edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
 
-                    fact_rows = client.run(
-                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
-                        "RETURN f.id, f.subject, f.attribute, f.value LIMIT 8",
-                        {"did": did},
-                    )
+                    if workspace_id:
+                        query = "MATCH (d:Document {doc_id: $did, workspace_id: $ws})-[:HAS_FACT]->(f:Fact {workspace_id: $ws}) RETURN f.id, f.subject, f.attribute, f.value LIMIT 8"
+                        params = {"did": did, "ws": workspace_id}
+                    else:
+                        query = "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 8"
+                        params = {"did": did}
+                    fact_rows = client.run(query, params)
                     for row in fact_rows:
                         nid = _node_id("Fact", row["f.id"])
                         if nid not in node_ids:
@@ -245,8 +249,8 @@ class TopologyCache:
 
     # ---- expand one node -----------------------------------------------------
 
-    def expand_node(self, label: str, key: str, refresh: bool = False) -> Dict[str, Any]:
-        cache_key = (label, key)
+    def expand_node(self, label: str, key: str, refresh: bool = False, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+        cache_key = (workspace_id or 'default', label, key)
         if not refresh and cache_key in self._expand_cache:
             return self._expand_cache[cache_key]
 
@@ -262,23 +266,27 @@ class TopologyCache:
                 if label == "Document":
                     origin = _node_id("Document", key)
                     for ent_label in _ENTITY_LABELS:
-                        rows = client.run(
-                            f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{ent_label}) "
-                            f"RETURN e.id, e.name LIMIT 25",
-                            {"did": key},
-                        )
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: $did, workspace_id: $ws}})-[:MENTIONS]->(e:{ent_label} {{workspace_id: $ws}}) RETURN e.id, e.name LIMIT 25"
+                            params = {"did": key, "ws": workspace_id}
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{ent_label}) RETURN e.id, e.name LIMIT 25"
+                            params = {"did": key}
+                        rows = client.run(query, params)
                         for row in rows:
                             nid = _node_id(ent_label, row["e.id"])
                             nodes.append(_entity_node(ent_label, "e.name", "e.id", row))
                             eidx += 1
                             edges.append(_edge(f"x{eidx}", origin, nid, "MENTIONS"))
 
-                    fact_rows = client.run(
-                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
-                        "RETURN f.id, f.subject, f.attribute, f.value LIMIT 15",
-                        {"did": key},
-                    )
-                    fact_losers = self._get_loser_ids()
+                    if workspace_id:
+                        query = "MATCH (d:Document {doc_id: $did, workspace_id: $ws})-[:HAS_FACT]->(f:Fact {workspace_id: $ws}) RETURN f.id, f.subject, f.attribute, f.value LIMIT 15"
+                        params = {"did": key, "ws": workspace_id}
+                    else:
+                        query = "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 15"
+                        params = {"did": key}
+                    fact_rows = client.run(query, params)
+                    fact_losers = self._get_loser_ids(workspace_id=workspace_id)
                     for row in fact_rows:
                         nid = _node_id("Fact", row["f.id"])
                         nodes.append(_fact_node(row, is_active=row["f.id"] not in fact_losers))
@@ -358,17 +366,29 @@ class TopologyCache:
 
     # ---- full edge-set pulls (small, safe to cache whole) ---------------------
 
-    def fetch_same_as(self, refresh: bool = False) -> List[Dict[str, Any]]:
-        if not refresh and self._same_as is not None:
-            return self._same_as
+    def fetch_same_as(self, refresh: bool = False, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        # For simplicity in caching, we don't cache workspace-specific same_as yet or use a dict
+        # Given it's requested per workspace, we can fetch live or cache per workspace
+        cache_key = workspace_id or 'default'
+        if self._same_as is None:
+            self._same_as = {}
+        if not refresh and cache_key in self._same_as:
+            return self._same_as[cache_key]
         with self._lock:
-            if not refresh and self._same_as is not None:
-                return self._same_as
+            if not refresh and cache_key in self._same_as:
+                return self._same_as[cache_key]
             with _client_ctx(self._client_factory) as client:
-                rows = client.run(
-                    "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
-                    "RETURN a.id, a.name, b.id, b.name, r.confidence"
-                )
+                if workspace_id:
+                    rows = client.run(
+                        "MATCH (a:Person {workspace_id: $ws})-[r:SAME_AS]->(b:Person {workspace_id: $ws}) "
+                        "RETURN a.id, a.name, b.id, b.name, r.confidence",
+                        {"ws": workspace_id}
+                    )
+                else:
+                    rows = client.run(
+                        "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
+                        "RETURN a.id, a.name, b.id, b.name, r.confidence"
+                    )
                 edges = []
                 for i, row in enumerate(rows):
                     edges.append(_edge(
@@ -378,20 +398,32 @@ class TopologyCache:
                         "SAME_AS",
                         confidence=row.get("r.confidence", 1.0),
                     ))
-                self._same_as = edges
+                self._same_as[cache_key] = edges
                 return edges
 
-    def fetch_supersedes(self, refresh: bool = False) -> List[Dict[str, Any]]:
-        if not refresh and self._supersedes is not None:
-            return self._supersedes
+    def fetch_supersedes(self, refresh: bool = False, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        cache_key = workspace_id or 'default'
+        if self._supersedes is None:
+            self._supersedes = {}
+            self._loser_ids = {}
+            
+        if not refresh and cache_key in self._supersedes:
+            return self._supersedes[cache_key]
         with self._lock:
-            if not refresh and self._supersedes is not None:
-                return self._supersedes
+            if not refresh and cache_key in self._supersedes:
+                return self._supersedes[cache_key]
             with _client_ctx(self._client_factory) as client:
-                rows = client.run(
-                    "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
-                    "RETURN a.id, a.subject, a.value, b.id, b.value"
-                )
+                if workspace_id:
+                    rows = client.run(
+                        "MATCH (a:Fact {workspace_id: $ws})-[:SUPERSEDES]->(b:Fact {workspace_id: $ws}) "
+                        "RETURN a.id, a.subject, a.value, b.id, b.value",
+                        {"ws": workspace_id}
+                    )
+                else:
+                    rows = client.run(
+                        "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
+                        "RETURN a.id, a.subject, a.value, b.id, b.value"
+                    )
                 edges = []
                 losers = set()
                 for i, row in enumerate(rows):
@@ -404,15 +436,16 @@ class TopologyCache:
                         reason=reason,
                     ))
                     losers.add(row["b.id"])
-                self._supersedes = edges
-                self._loser_ids = losers
+                self._supersedes[cache_key] = edges
+                self._loser_ids[cache_key] = losers
                 return edges
 
     def _get_loser_ids(self, workspace_id: Optional[str] = None) -> set:
         """Fact ids on the losing side of a SUPERSEDES edge."""
-        if self._loser_ids is None:
-            self.fetch_supersedes()
-        return self._loser_ids or set()
+        cache_key = workspace_id or 'default'
+        if self._loser_ids is None or cache_key not in self._loser_ids:
+            self.fetch_supersedes(workspace_id=workspace_id)
+        return self._loser_ids.get(cache_key, set())
 
 
 # Module-level singleton -- the graph is process-wide and read-only from this

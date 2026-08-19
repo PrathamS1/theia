@@ -90,11 +90,11 @@ def get_graph_topology(
     # payload bounded while still surfacing SAME_AS/SUPERSEDES when relevant.
     node_ids = {n["data"]["id"] for n in nodes}
     if "Person" in allowed_labels:
-        for e in topology_cache.fetch_same_as():
+        for e in topology_cache.fetch_same_as(workspace_id=workspace_id):
             if e["data"]["source"] in node_ids and e["data"]["target"] in node_ids:
                 edges.append(e)
     if "Fact" in allowed_labels:
-        for e in topology_cache.fetch_supersedes():
+        for e in topology_cache.fetch_supersedes(workspace_id=workspace_id):
             if e["data"]["source"] in node_ids and e["data"]["target"] in node_ids:
                 edges.append(e)
 
@@ -110,6 +110,7 @@ def get_graph_topology(
 def expand_node(
     node_id: str = Query(..., description="Cytoscape node id, e.g. doc_<doc_id> or person_<int_id>"),
     label: str = Query(..., description="Node label: Document, Person, Org, Ticket, Project, or Fact"),
+    workspace_id: Optional[str] = Query(None, description="Workspace isolation ID"),
 ):
     """
     Returns the 1-hop neighbourhood of a single node (anchored Cypher lookup,
@@ -125,7 +126,7 @@ def expand_node(
     key = node_id[len(prefix):]
 
     try:
-        result = topology_cache.expand_node(label, key)
+        result = topology_cache.expand_node(label, key, workspace_id=workspace_id)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"HydraDB query failed: {exc}")
 
@@ -138,7 +139,10 @@ def expand_node(
 
 
 @router.get("/node/{node_id}")
-def get_node_details(node_id: str):
+def get_node_details(
+    node_id: str,
+    workspace_id: Optional[str] = Query(None, description="Workspace isolation ID"),
+):
     """
     Returns full property inspector details for a selected node, reading live
     property values from HydraDB (anchored by id) plus, for documents, the
@@ -157,7 +161,7 @@ def get_node_details(node_id: str):
                 raise HTTPException(status_code=404, detail="Document not found")
             neighbours = []
             try:
-                exp = topology_cache.expand_node("Document", key)
+                exp = topology_cache.expand_node("Document", key, workspace_id=workspace_id)
                 for n in exp["nodes"][:12]:
                     rel = "HAS_FACT" if n["data"]["label"] == "Fact" else "MENTIONS"
                     neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": rel})
@@ -194,7 +198,7 @@ def get_node_details(node_id: str):
             f = rows[0]
             neighbours = []
             try:
-                exp = topology_cache.expand_node("Fact", key)
+                exp = topology_cache.expand_node("Fact", key, workspace_id=workspace_id)
                 for n in exp["nodes"][:8]:
                     neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": "SUPERSEDES"})
             except Exception:
@@ -229,7 +233,7 @@ def get_node_details(node_id: str):
         e = rows[0]
         neighbours = []
         try:
-            exp = topology_cache.expand_node(label, key)
+            exp = topology_cache.expand_node(label, key, workspace_id=workspace_id)
             for n in exp["nodes"][:12]:
                 rel = "SAME_AS" if n["data"]["label"] == "Person" and label == "Person" else "MENTIONS"
                 neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": rel})

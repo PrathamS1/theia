@@ -64,14 +64,18 @@ export function getTopology(
 
 /* 1-hop neighbourhood of a single node (anchored Cypher lookup, ~10-75ms) to
  * graft onto the existing canvas without a full topology refetch. */
-export const expandNode = (nodeId: string, label: NodeLabel, signal?: AbortSignal) =>
-  get<ExpandResult>(
-    `/api/graph/expand?node_id=${encodeURIComponent(nodeId)}&label=${encodeURIComponent(label)}`,
-    signal,
-  );
+export const expandNode = (nodeId: string, label: NodeLabel, workspaceId?: string | null, signal?: AbortSignal) => {
+  const p = new URLSearchParams({ node_id: nodeId, label });
+  if (workspaceId) p.set('workspace_id', workspaceId);
+  return get<ExpandResult>(`/api/graph/expand?${p}`, signal);
+};
 
-export const getNodeDetail = (id: string, signal?: AbortSignal) =>
-  get<NodeDetail>(`/api/graph/node/${encodeURIComponent(id)}`, signal);
+export const getNodeDetail = (id: string, workspaceId?: string | null, signal?: AbortSignal) => {
+  const p = new URLSearchParams();
+  if (workspaceId) p.set('workspace_id', workspaceId);
+  const q = p.toString() ? `?${p}` : '';
+  return get<NodeDetail>(`/api/graph/node/${encodeURIComponent(id)}${q}`, signal);
+};
 
 export function getQuestions(
   opts: { category?: string; search?: string; limit?: number; offset?: number } = {},
@@ -135,6 +139,55 @@ export const syncAll = (userId: string, opts?: { selectedRepos?: string[] }, sig
   post<SyncResponse>('/api/integrations/sync/all', {
     user_id: userId,
     selected_repos: opts?.selectedRepos,
+  }, signal);
+
+export const connectDiscord = (userId: string, signal?: AbortSignal) =>
+  post<ConnectResponse>('/api/integrations/connect/discord', { user_id: userId }, signal);
+
+export const syncDiscord = (
+  userId: string,
+  opts?: { guildId?: string; maxChannels?: number; messagesPerChannel?: number },
+  signal?: AbortSignal,
+) =>
+  post<SyncResponse>('/api/integrations/sync/discord', {
+    user_id: userId,
+    guild_id: opts?.guildId ?? '',
+    max_channels: opts?.maxChannels ?? 5,
+    messages_per_channel: opts?.messagesPerChannel ?? 50,
+  }, signal);
+
+export const getDiscordGuilds = (userId: string, signal?: AbortSignal) =>
+  get<{ user_id: string; total_guilds: number; guilds: { id: string; name: string; icon?: string; member_count?: number }[] }>(
+    `/api/integrations/discord/guilds?user_id=${encodeURIComponent(userId)}`,
+    signal,
+  );
+
+export const connectGmail = (userId: string, signal?: AbortSignal) =>
+  post<ConnectResponse>('/api/integrations/connect/gmail', { user_id: userId }, signal);
+
+export const syncGmail = (
+  userId: string,
+  opts?: { query?: string; maxEmails?: number },
+  signal?: AbortSignal,
+) =>
+  post<SyncResponse>('/api/integrations/sync/gmail', {
+    user_id: userId,
+    query: opts?.query ?? 'label:inbox',
+    max_emails: opts?.maxEmails ?? 50,
+  }, signal);
+
+export const connectGoogleDrive = (userId: string, signal?: AbortSignal) =>
+  post<ConnectResponse>('/api/integrations/connect/googledrive', { user_id: userId }, signal);
+
+export const syncGoogleDrive = (
+  userId: string,
+  opts?: { maxFiles?: number; query?: string },
+  signal?: AbortSignal,
+) =>
+  post<SyncResponse>('/api/integrations/sync/googledrive', {
+    user_id: userId,
+    max_files: opts?.maxFiles ?? 30,
+    query: opts?.query ?? '',
   }, signal);
 
 export const purgeWorkspace = (userId: string, signal?: AbortSignal) =>

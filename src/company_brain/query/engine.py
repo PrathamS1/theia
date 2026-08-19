@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from company_brain.indexing.vector_store import VectorStore
 from company_brain.graph.client import GraphClient
 from company_brain import config
+from company_brain.query.abstain import should_abstain
 
 logger = logging.getLogger(__name__)
 
@@ -165,9 +166,26 @@ class QueryEngine:
             rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + 0.015
 
         # ── 5. Confidence-Based Abstention Check ──
-        # Pure statistical gating: abstains if top dense cosine < 0.22 and no lexical overlap
+        # Dual-gate abstention:
+        # Gate A: abstain unconditionally if vector score is very weak (< 0.25)
+        # Gate B: abstain if vector score is weak (< 0.38) AND there is zero lexical overlap
+        #         (i.e. not a single query token appears in any document in the corpus)
         top_rrf = max(rrf_scores.values()) if rrf_scores else 0.0
-        if top_vector_score < 0.22 and top_rrf < 0.012:
+
+        # Compute meaningful lexical overlap (stopwords-stripped)
+        _STOPWORDS = {"the", "a", "an", "is", "are", "was", "were", "be", "been",
+                      "to", "of", "in", "on", "at", "for", "with", "by", "from",
+                      "it", "its", "this", "that", "what", "who", "how", "when",
+                      "do", "does", "did", "can", "could", "will", "would", "my",
+                      "me", "we", "our", "you", "your", "he", "she", "they", "their"}
+        content_q_tokens = q_tokens - _STOPWORDS
+
+        max_lexical_overlap = max(doc_lexical_scores.values()) if doc_lexical_scores else 0.0
+
+        gate_a = top_vector_score < 0.25  # unconditional hard cutoff
+        gate_b = top_vector_score < 0.38 and max_lexical_overlap == 0.0  # weak vector + zero lexical
+
+        if gate_a or gate_b:
             return QueryResult(
                 question=question,
                 answer="Information not found in company knowledge base.",
@@ -213,6 +231,26 @@ class QueryEngine:
             except Exception:
                 pass
 
+        # ── 7b. Fact-Level Abstention Gate ──
+        # If no valid facts were retrieved from the graph AND the vector score is borderline,
+        # treat it as not-found rather than synthesizing an answer from weak passage overlap.
+        if active_facts:
+            abstain_flag, _ = should_abstain(active_facts)
+        else:
+            abstain_flag = False  # no facts is OK — we still answer from passage text
+
+        # If borderline vector confidence AND zero graph facts, abstain entirely
+        if abstain_flag and top_vector_score < 0.42:
+            return QueryResult(
+                question=question,
+                answer="Information not found in company knowledge base.",
+                citations=[],
+                abstained=True,
+                traversed_entities=traversed_entities,
+                facts_used=[],
+                confidence=top_vector_score,
+            )
+
         # ── 8. Grounded Answer Synthesis from Best Passage & Facts ──
         answer = self._synthesize_grounded_answer(citations, doc_best_passages, active_facts, q_tokens, question=clean_q)
 
@@ -235,8 +273,8 @@ class QueryEngine:
         question: str = "",
     ) -> str:
         """
-        Synthesizes a rich, grounded answer combining active HydraDB facts and relevant passage text.
-        If GEMINI_API_KEY is available, generates a concise natural-language response.
+        Synthesizes a rich, grounded answer combining active HydraDB facts and relevant passage text
+        using Gemini 2.5 Flash for natural language generation.
         """
         if not citations:
             return "No relevant information found in knowledge base."
@@ -263,10 +301,34 @@ class QueryEngine:
                 if len(clean_passage) > 800:
                     clean_passage = clean_passage[:800]
                 if clean_passage and clean_passage not in context_parts:
-                    context_parts.append(clean_passage)
+                    context_parts.append(f"Passage ({doc_id}): {clean_passage}")
 
         if not context_parts:
             return "Relevant documentation located in " + ", ".join(citations)
 
-        # Return directly grounded facts and passages
-        return "\n\n".join(context_parts)
+        context_str = "\n\n".join(context_parts)
+        
+        try:
+            import google.genai as genai
+            from google.genai import types
+            
+            client = genai.Client(api_key=config.get_gemini_api_key())
+            prompt = f\"\"\"You are a helpful company AI assistant answering questions based strictly on the provided context.
+If the answer cannot be determined from the context, state that you do not have enough information.
+Keep your answer concise, professional, and directly address the user's question.
+
+Context Facts and Passages:
+{context_str}
+
+User Question: {question}
+Answer:\"\"\"
+
+            response = client.models.generate_content(
+                model=config.GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0.0)
+            )
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Failed to synthesize with Gemini: {e}")
+            return context_str

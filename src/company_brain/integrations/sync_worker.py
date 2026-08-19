@@ -12,6 +12,9 @@ from company_brain.config import LIVE_DATA_DIR
 from company_brain.integrations.composio_client import ComposioManager
 from company_brain.integrations.normalizers.slack_normalizer import SlackNormalizer
 from company_brain.integrations.normalizers.github_normalizer import GitHubNormalizer
+from company_brain.integrations.normalizers.discord_normalizer import DiscordNormalizer
+from company_brain.integrations.normalizers.gmail_normalizer import GmailNormalizer
+from company_brain.integrations.normalizers.drive_normalizer import DriveNormalizer
 from company_brain.indexing.chunker import DocumentChunker
 from company_brain.indexing.vector_store import VectorStore
 from company_brain.extraction.hybrid_extractor import extract_entities_and_facts
@@ -317,6 +320,220 @@ class LiveSyncWorker:
                 "supersedes_edges": conflict_count,
             },
         }
+
+    def sync_discord(
+        self,
+        guild_id: str = "",
+        max_channels: int = 5,
+        messages_per_channel: int = 50,
+    ) -> Dict[str, Any]:
+        """
+        Pulls live Discord messages from a guild's text channels,
+        chunks, vectorizes, and writes into HydraDB.
+
+        If guild_id is empty, fetches the first available guild.
+        """
+        logger.info("Starting Discord sync for user_id=%s (guild=%s)...", self.user_id, guild_id or "auto")
+
+        # 1. Verify connection
+        conn = self.composio.get_connection_status(user_id=self.user_id, toolkit="discord")
+        if conn.get("status") != "ACTIVE":
+            return {
+                "status": "ERROR",
+                "message": f"Discord connection is not ACTIVE (current: {conn.get('status')}). Please connect Discord first.",
+                "connection": conn,
+            }
+
+        # 2. Resolve guild_id if not provided
+        effective_guild_id = guild_id
+        guild_name = "unknown-server"
+        if not effective_guild_id:
+            guilds = self.composio.fetch_discord_guilds(user_id=self.user_id)
+            if not guilds:
+                return {
+                    "status": "ERROR",
+                    "message": "No Discord guilds found. Ensure your account is a member of at least one server.",
+                    "documents_synced": 0,
+                }
+            effective_guild_id = str(guilds[0].get("id") or "")
+            guild_name = str(guilds[0].get("name") or effective_guild_id)
+
+        # 3. Fetch channels
+        raw_channels = self.composio.fetch_discord_channels(guild_id=effective_guild_id, user_id=self.user_id)
+        # Filter to text channels only (type 0 = GUILD_TEXT)
+        text_channels = [ch for ch in raw_channels if isinstance(ch, dict) and ch.get("type", 0) == 0]
+        if not text_channels:
+            # Fallback: try all channels if type filtering returns nothing
+            text_channels = raw_channels
+
+        if not text_channels:
+            return {
+                "status": "ERROR",
+                "message": f"No accessible text channels found in guild '{guild_name}'.",
+                "documents_synced": 0,
+            }
+
+        normalizer = DiscordNormalizer()
+        all_normalized_docs: List[Dict[str, Any]] = []
+
+        # 4. Pull messages per channel
+        for ch in text_channels[:max_channels]:
+            ch_id = str(ch.get("id") or "")
+            ch_name = str(ch.get("name") or ch_id)
+            if not ch_id:
+                continue
+
+            logger.info("Fetching messages from #%s (%s)...", ch_name, ch_id)
+            raw_msgs = self.composio.fetch_discord_messages(
+                channel_id=ch_id,
+                user_id=self.user_id,
+                limit=messages_per_channel,
+            )
+            docs = normalizer.normalize_channel_messages(
+                raw_msgs,
+                channel_name=ch_name,
+                channel_id=ch_id,
+                guild_name=guild_name,
+                guild_id=effective_guild_id,
+            )
+            for d in docs:
+                d["workspace_id"] = self.user_id
+            all_normalized_docs.extend(docs)
+
+        if not all_normalized_docs:
+            return {
+                "status": "SUCCESS",
+                "message": "Discord sync completed, but no messages were found.",
+                "documents_synced": 0,
+            }
+
+        return self._process_and_index_docs(all_normalized_docs, source_label="Discord")
+
+    def sync_gmail(
+        self,
+        query: str = "label:inbox",
+        max_emails: int = 50,
+    ) -> Dict[str, Any]:
+        """
+        Pulls live Gmail messages, chunks, vectorizes, and writes into HydraDB.
+        Uses a two-step approach: list IDs via GMAIL_LIST_EMAILS, then fetch
+        each full message via GMAIL_GET_MESSAGE.
+        """
+        logger.info("Starting Gmail sync for user_id=%s (query=%r, max=%d)...", self.user_id, query, max_emails)
+
+        # 1. Verify connection
+        conn = self.composio.get_connection_status(user_id=self.user_id, toolkit="gmail")
+        if conn.get("status") != "ACTIVE":
+            return {
+                "status": "ERROR",
+                "message": f"Gmail connection is not ACTIVE (current: {conn.get('status')}). Please connect Gmail first.",
+                "connection": conn,
+            }
+
+        # 2. List email IDs
+        message_ids = self.composio.fetch_gmail_email_ids(
+            user_id=self.user_id,
+            query=query,
+            max_results=max_emails,
+        )
+        if not message_ids:
+            return {
+                "status": "SUCCESS",
+                "message": "Gmail sync completed, but no emails matched the query.",
+                "documents_synced": 0,
+            }
+
+        normalizer = GmailNormalizer()
+        all_normalized_docs: List[Dict[str, Any]] = []
+
+        # 3. Fetch + normalize each full message
+        for msg_id in message_ids:
+            raw_msg = self.composio.fetch_gmail_message(message_id=msg_id, user_id=self.user_id)
+            if not raw_msg:
+                continue
+            doc = normalizer.normalize_email(raw_msg)
+            if doc:
+                doc["workspace_id"] = self.user_id
+                all_normalized_docs.append(doc)
+
+        if not all_normalized_docs:
+            return {
+                "status": "SUCCESS",
+                "message": "Gmail sync completed, but no email content could be extracted.",
+                "documents_synced": 0,
+            }
+
+        logger.info("Normalized %d Gmail messages for workspace=%s.", len(all_normalized_docs), self.user_id)
+        return self._process_and_index_docs(all_normalized_docs, source_label="Gmail")
+
+    def sync_googledrive(
+        self,
+        max_files: int = 30,
+        query: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Pulls text-exportable files from Google Drive, chunks, vectorizes,
+        and writes into HydraDB. Binary files (images, videos) are skipped.
+        """
+        logger.info("Starting Google Drive sync for user_id=%s (max_files=%d)...", self.user_id, max_files)
+
+        # 1. Verify connection
+        conn = self.composio.get_connection_status(user_id=self.user_id, toolkit="googledrive")
+        if conn.get("status") != "ACTIVE":
+            return {
+                "status": "ERROR",
+                "message": f"Google Drive connection is not ACTIVE (current: {conn.get('status')}). Please connect Google Drive first.",
+                "connection": conn,
+            }
+
+        # 2. List files
+        raw_files = self.composio.fetch_drive_files(
+            user_id=self.user_id,
+            query=query,
+            max_files=max_files,
+        )
+        if not raw_files:
+            return {
+                "status": "SUCCESS",
+                "message": "Google Drive sync completed, but no files were found.",
+                "documents_synced": 0,
+            }
+
+        normalizer = DriveNormalizer()
+        all_normalized_docs: List[Dict[str, Any]] = []
+
+        # 3. For each indexable file, fetch content and normalize
+        for file_meta in raw_files:
+            if not isinstance(file_meta, dict):
+                continue
+            mime_type = str(file_meta.get("mimeType") or "")
+            if not DriveNormalizer.is_indexable(mime_type):
+                logger.debug("Skipping non-indexable file: %s (%s)", file_meta.get("name"), mime_type)
+                continue
+
+            file_id = str(file_meta.get("id") or "")
+            content = None
+            if file_id:
+                content = self.composio.fetch_drive_file_content(
+                    file_id=file_id,
+                    mime_type=mime_type,
+                    user_id=self.user_id,
+                )
+
+            doc = normalizer.normalize_file(file_data=file_meta, content=content)
+            if doc:
+                doc["workspace_id"] = self.user_id
+                all_normalized_docs.append(doc)
+
+        if not all_normalized_docs:
+            return {
+                "status": "SUCCESS",
+                "message": "Google Drive sync completed, but no indexable file content was found.",
+                "documents_synced": 0,
+            }
+
+        logger.info("Normalized %d Google Drive files for workspace=%s.", len(all_normalized_docs), self.user_id)
+        return self._process_and_index_docs(all_normalized_docs, source_label="GoogleDrive")
 
     def purge_workspace(self) -> Dict[str, Any]:
         """

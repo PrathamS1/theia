@@ -65,9 +65,14 @@ class GraphLoader:
         facts_failed}) rather than swallowing failures silently.
         """
         stats = {"entities_ok": 0, "entities_failed": 0, "facts_ok": 0, "facts_failed": 0}
-        doc_int_id = string_to_int_id(f"doc_{doc_id}")
-        source_trust = trust_for(source)
         effective_ws = workspace_id or self.workspace_id
+        
+        doc_key = f"doc_{doc_id}"
+        if effective_ws:
+            doc_key = f"{effective_ws}_{doc_key}"
+        doc_int_id = string_to_int_id(doc_key)
+        
+        source_trust = trust_for(source)
 
         doc_props = {
             "doc_int_id": doc_int_id,
@@ -94,6 +99,8 @@ class GraphLoader:
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
         for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
+            if effective_ws:
+                entity_key = f"{effective_ws}_{entity_key}"
             entity_int_id = string_to_int_id(entity_key)
             label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
 
@@ -117,6 +124,8 @@ class GraphLoader:
         # 2. Load facts via one-hop (Document)-[:HAS_FACT]->(Fact) pattern.
         for idx, fact in enumerate(extraction.facts):
             fact_key = f"fact_{doc_id}_{idx}"
+            if effective_ws:
+                fact_key = f"{effective_ws}_{fact_key}"
             fact_int_id = string_to_int_id(fact_key)
 
             cypher = (

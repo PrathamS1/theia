@@ -21,6 +21,7 @@ interface Props {
   topology: Topology;
   layout: LayoutName;
   selectedId: string | null;
+  workspaceId?: string | null;
   onSelect: (id: string | null) => void;
 }
 
@@ -62,7 +63,7 @@ function layoutOf(name: LayoutName): LayoutOptions {
 }
 
 const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
-  { topology, layout, selectedId, onSelect },
+  { topology, layout, selectedId, workspaceId, onSelect },
   ref,
 ) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -193,7 +194,7 @@ const GraphCanvas = forwardRef<GraphCanvasHandle, Props>(function GraphCanvas(
 
     node.addClass('expanding');
     try {
-      const result = await apiExpandNode(nodeId, label);
+      const result = await apiExpandNode(nodeId, label, workspaceId);
       expandedRef.current.add(nodeId);
       node.addClass('expanded');
 

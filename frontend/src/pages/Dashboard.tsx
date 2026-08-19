@@ -205,12 +205,12 @@ export default function Dashboard() {
           <GraphCanvas
             ref={canvasRef}
             topology={topo.data} layout={layout}
-            selectedId={selected} onSelect={setSelected}
+            selectedId={selected} workspaceId={activeWorkspaceId} onSelect={setSelected}
           />
         )}
 
         {selected && (
-          <NodeInspector nodeId={selected} onClose={() => setSelected(null)} onExpand={handleExpand} />
+          <NodeInspector nodeId={selected} workspaceId={activeWorkspaceId} onClose={() => setSelected(null)} onExpand={handleExpand} />
         )}
       </main>
 
