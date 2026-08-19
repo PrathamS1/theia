@@ -89,6 +89,30 @@ export default function Dashboard() {
           >
             {userName ? `👤 ${userName}’s Live Workspace` : '⚡ Live Mode (Connect SaaS)'}
           </button>
+
+          {workspaceMode === 'live' && userId && (
+            <button
+              className="btn btn-sm btn-danger-outline"
+              title="Delete all ingested graph nodes, vectors, and documents for this workspace"
+              onClick={async () => {
+                const ok = window.confirm(
+                  `Are you sure you want to purge all live data for workspace '${userId}'?\n\nThis will completely delete all your ingested Slack and GitHub graph nodes, vector embeddings, and staged files from HydraDB so you can re-create them cleanly.`
+                );
+                if (ok) {
+                  try {
+                    const { purgeWorkspace } = await import('../lib/api');
+                    await purgeWorkspace(userId);
+                    alert(`Successfully purged workspace '${userId}'! You can now ingest fresh data.`);
+                    topo.reload();
+                  } catch (err: any) {
+                    alert(`Failed to purge workspace: ${err.message || err}`);
+                  }
+                }
+              }}
+            >
+              🗑️ Purge Workspace
+            </button>
+          )}
         </div>
 
         <button

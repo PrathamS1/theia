@@ -227,3 +227,26 @@ def sync_all(req: SyncAllRequest, background_tasks: BackgroundTasks):
         "user_id": req.user_id,
         "results": results,
     }
+
+
+@router.delete("/workspace/{user_id}")
+def purge_workspace_data(user_id: str):
+    """
+    Purges all ingested graph nodes, edges, vectors, and staged files for the given workspace.
+    Allows user to cleanly re-sync or reset their live data.
+    """
+    try:
+        worker = LiveSyncWorker(user_id=user_id)
+        result = worker.purge_workspace()
+        return result
+    except Exception as e:
+        logger.error("Failed to purge workspace %s: %s", user_id, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/workspace/purge")
+def purge_workspace_post(req: ConnectRequest):
+    """
+    POST alternative for purging workspace data.
+    """
+    return purge_workspace_data(user_id=req.user_id)

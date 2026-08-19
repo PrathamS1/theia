@@ -435,7 +435,32 @@ export default function LiveIntegrationsModal({
           )}
         </div>
 
-        <div className="modal-footer">
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {userId ? (
+            <button
+              type="button"
+              className="btn btn-sm btn-danger-outline"
+              onClick={async () => {
+                const ok = window.confirm(
+                  `Are you sure you want to purge all live data for workspace '${userId}'?\n\nThis will completely delete all your ingested Slack and GitHub graph nodes, vector embeddings, and staged files from HydraDB so you can re-create them cleanly.`
+                );
+                if (ok) {
+                  try {
+                    const { purgeWorkspace } = await import('../lib/api');
+                    await purgeWorkspace(userId);
+                    setSyncMessage(`Successfully purged all data for workspace '${userId}'. You can now sync fresh.`);
+                    setSyncDetails(null);
+                    if (onSyncComplete) onSyncComplete();
+                  } catch (err: any) {
+                    setSyncMessage(`Failed to purge workspace: ${err.message || err}`);
+                  }
+                }
+              }}
+            >
+              🗑️ Purge & Reset Workspace Data
+            </button>
+          ) : <div />}
+
           <button className="btn" onClick={onClose}>
             Close
           </button>

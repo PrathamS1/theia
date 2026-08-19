@@ -136,3 +136,10 @@ export const syncAll = (userId: string, opts?: { selectedRepos?: string[] }, sig
     user_id: userId,
     selected_repos: opts?.selectedRepos,
   }, signal);
+
+export const purgeWorkspace = (userId: string, signal?: AbortSignal) =>
+  post<{ status: string; message: string; user_id: string }>(
+    '/api/integrations/workspace/purge',
+    { user_id: userId },
+    signal,
+  );

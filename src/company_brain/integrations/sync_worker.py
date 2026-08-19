@@ -317,3 +317,43 @@ class LiveSyncWorker:
                 "supersedes_edges": conflict_count,
             },
         }
+
+    def purge_workspace(self) -> Dict[str, Any]:
+        """
+        Completely purges all data for this workspace:
+        1. Deletes all HydraDB nodes and edges belonging to this workspace_id.
+        2. Deletes local vector embeddings and cached documents in data/live/{user_id}.
+        3. Clears cached graph topology in memory.
+        """
+        logger.info("Purging all live workspace data for user_id=%s...", self.user_id)
+
+        # 1. Purge from HydraDB
+        with GraphClient() as client:
+            for label in ["Document", "Fact", "Person", "Org", "Project", "Ticket"]:
+                try:
+                    client.run(f"MATCH (n:{label} {{workspace_id: $ws}}) DETACH DELETE n", {"ws": self.user_id})
+                except Exception as e:
+                    logger.debug("Failed deleting :%s nodes for %s: %s", label, self.user_id, e)
+
+        # 2. Purge local disk files
+        import shutil
+        if self.user_live_dir.exists():
+            try:
+                shutil.rmtree(self.user_live_dir)
+                self.user_live_dir.mkdir(parents=True, exist_ok=True)
+                self.vectors_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                logger.warning("Failed to remove directory %s: %s", self.user_live_dir, e)
+
+        # 3. Clear topology cache
+        try:
+            from company_brain.graph.topology import cache as topology_cache
+            topology_cache.clear_cache(workspace_id=self.user_id)
+        except Exception:
+            pass
+
+        return {
+            "status": "SUCCESS",
+            "message": f"Successfully purged all live data for workspace '{self.user_id}'. You can now ingest fresh data.",
+            "user_id": self.user_id,
+        }
