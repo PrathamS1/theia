@@ -6,7 +6,7 @@ and writes SAME_AS {confidence, evidence} edges into HydraDB using one-hop CREAT
 """
 
 import logging
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 
 from company_brain import config
 from company_brain.graph.client import GraphClient
@@ -15,12 +15,13 @@ from company_brain.resolution.blocking import generate_candidate_pairs
 logger = logging.getLogger(__name__)
 
 
-def resolve_entities(client: GraphClient) -> int:
+def resolve_entities(client: GraphClient, workspace_id: Optional[str] = None) -> int:
     """
-    Runs blocking, evaluates candidate entity pairs, and writes SAME_AS edges into HydraDB.
+    Runs blocking, evaluates candidate entity pairs, and writes SAME_AS edges into HydraDB
+    strictly scoped to the specified workspace_id.
     Returns: count of SAME_AS edges created.
     """
-    candidate_pairs = generate_candidate_pairs(client)
+    candidate_pairs = generate_candidate_pairs(client, workspace_id=workspace_id)
     same_as_count = 0
 
     for p1, p2, score, shared_docs in candidate_pairs:
@@ -34,22 +35,30 @@ def resolve_entities(client: GraphClient) -> int:
         evidence = "; ".join(evidence_parts)
 
         # Write SAME_AS edge
-        success = _write_same_as(client, p1["id"], p2["id"], confidence, evidence)
+        success = _write_same_as(client, p1["id"], p2["id"], confidence, evidence, workspace_id=workspace_id)
         if success:
             same_as_count += 1
 
-    logger.info("Entity resolution complete. Created %d SAME_AS edges in HydraDB.", same_as_count)
+    logger.info("Entity resolution complete for workspace=%s. Created %d SAME_AS edges in HydraDB.", workspace_id, same_as_count)
     return same_as_count
 
 
-def _write_same_as(client: GraphClient, id1: int, id2: int, confidence: float, evidence: str) -> bool:
+def _write_same_as(
+    client: GraphClient,
+    id1: int,
+    id2: int,
+    confidence: float,
+    evidence: str,
+    workspace_id: Optional[str] = None,
+) -> bool:
     """
     Writes a SAME_AS edge between two resolved entity nodes in HydraDB using one-hop CREATE.
     """
     clean_evidence = evidence.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+    ws_prop = f", workspace_id: '{workspace_id}'" if workspace_id else ""
     cypher = (
         f"CREATE (a:Person {{id: {id1}}})"
-        f"-[:SAME_AS {{confidence: {confidence}, evidence: '{clean_evidence}'}}]->"
+        f"-[:SAME_AS {{confidence: {confidence}, evidence: '{clean_evidence}'{ws_prop}}}]->"
         f"(b:Person {{id: {id2}}})"
     )
     try:

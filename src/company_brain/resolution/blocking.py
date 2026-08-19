@@ -8,7 +8,7 @@ Groups Person and Org entities into candidate clusters based on:
 """
 
 import logging
-from typing import List, Tuple, Dict, Any, Set
+from typing import List, Tuple, Dict, Any, Set, Optional
 from rapidfuzz import fuzz
 
 from company_brain import config
@@ -17,13 +17,19 @@ from company_brain.graph.client import GraphClient
 logger = logging.getLogger(__name__)
 
 
-def generate_candidate_pairs(client: GraphClient) -> List[Tuple[Dict[str, Any], Dict[str, Any], float, List[str]]]:
+def generate_candidate_pairs(
+    client: GraphClient,
+    workspace_id: Optional[str] = None,
+) -> List[Tuple[Dict[str, Any], Dict[str, Any], float, List[str]]]:
     """
-    Fetch Person entities from HydraDB and find matching candidate pairs.
+    Fetch Person entities from HydraDB and find matching candidate pairs scoped to workspace_id.
     Returns: List of (entity_A, entity_B, similarity_score, shared_evidence_docs).
     """
     try:
-        persons = client.run("MATCH (p:Person) RETURN p.id AS id, p.name AS name, p.source AS source")
+        if workspace_id:
+            persons = client.run(f"MATCH (p:Person {{workspace_id: '{workspace_id}'}}) RETURN p.id AS id, p.name AS name, p.source AS source")
+        else:
+            persons = client.run("MATCH (p:Person) WHERE p.workspace_id IS NULL OR p.workspace_id = 'benchmark' RETURN p.id AS id, p.name AS name, p.source AS source")
     except Exception as e:
         logger.warning("Failed to fetch Person nodes: %s", e)
         persons = []
@@ -38,9 +44,14 @@ def generate_candidate_pairs(client: GraphClient) -> List[Tuple[Dict[str, Any], 
     # Fetch document co-occurrence links: which persons are mentioned in the same documents
     co_occurrences: Dict[int, Set[str]] = {}
     try:
-        doc_mentions = client.run(
-            "MATCH (d:Document)-[:MENTIONS]->(p:Person) RETURN p.id AS person_id, d.doc_id AS doc_id"
-        )
+        if workspace_id:
+            doc_mentions = client.run(
+                f"MATCH (d:Document {{workspace_id: '{workspace_id}'}})-[:MENTIONS]->(p:Person {{workspace_id: '{workspace_id}'}}) RETURN p.id AS person_id, d.doc_id AS doc_id"
+            )
+        else:
+            doc_mentions = client.run(
+                "MATCH (d:Document)-[:MENTIONS]->(p:Person) WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') RETURN p.id AS person_id, d.doc_id AS doc_id"
+            )
         for row in doc_mentions:
             pid = row.get("person_id")
             did = row.get("doc_id")

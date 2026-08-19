@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 
 from company_brain.indexing.vector_store import VectorStore
 from company_brain.graph.client import GraphClient
+from company_brain import config
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,9 @@ class QueryEngine:
         self,
         vector_dir: str = "data/vectors",
         staged_docs_path: str = "data/staged_gold_docs.json",
+        workspace_id: Optional[str] = None,
     ):
+        self.workspace_id = workspace_id
         self.vector_store = VectorStore()
         self.vector_store.load(vector_dir)
 
@@ -69,14 +72,16 @@ class QueryEngine:
     def _load_orgs_from_graph(self) -> List[str]:
         """Dynamically queries known Organization names from HydraDB graph."""
         try:
-            rows = self.graph_client.run("MATCH (o:Org) RETURN o.name AS name")
+            if self.workspace_id:
+                rows = self.graph_client.run(f"MATCH (o:Org {{workspace_id: '{self.workspace_id}'}}) RETURN o.name AS name")
+            else:
+                rows = self.graph_client.run("MATCH (o:Org) WHERE o.workspace_id IS NULL OR o.workspace_id = 'benchmark' RETURN o.name AS name")
             return [r["name"] for r in rows if r.get("name")]
         except Exception:
             return []
 
     def close(self):
-        """Closes the underlying graph client connection."""
-        if hasattr(self, "graph_client") and self.graph_client:
+        if self.graph_client:
             self.graph_client.close()
 
     def __enter__(self):
@@ -121,10 +126,19 @@ class QueryEngine:
             if org_name.lower() in q_lower:
                 traversed_entities.append(org_name)
                 try:
-                    # Find documents linked to this entity over persistent connection
-                    rows = self.graph_client.run(
-                        f"MATCH (d:Document)-[:MENTIONS]->(o:Org {{name: '{org_name}'}}) RETURN d.doc_id AS did LIMIT 15"
-                    )
+                    # Find documents linked to this entity scoped to workspace
+                    if self.workspace_id:
+                        cypher_graph = (
+                            f"MATCH (d:Document {{workspace_id: '{self.workspace_id}'}})-[:MENTIONS]->(o:Org {{name: '{org_name}', workspace_id: '{self.workspace_id}'}}) "
+                            "RETURN d.doc_id AS did LIMIT 15"
+                        )
+                    else:
+                        cypher_graph = (
+                            f"MATCH (d:Document)-[:MENTIONS]->(o:Org {{name: '{org_name}'}}) "
+                            "WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') "
+                            "RETURN d.doc_id AS did LIMIT 15"
+                        )
+                    rows = self.graph_client.run(cypher_graph)
                     for r in rows:
                         did = r.get("did")
                         if did:
@@ -171,11 +185,10 @@ class QueryEngine:
             best_doc, best_score = sorted_rrf[0]
             if best_doc in self.staged_docs:
                 citations.append(best_doc)
-            # Only include second doc if score is close to the top score
-            if len(sorted_rrf) > 1:
-                second_doc, second_score = sorted_rrf[1]
-                if second_score >= 0.75 * best_score and second_doc in self.staged_docs:
-                    citations.append(second_doc)
+            # Include competitive citations within dynamic score cutoff
+            for next_doc, next_score in sorted_rrf[1:5]:
+                if next_score >= 0.55 * best_score and next_doc in self.staged_docs and next_doc not in citations:
+                    citations.append(next_doc)
 
         if not citations and doc_vector_scores:
             citations = [sorted_vector[0][0]]
@@ -201,7 +214,7 @@ class QueryEngine:
                 pass
 
         # ── 8. Grounded Answer Synthesis from Best Passage & Facts ──
-        answer = self._synthesize_grounded_answer(citations, doc_best_passages, active_facts, q_tokens)
+        answer = self._synthesize_grounded_answer(citations, doc_best_passages, active_facts, q_tokens, question=clean_q)
 
         return QueryResult(
             question=question,
@@ -219,14 +232,16 @@ class QueryEngine:
         doc_best_passages: Dict[str, str],
         active_facts: List[Dict[str, Any]],
         q_tokens: Set[str],
+        question: str = "",
     ) -> str:
         """
         Synthesizes a rich, grounded answer combining active HydraDB facts and relevant passage text.
+        If GEMINI_API_KEY is available, generates a concise natural-language response.
         """
         if not citations:
             return "No relevant information found in knowledge base."
 
-        snippets = []
+        context_parts = []
 
         # 1. Include direct active facts from HydraDB
         for f in active_facts:
@@ -235,23 +250,44 @@ class QueryEngine:
             attr = str(f.get("attribute") or "").strip()
             if subj and val:
                 f_str = f"{subj} {attr} is {val}".strip() if attr else f"{subj} is {val}".strip()
-                if f_str not in snippets:
-                    snippets.append(f_str)
+                if f_str not in context_parts:
+                    context_parts.append(f"Fact: {f_str}")
 
         # 2. Include rich passage text from the top cited documents
-        for doc_id in citations[:2]:
+        for doc_id in citations[:4]:
             passage = doc_best_passages.get(doc_id)
             if not passage:
                 passage = self.staged_docs.get(doc_id, {}).get("text") or self.staged_docs.get(doc_id, {}).get("body", "")
             if passage:
-                # Clean and add passage context
                 clean_passage = passage.strip()
-                if len(clean_passage) > 600:
-                    clean_passage = clean_passage[:600]
-                if clean_passage and clean_passage not in snippets:
-                    snippets.append(clean_passage)
+                if len(clean_passage) > 800:
+                    clean_passage = clean_passage[:800]
+                if clean_passage and clean_passage not in context_parts:
+                    context_parts.append(clean_passage)
 
-        if snippets:
-            return "\n\n".join(snippets)
+        if not context_parts:
+            return "Relevant documentation located in " + ", ".join(citations)
 
-        return "Relevant documentation located in " + ", ".join(citations)
+        # 3. If Gemini is available, synthesize a direct conversational answer
+        if question and config.get_gemini_api_key():
+            try:
+                from google import genai
+                client = genai.Client(api_key=config.get_gemini_api_key())
+                prompt = (
+                    f"You are Company Brain, an enterprise AI knowledge assistant.\n"
+                    f"Answer the user's question directly, clearly, and concisely based ONLY on the provided context.\n"
+                    f"If the answer includes members, channels, counts, or requests, state them directly.\n\n"
+                    f"Context:\n" + "\n\n".join(context_parts) + f"\n\n"
+                    f"Question: {question}\n\n"
+                    f"Direct Answer:"
+                )
+                response = client.models.generate_content(
+                    model=config.GEMINI_MODEL,
+                    contents=prompt,
+                )
+                if response.text and response.text.strip():
+                    return response.text.strip()
+            except Exception as e:
+                logger.debug("LLM answer synthesis fallback: %s", e)
+
+        return "\n\n".join(context_parts)

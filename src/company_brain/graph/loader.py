@@ -27,8 +27,9 @@ def string_to_int_id(identifier: str) -> int:
 
 
 class GraphLoader:
-    def __init__(self, client: GraphClient) -> None:
+    def __init__(self, client: GraphClient, workspace_id: str = "benchmark") -> None:
         self.client = client
+        self.workspace_id = workspace_id
 
     def load_document(
         self,
@@ -38,17 +39,19 @@ class GraphLoader:
         text_snippet: str,
         extraction: DocumentExtractionResult,
         title: str = "",
+        workspace_id: str = "",
     ) -> None:
         """
-        Loads a document and its extracted entities and facts into HydraDB.
+        Loads a document and its extracted entities and facts into HydraDB under an isolated workspace_id.
         """
-        doc_int_id = string_to_int_id(f"doc_{doc_id}")
+        ws = workspace_id or self.workspace_id
+        doc_int_id = string_to_int_id(f"{ws}_doc_{doc_id}")
         source_trust = trust_for(source)
 
         # 0. Always ensure the Document node itself exists
         doc_cypher = (
             f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', "
-            f"title: '{_sanitize(title)}', created_at: '{created_at}'}})"
+            f"title: '{_sanitize(title)}', created_at: '{created_at}', workspace_id: '{ws}'}})"
         )
         try:
             self.client.run_write(doc_cypher)
@@ -57,14 +60,14 @@ class GraphLoader:
 
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern
         for idx, entity in enumerate(extraction.entities):
-            entity_key = f"{entity.entity_type}_{entity.name}"
+            entity_key = f"{ws}_{entity.entity_type}_{entity.name}"
             entity_int_id = string_to_int_id(entity_key)
             label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
 
             cypher = (
-                f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-                f"-[:MENTIONS {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}'}}]->"
-                f"(e:{label} {{id: {entity_int_id}, name: '{_sanitize(entity.name)}', source: '{source}'}})"
+                f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}', workspace_id: '{ws}'}})"
+                f"-[:MENTIONS {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}', workspace_id: '{ws}'}}]->"
+                f"(e:{label} {{id: {entity_int_id}, name: '{_sanitize(entity.name)}', source: '{source}', workspace_id: '{ws}'}})"
             )
             try:
                 self.client.run_write(cypher)
@@ -73,13 +76,13 @@ class GraphLoader:
 
         # 2. Load facts via one-hop (Document)-[:HAS_FACT]->(Fact) pattern
         for idx, fact in enumerate(extraction.facts):
-            fact_key = f"fact_{doc_id}_{idx}"
+            fact_key = f"{ws}_fact_{doc_id}_{idx}"
             fact_int_id = string_to_int_id(fact_key)
 
             cypher = (
-                f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}'}})"
-                f"-[:HAS_FACT {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}'}}]->"
-                f"(f:Fact {{id: {fact_int_id}, subject: '{_sanitize(fact.subject)}', attribute: '{_sanitize(fact.attribute)}', value: '{_sanitize(fact.value)}', trust_score: {source_trust}, doc_id: '{doc_id}'}})"
+                f"CREATE (d:Document {{id: {doc_int_id}, doc_id: '{doc_id}', source: '{source}', created_at: '{created_at}', workspace_id: '{ws}'}})"
+                f"-[:HAS_FACT {{source: '{source}', timestamp: '{created_at}', doc_id: '{doc_id}', workspace_id: '{ws}'}}]->"
+                f"(f:Fact {{id: {fact_int_id}, subject: '{_sanitize(fact.subject)}', attribute: '{_sanitize(fact.attribute)}', value: '{_sanitize(fact.value)}', trust_score: {source_trust}, doc_id: '{doc_id}', workspace_id: '{ws}'}})"
             )
             try:
                 self.client.run_write(cypher)

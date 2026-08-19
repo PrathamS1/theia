@@ -6,29 +6,40 @@ ranks them by temporal recency and source authority, and writes SUPERSEDES edges
 """
 
 import logging
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 from company_brain.graph.client import GraphClient
 
 logger = logging.getLogger(__name__)
 
 
-def detect_and_tag_conflicts(client: GraphClient) -> int:
+def detect_and_tag_conflicts(client: GraphClient, workspace_id: Optional[str] = None) -> int:
     """
-    Finds conflicting Fact nodes in HydraDB with the same (subject, attribute) but different values.
+    Finds conflicting Fact nodes in HydraDB strictly scoped to the specified workspace_id.
     Creates (f_newer)-[:SUPERSEDES]->(f_older) edges based on timestamp and source trust.
     Returns: count of SUPERSEDES edges created.
     """
-    cypher = (
-        "MATCH (d:Document)-[:HAS_FACT]->(f:Fact) "
-        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
-        "f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, d.created_at AS created_at"
-    )
+    if workspace_id:
+        cypher = (
+            f"MATCH (d:Document {{workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact {{workspace_id: '{workspace_id}'}}) "
+            "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
+            "f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, d.created_at AS created_at"
+        )
+    else:
+        cypher = (
+            "MATCH (d:Document)-[:HAS_FACT]->(f:Fact) "
+            "WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') "
+            "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
+            "f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, d.created_at AS created_at"
+        )
     try:
         facts = client.run(cypher)
     except Exception as exc:
         logger.warning("Could not fetch facts for conflict detection: %s", exc)
         try:
-            facts = client.run("MATCH (f:Fact) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
+            if workspace_id:
+                facts = client.run(f"MATCH (f:Fact {{workspace_id: '{workspace_id}'}}) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
+            else:
+                facts = client.run("MATCH (f:Fact) WHERE f.workspace_id IS NULL OR f.workspace_id = 'benchmark' RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
         except Exception:
             facts = []
 
@@ -45,6 +56,7 @@ def detect_and_tag_conflicts(client: GraphClient) -> int:
             grouped.setdefault(key, []).append(f)
 
     supersedes_count = 0
+    ws_prop = f", workspace_id: '{workspace_id}'" if workspace_id else ""
     for (sub, attr), fact_list in grouped.items():
         if len(fact_list) < 2:
             continue
@@ -74,7 +86,7 @@ def detect_and_tag_conflicts(client: GraphClient) -> int:
 
                     link_cypher = (
                         f"CREATE (w:Fact {{id: {winner['id']}}})"
-                        f"-[:SUPERSEDES {{reason: '{clean_reason}', timestamp: '{winner_time}'}}]->"
+                        f"-[:SUPERSEDES {{reason: '{clean_reason}', timestamp: '{winner_time}'{ws_prop}}}]->"
                         f"(l:Fact {{id: {loser['id']}}})"
                     )
                     try:
@@ -83,5 +95,5 @@ def detect_and_tag_conflicts(client: GraphClient) -> int:
                     except Exception as exc:
                         logger.debug("Failed to write SUPERSEDES edge: %s", exc)
 
-    logger.info("Conflict layer complete. Created %d SUPERSEDES edges in HydraDB.", supersedes_count)
+    logger.info("Conflict layer complete for workspace=%s. Created %d SUPERSEDES edges in HydraDB.", workspace_id, supersedes_count)
     return supersedes_count
