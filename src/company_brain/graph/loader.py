@@ -1,17 +1,33 @@
 """
 graph/loader.py — bulk loader for Document, Entity, and Fact nodes into HydraDB.
 
-Complies strictly with HydraDB Cypher rules:
-- Positive 32-bit integer node `id` property
-- Single one-hop CREATE pattern: (Document)-[:MENTIONS]->(Entity) and (Document)-[:HAS_FACT]->(Fact)
-- Parameterized queries (no string interpolation) to prevent Cypher parse errors from special characters
-- High-throughput execution with persistent Neo4j Bolt session reuse
+Obeys HydraDB Cypher rules (verified empirically against a live instance):
+- Integer node `id` property (generated deterministically from string identifiers)
+- Only one-hop edge CREATE patterns are executable: (Document)-[:MENTIONS]->(Entity)
+  and (Document)-[:HAS_FACT]->(Fact). A standalone `CREATE (d:Document {...})`
+  with no edge is rejected outright ("only one-hop edge patterns are executable
+  in Query engine CREATE") -- this was already true in the pre-existing code,
+  just silently swallowed by its bare `except Exception`, so the Document node
+  has only ever actually been created as a side effect of its first
+  MENTIONS/HAS_FACT write, never by a dedicated statement.
+- `MERGE` is rejected if followed by another clause ("MERGE with following
+  clauses is not executable in Query engine"), so idempotent upsert-by-id is
+  not available here -- CREATE is genuinely the only option.
+- Auto-commit RUN queries
+- All writes use $param binding (see graph/topology.py header for why: HydraDB
+  supports it and it avoids hand-rolled string escaping entirely)
+
+HydraDB resolves nodes by `id` and CREATE against an existing id replaces its
+whole property bag (last write wins), which is why every prior write of the
+Document node silently erased its title once a title-less write followed.
+Fixed by carrying `title` (and every other Document property) on *every*
+CREATE of the Document node, not just the first -- so it no longer matters
+which write is last, they all agree.
 """
 
 import logging
 import zlib
 from typing import Dict, Any, List, Optional
-from neo4j import Session
 
 from company_brain.graph.client import GraphClient
 from company_brain.graph.schema import trust_for
@@ -29,8 +45,9 @@ def string_to_int_id(identifier: str) -> int:
 
 
 class GraphLoader:
-    def __init__(self, client: GraphClient) -> None:
+    def __init__(self, client: GraphClient, workspace_id: Optional[str] = None) -> None:
         self.client = client
+        self.workspace_id = workspace_id
 
     def load_document(
         self,
@@ -39,82 +56,97 @@ class GraphLoader:
         created_at: str,
         text_snippet: str,
         extraction: DocumentExtractionResult,
-        session: Optional[Session] = None,
-    ) -> None:
+        title: str = "",
+        workspace_id: Optional[str] = None,
+    ) -> Dict[str, int]:
         """
         Loads a document and its extracted entities and facts into HydraDB.
-        Uses parameterized Cypher queries to avoid parse errors from special characters in values.
+        Returns write counts ({entities_ok, entities_failed, facts_ok,
+        facts_failed}) rather than swallowing failures silently.
         """
-        doc_int_id = string_to_int_id(f"doc_{doc_id}")
+        stats = {"entities_ok": 0, "entities_failed": 0, "facts_ok": 0, "facts_failed": 0}
+        effective_ws = workspace_id or self.workspace_id
+        
+        doc_key = f"doc_{doc_id}"
+        if effective_ws:
+            doc_key = f"{effective_ws}_{doc_key}"
+        doc_int_id = string_to_int_id(doc_key)
+        
         source_trust = trust_for(source)
-        has_written = False
 
-        # 1. Create Entity Nodes: (Document)-[:MENTIONS]->(Entity)
+        doc_props = {
+            "doc_int_id": doc_int_id,
+            "doc_id": doc_id,
+            "source": source,
+            "title": title,
+            "created_at": created_at,
+        }
+        if effective_ws:
+            doc_props["workspace_id"] = effective_ws
+
+        ws_prop = ", workspace_id: $workspace_id" if effective_ws else ""
+
+        # Always ensure Document node exists in HydraDB
+        create_doc_cypher = (
+            f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+            f"title: $title, created_at: $created_at{ws_prop}}})"
+        )
+        try:
+            self.client.run_write(create_doc_cypher, doc_props)
+        except Exception as e:
+            logger.debug("Failed to write Document node: %s", e)
+
+        # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
         for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
+            if effective_ws:
+                entity_key = f"{effective_ws}_{entity_key}"
             entity_int_id = string_to_int_id(entity_key)
             label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
 
             cypher = (
-                f"CREATE (d:Document {{id: $did, doc_id: $doc_id, source: $source, created_at: $ts}})"
-                f"-[:MENTIONS]->"
-                f"(e:{label} {{id: $eid, name: $name, source: $source}})"
+                f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+                f"title: $title, created_at: $created_at{ws_prop}}})"
+                f"-[r:MENTIONS {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                f"(e:{label} {{id: $entity_int_id, name: $name, source: $source{ws_prop}}})"
             )
-            params = {
-                "did": doc_int_id,
-                "doc_id": doc_id,
-                "source": source,
-                "ts": created_at,
-                "eid": entity_int_id,
-                "name": entity.name or "",
-            }
             try:
-                self.client.run_write(cypher, params, session=session)
-                has_written = True
+                self.client.run_write(cypher, {
+                    **doc_props,
+                    "entity_int_id": entity_int_id,
+                    "name": entity.name,
+                })
+                stats["entities_ok"] += 1
             except Exception as e:
-                logger.debug("Failed entity write %s: %s", entity.name, e)
+                stats["entities_failed"] += 1
+                logger.debug("Failed to write entity %s: %s", entity.name, e)
 
-        # 2. Create Fact Nodes: (Document)-[:HAS_FACT]->(Fact)
+        # 2. Load facts via one-hop (Document)-[:HAS_FACT]->(Fact) pattern.
         for idx, fact in enumerate(extraction.facts):
             fact_key = f"fact_{doc_id}_{idx}"
+            if effective_ws:
+                fact_key = f"{effective_ws}_{fact_key}"
             fact_int_id = string_to_int_id(fact_key)
 
             cypher = (
-                "CREATE (d:Document {id: $did, doc_id: $doc_id, source: $source, created_at: $ts})"
-                "-[:HAS_FACT]->"
-                "(f:Fact {id: $fid, subject: $subject, attribute: $attribute, value: $value, trust_score: $trust, doc_id: $doc_id})"
+                f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+                f"title: $title, created_at: $created_at{ws_prop}}})"
+                f"-[r:HAS_FACT {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                f"(f:Fact {{id: $fact_int_id, subject: $subject, attribute: $attribute, "
+                f"value: $value, trust_score: $trust_score, doc_id: $doc_id{ws_prop}}})"
             )
-            params = {
-                "did": doc_int_id,
-                "doc_id": doc_id,
-                "source": source,
-                "ts": created_at,
-                "fid": fact_int_id,
-                "subject": fact.subject or "",
-                "attribute": fact.attribute or "",
-                "value": fact.value or "",
-                "trust": source_trust,
-            }
             try:
-                self.client.run_write(cypher, params, session=session)
-                has_written = True
+                self.client.run_write(cypher, {
+                    **doc_props,
+                    "fact_int_id": fact_int_id,
+                    "subject": fact.subject,
+                    "attribute": fact.attribute,
+                    "value": fact.value,
+                    "trust_score": source_trust,
+                })
+                stats["facts_ok"] += 1
             except Exception as e:
-                logger.debug("Failed fact write %s: %s", fact.subject, e)
+                stats["facts_failed"] += 1
+                logger.debug("Failed to write fact %s: %s", fact.subject, e)
 
-        # 3. Fallback for docs with no entities/facts
-        if not has_written:
-            cypher = (
-                "CREATE (d:Document {id: $did, doc_id: $doc_id, source: $source, created_at: $ts})"
-                "-[:MENTIONS]->"
-                "(e:Document {id: $did, doc_id: $doc_id, source: $source, created_at: $ts})"
-            )
-            params = {
-                "did": doc_int_id,
-                "doc_id": doc_id,
-                "source": source,
-                "ts": created_at,
-            }
-            try:
-                self.client.run_write(cypher, params, session=session)
-            except Exception as e:
-                logger.debug("Failed standalone doc write %s: %s", doc_id, e)
+        return stats

@@ -1,127 +1,83 @@
 """
-resolution/conflicts.py — Conflict Detection and Tagging Layer.
+resolution/conflicts.py — Conflict Detection & Temporal Supersession Layer.
 
 Identifies facts with matching (subject, attribute) pairs but conflicting values,
-tags them with source trust & timestamps, and links them with SUPERSEDES edges in HydraDB.
-Uses fast READ_ACCESS snapshot path for fact retrieval.
+ranks them by temporal recency and source authority, and writes SUPERSEDES edges into HydraDB using one-hop CREATE.
 """
 
 import logging
+from typing import Dict, List, Any, Tuple, Optional
 from company_brain.graph.client import GraphClient
 
 logger = logging.getLogger(__name__)
 
 
-def detect_and_tag_conflicts(client: GraphClient) -> int:
+def detect_and_tag_conflicts(client: GraphClient, workspace_id: Optional[str] = None) -> int:
     """
-    Finds conflicting Fact nodes in HydraDB with the same (subject, attribute) but different values.
-    Uses fast read queries to avoid timeouts and writes SUPERSEDES edges via UNWIND batching.
-    Returns count of SUPERSEDES edges created.
+    Finds conflicting Fact nodes in HydraDB strictly scoped to the specified workspace_id.
+    Creates (f_newer)-[:SUPERSEDES]->(f_older) edges based on timestamp and source trust.
+    Returns: count of SUPERSEDES edges created.
     """
-
-    # Step 1: Fetch all Document node integer ids
     try:
-        doc_rows = client.run_read("MATCH (d:Document) RETURN d.id AS did, d.doc_id AS doc_id")
-        all_doc_ids = [r["did"] for r in doc_rows if r.get("did") is not None]
+        if workspace_id:
+            facts = client.run(f"MATCH (f:Fact {{workspace_id: '{workspace_id}'}}) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
+        else:
+            facts = client.run("MATCH (f:Fact) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
     except Exception as exc:
-        logger.warning("Could not fetch document list for conflict detection: %s", exc)
+        logger.warning("Could not fetch facts for conflict detection: %s", exc)
+        facts = []
+
+    if not facts:
         return 0
 
-    if not all_doc_ids:
-        logger.info("No documents found — skipping conflict detection.")
-        return 0
+    # Group facts by normalized (subject, attribute)
+    grouped: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+    for f in facts:
+        sub = str(f.get("subject", "")).lower().strip()
+        attr = str(f.get("attribute", "")).lower().strip()
+        if sub and attr:
+            key = (sub, attr)
+            grouped.setdefault(key, []).append(f)
 
-    logger.info("Fetching facts across %d documents using fast snapshot read path...", len(all_doc_ids))
+    supersedes_count = 0
+    ws_prop = f", workspace_id: '{workspace_id}'" if workspace_id else ""
+    for (sub, attr), fact_list in grouped.items():
+        if len(fact_list) < 2:
+            continue
 
-    grouped: dict[tuple, list] = {}
-    total_facts = 0
-    errors = 0
+        # Check for conflicting values
+        unique_values = set(str(f.get("value", "")).strip() for f in fact_list)
+        if len(unique_values) > 1:
+            # Sort facts by: 1) created_at timestamp descending, 2) trust_score descending
+            sorted_facts = sorted(
+                fact_list,
+                key=lambda x: (
+                    str(x.get("created_at", "1970-01-01")),
+                    float(x.get("trust_score", 0.5))
+                ),
+                reverse=True
+            )
 
-    # Step 2: Fetch facts per document using READ_ACCESS
-    query = (
-        "MATCH (d:Document {id: $did})-[:HAS_FACT]->(f:Fact) "
-        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score"
-    )
+            winner = sorted_facts[0]
+            winner_val = str(winner.get("value", "")).replace("'", "").replace('"', "")
+            winner_time = str(winner.get("created_at", "latest"))
 
-    for doc_int_id in all_doc_ids:
-        try:
-            records = client.run_read(query, {"did": doc_int_id})
-            for record in records:
-                raw_id = record.get("id")
-                if raw_id is None:
-                    continue
-                try:
-                    fact_id = int(raw_id)
-                except (ValueError, TypeError):
-                    continue
+            for loser in sorted_facts[1:]:
+                loser_val = str(loser.get("value", "")).replace("'", "").replace('"', "")
+                if loser_val != winner_val:
+                    reason = f"Newer assertion ({winner_val}) supersedes earlier value ({loser_val})"
+                    clean_reason = reason.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
 
-                sub = str(record.get("subject") or "").lower().strip()
-                attr = str(record.get("attribute") or "").lower().strip()
-                val = str(record.get("value") or "").strip()
-                trust = record.get("trust_score")
+                    link_cypher = (
+                        f"CREATE (w:Fact {{id: {winner['id']}}})"
+                        f"-[:SUPERSEDES {{reason: '{clean_reason}', timestamp: '{winner_time}'{ws_prop}}}]->"
+                        f"(l:Fact {{id: {loser['id']}}})"
+                    )
+                    try:
+                        client.run_write(link_cypher)
+                        supersedes_count += 1
+                    except Exception as exc:
+                        logger.debug("Failed to write SUPERSEDES edge: %s", exc)
 
-                if sub and attr and val:
-                    generic_attrs = {"status", "priority", "type", "date", "author", "id", "name", "project", "owner"}
-                    if sub.startswith("dsid_") or sub.startswith("doc_"):
-                        if attr in generic_attrs:
-                            continue
-                        key = ("__global_entity__", attr)
-                    else:
-                        key = (sub, attr)
-                        
-                    grouped.setdefault(key, []).append({
-                        "id": fact_id,
-                        "subject": sub,
-                        "attribute": attr,
-                        "value": val,
-                        "trust_score": float(trust) if trust is not None else 0.5,
-                    })
-                    total_facts += 1
-        except Exception as exc:
-            errors += 1
-            logger.debug("Failed to fetch facts for doc %d: %s", doc_int_id, exc)
-
-    if errors:
-        logger.warning("Fact fetch errors for %d documents (out of %d).", errors, len(all_doc_ids))
-
-    conflicting_groups = [
-        (k, v) for k, v in grouped.items()
-        if len(v) >= 2 and len(set(f["value"] for f in v)) > 1
-    ]
-    logger.info("Scanned %d fact entries. Found %d conflicting attribute groups.", total_facts, len(conflicting_groups))
-
-    if not conflicting_groups:
-        logger.info("No conflicting fact pairs found in Knowledge Graph.")
-        return 0
-
-    # Build rows for batched UNWIND query
-    rows = []
-    for (sub, attr), fact_list in conflicting_groups:
-        sorted_facts = sorted(fact_list, key=lambda x: x["trust_score"], reverse=True)
-        winner = sorted_facts[0]
-        for loser in sorted_facts[1:]:
-            rows.append({
-                "wid": winner["id"],
-                "lid": loser["id"],
-            })
-
-    if not rows:
-        return 0
-
-    logger.info("Writing %d SUPERSEDES conflict edges in batched UNWIND queries...", len(rows))
-
-    batch_cypher = (
-        "UNWIND $rows AS row "
-        "CREATE (w {id: row.wid})"
-        "-[:SUPERSEDES]->"
-        "(l {id: row.lid})"
-    )
-
-    try:
-        supersedes_count = client.run_batch(batch_cypher, rows, batch_size=500)
-    except Exception as exc:
-        logger.warning("Batched conflict write error: %s", exc)
-        supersedes_count = 0
-
-    logger.info("Conflict layer complete. Created %d SUPERSEDES edges.", supersedes_count)
+    logger.info("Conflict layer complete for workspace=%s. Created %d SUPERSEDES edges in HydraDB.", workspace_id, supersedes_count)
     return supersedes_count

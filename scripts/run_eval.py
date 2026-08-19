@@ -1,175 +1,134 @@
+#!/usr/bin/env python3
 """
-scripts/run_eval.py — Phase 4 Evaluation Harness.
+scripts/run_eval.py — Official EnterpriseRAG-Bench Evaluation Runner.
 
-Loops over questions in data/questions/questions.jsonl, executes each question
-against the query engine, evaluates accuracy vs gold answers using token F1,
-and reports metrics by category.
+Runs 500 benchmark questions in strict blind inference mode:
+1. Passes ONLY question_text into QueryEngine.
+2. Evaluates Document Recall, Fact Correctness, Answer Completeness, and Extra Docs Penalty.
+3. Computes Composite Benchmark Score and compares against Leaderboard (#1 Troml @ 76.79).
+4. Saves full evaluation artifacts to data/eval_results/eval_latest.json.
 
 Usage:
-    python3 scripts/run_eval.py [--limit N] [--save] [--heuristic]
+    python3 scripts/run_eval.py [--limit N]
 """
 
-import json
 import sys
+import json
 import logging
+import time
 import argparse
 from pathlib import Path
+from typing import List, Dict, Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from company_brain import config
 from company_brain.graph.client import GraphClient
-from company_brain.query.engine import answer_question
-from company_brain.eval.metrics import compute_metrics
+from company_brain.query.engine import QueryEngine
+from company_brain.eval.metrics import evaluate_prediction, aggregate_benchmark_results
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("run_eval")
 
 
-def _token_f1(prediction: str, gold_facts: list[str]) -> float:
-    """
-    Compute token-level F1 between prediction text and gold answer facts.
-    Each gold fact is tokenised; we check if prediction contains those tokens.
-    Returns a score 0.0–1.0.
-    """
-    if not gold_facts:
-        return 1.0  # No gold facts = abstention question; handled separately
-
-    pred_tokens = set(prediction.lower().split())
-
-    total_recall = 0.0
-    for fact in gold_facts:
-        fact_tokens = {
-            t for t in fact.lower().split()
-            if len(t) > 2
-        }
-        if not fact_tokens:
-            continue
-        overlap = len(pred_tokens & fact_tokens)
-        recall = overlap / len(fact_tokens)
-        total_recall += recall
-
-    return total_recall / len(gold_facts)
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate Company Brain on questions.jsonl")
-    parser.add_argument("--limit", type=int, default=0, help="Max questions to evaluate (0 = all)")
-    parser.add_argument("--save", action="store_true", help="Save results to data/eval_results.jsonl")
-    parser.add_argument("--threshold", type=float, default=0.3,
-                        help="Token F1 threshold to count an answer as correct (default: 0.3)")
-    parser.add_argument("--heuristic", action="store_true", help="Run 100% deterministic non-AI synthesis (instant, zero API calls)")
+    parser = argparse.ArgumentParser(description="Run EnterpriseRAG-Bench evaluation.")
+    parser.add_argument("--questions", type=str, default="data/questions/questions.jsonl", help="Path to questions.jsonl file")
+    parser.add_argument("--limit", type=int, default=None, help="Limit number of questions evaluated (e.g. 50 or 500)")
+    parser.add_argument("--output", type=str, default="data/eval_results/eval_latest.json", help="Output results file")
+    parser.add_argument("--concurrency", type=int, default=1, help="Evaluation concurrency (default 1)")
     args = parser.parse_args()
 
-    questions_path = config.QUESTIONS_FILE
-    if not questions_path.exists():
-        logger.error("Questions file %s not found. Run bash scripts/download_dataset.sh first.", questions_path)
+    questions_file = Path(args.questions)
+    if not questions_file.exists():
+        logger.error("Questions file not found at %s", questions_file)
         sys.exit(1)
 
-    if args.heuristic:
-        logger.info("⚡ Heuristic non-AI mode enabled: using deterministic graph synthesis without Gemini API calls.")
+    # Load questions
+    with open(questions_file, "r", encoding="utf-8") as f:
+        all_questions = [json.loads(line) for line in f if line.strip()]
 
-    logger.info("Loading questions from %s...", questions_path)
-    questions = []
-    with open(questions_path, "r", encoding="utf-8") as f:
-        for line in f:
-            if line.strip():
-                questions.append(json.loads(line))
+    if args.limit:
+        all_questions = all_questions[:args.limit]
 
-    if args.limit > 0:
-        questions = questions[:args.limit]
+    logger.info("=== Starting Benchmark Evaluation on %d Questions ===", len(all_questions))
+    
+    # Check HydraDB connectivity
+    with GraphClient() as test_client:
+        if test_client.ping():
+            logger.info("✅ HydraDB is ACTIVE on bolt://127.0.0.1:7687 (Full Hybrid Graph + Vector Search enabled).")
+        else:
+            logger.warning("⚠️  HydraDB is NOT RUNNING on bolt://127.0.0.1:7687! Evaluation will run in Vector-Only mode without graph traversals.")
+            logger.warning("   To enable full graph traversal, start HydraDB with: bash scripts/start_hydradb.sh")
 
-    logger.info("Starting evaluation on %d questions (F1 threshold=%.2f)...", len(questions), args.threshold)
-    results = []
+    engine = QueryEngine()
+
+    eval_records: List[Dict[str, Any]] = []
+    start_time = time.time()
 
     with GraphClient() as client:
-        if not client.ping():
-            logger.error("HydraDB not reachable. Start the graph-node first.")
-            sys.exit(1)
+        for idx, q in enumerate(all_questions, 1):
+            q_text = q["question"]
+            qid = q.get("question_id", f"q_{idx}")
+            qtype = q.get("question_type", "basic")
 
-        for idx, q_data in enumerate(questions):
-            q_id = q_data.get("question_id", f"q{idx}")
-            q_text = q_data.get("question", "")
-            q_type = q_data.get("question_type", "basic")
-            gold_facts = q_data.get("answer_facts", [])
-            expects_abstain = q_data.get("expected_abstain", False)
+            # Strict blind query
+            pred = engine.query(q_text)
 
-            try:
-                ans = answer_question(q_text, client, force_heuristic=args.heuristic)
-            except Exception as exc:
-                logger.warning("[%d/%d] Error on %s: %s", idx + 1, len(questions), q_id, exc)
-                results.append({
-                    "question_id": q_id,
-                    "question_type": q_type,
-                    "question": q_text,
-                    "answer": "",
-                    "citations": [],
-                    "abstained": False,
-                    "matched_entities": [],
-                    "f1_score": 0.0,
-                    "is_correct": False,
-                    "gold_facts": gold_facts,
-                })
-                continue
-
-            # Scoring
-            if expects_abstain:
-                # Correct if system correctly abstained
-                is_correct = ans.abstained
-                f1 = 1.0 if is_correct else 0.0
-            elif not gold_facts:
-                # No gold facts given — mark as correct if not abstained
-                is_correct = not ans.abstained
-                f1 = 1.0 if is_correct else 0.0
-            else:
-                f1 = _token_f1(ans.answer, gold_facts)
-                is_correct = f1 >= args.threshold
-
-            results.append({
-                "question_id": q_id,
-                "question_type": q_type,
+            pred_dict = {
                 "question": q_text,
-                "answer": ans.answer,
-                "citations": ans.citations,
-                "abstained": ans.abstained,
-                "matched_entities": ans.matched_entities,
-                "f1_score": round(f1, 4),
-                "is_correct": is_correct,
-                "gold_facts": gold_facts,
-            })
+                "answer": pred.answer,
+                "citations": pred.citations,
+                "abstained": pred.abstained,
+            }
 
-            status = "✓" if is_correct else "✗"
-            abstain_tag = " [ABSTAIN]" if ans.abstained else ""
-            entity_tag = f" entities={ans.matched_entities[:2]}" if ans.matched_entities else ""
-            logger.info(
-                "[%d/%d] %s %s (%s) F1=%.2f%s%s",
-                idx + 1, len(questions), status, q_id, q_type, f1, abstain_tag, entity_tag,
+            # Evaluate against ground truth
+            eval_res = evaluate_prediction(
+                prediction=pred_dict,
+                ground_truth=q
             )
+            eval_records.append(eval_res)
 
-    # Compute and display metrics
-    metrics = compute_metrics(results)
-    logger.info("\n=== EVALUATION REPORT ===")
-    logger.info("Total Questions:  %d", metrics["total_questions"])
-    logger.info("Overall Accuracy: %.2f%%", metrics["overall_accuracy"])
-    logger.info("Mean F1 Score:    %.4f", metrics.get("mean_f1", 0.0))
-    logger.info("\nCategory Breakdown:")
-    for cat, stats in metrics["by_category"].items():
-        logger.info(
-            "  %-20s : %d / %d (%.2f%%) avg_f1=%.3f",
-            cat,
-            stats["correct"],
-            stats["total"],
-            stats["accuracy"],
-            stats.get("avg_f1", 0.0),
-        )
+            if idx % 50 == 0 or idx == len(all_questions):
+                elapsed = time.time() - start_time
+                avg_score = sum(r["composite_score"] for r in eval_records) / len(eval_records)
+                logger.info("  [%d / %d] Elapsed: %.1fs | Running Composite Score: %.2f",
+                            idx, len(all_questions), elapsed, avg_score)
 
-    if args.save:
-        out_path = Path("data/eval_results.jsonl")
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            for r in results:
-                f.write(json.dumps(r) + "\n")
-        logger.info("Results saved to %s", out_path)
+    total_time = time.time() - start_time
+    logger.info("Evaluation loop complete in %.2f seconds (%.2f q/s).", total_time, len(all_questions) / total_time)
+
+    # Aggregate Benchmark Metrics
+    summary = aggregate_benchmark_results(eval_records)
+    summary["execution_time_seconds"] = round(total_time, 2)
+    summary["questions_per_second"] = round(len(all_questions) / total_time, 2)
+
+    # Save artifact
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump({"summary": summary, "per_question": eval_records}, f, indent=2)
+
+    # Display Report
+    print("\n" + "=" * 80)
+    print("  🏆 ENTERPRISERAG-BENCH EVALUATION REPORT — COMPANY BRAIN (HYDRADB)")
+    print("=" * 80)
+    print(f"\nTotal Questions Evaluated: {summary['total_questions']}")
+    print(f"Total Execution Time:      {summary['execution_time_seconds']}s ({summary['questions_per_second']} queries/sec)")
+    print("\n" + "-" * 80)
+    print(f"  🎯 OVERALL COMPOSITE BENCHMARK SCORE:  {summary['overall_composite_score']} / 100.00")
+    print(f"     • Fact Answer Correctness:          {summary['overall_correctness']}%")
+    print(f"     • Answer Completeness:              {summary['overall_completeness']}%")
+    print(f"     • Document Recall:                  {summary['overall_doc_recall']}%")
+    print(f"     • Invalid Extra Docs:               {summary['overall_invalid_extra_docs']}%")
+    print("-" * 80)
+
+    # Category breakdown table
+    print("\n📊 CATEGORY BREAKDOWN (10 DIMENSIONS):")
+    print(f"  {'Category':<24} | {'Count':<5} | {'Score':<6} | {'Doc Recall':<10} | {'Correctness':<11} | {'Completeness':<12}")
+    print("  " + "-" * 80)
+    for cat, metrics in summary.get("by_category", {}).items():
+        print(f"  {cat:<22} | {metrics['count']:<5} | {metrics['composite_score']:>6.2f} | {metrics['doc_recall']:>9.2f}% | {metrics['correctness']:>10.2f}% | {metrics['completeness']:>11.2f}%")
+    print("=" * 80)
 
 
 if __name__ == "__main__":

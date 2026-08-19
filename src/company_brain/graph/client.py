@@ -43,6 +43,7 @@ class GraphClient:
         uri: str | None = None,
         user: str | None = None,
         password: str | None = None,
+        connection_timeout: float = 5.0,
     ) -> None:
         self._uri = uri or config.BOLT_URI
         self._user = user or config.HYDRA_USER
@@ -50,12 +51,11 @@ class GraphClient:
         self._driver: Driver = GraphDatabase.driver(
             self._uri,
             auth=(self._user, self._password),
+            connection_timeout=connection_timeout,
         )
-        logger.info("GraphClient connected to %s", self._uri)
 
     def close(self) -> None:
         self._driver.close()
-        logger.info("GraphClient closed.")
 
     def __enter__(self) -> GraphClient:
         return self

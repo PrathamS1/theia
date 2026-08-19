@@ -4,12 +4,17 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Secrets — NEVER commit
+# Secrets & Private Helper Docs — NEVER commit
 .env
 PROGRESS.md
+helperDoc/
 
 # Raw dataset archives (large binary files, re-downloadable)
 data/raw/
+
+# Built vector index (rebuildable from data/staged_gold_docs.json via
+# scripts/run_ingest.py or VectorStore.build_index)
+data/vectors/
 
 # HydraDB local storage
 .hydradb/
@@ -35,5 +40,11 @@ Thumbs.db
 # SuiteSparse build (built locally in WSL, not needed in repo)
 ~/SuiteSparse/
 
-# Next steps
-NEXT_STEPS.md
+# Local env backups
+.env.bak
+
+# Benchmark scratch runs (eval_latest.json is the committed result)
+data/eval_results/eval_after_s3.json
+data/eval_results/eval_baseline_pre_s3.json
+data/eval_results/eval_cleanroom.json
+data/eval_results/eval_full_pipeline.json

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # scripts/start_hydradb.sh
 # Starts a local HydraDB graph-node in development mode.
-# Run from the hydradb repo root (NOT from this project root).
-# Usage:  bash /path/to/company-brain/scripts/start_hydradb.sh
+# Can be run directly from the theia project root:
+#   bash scripts/start_hydradb.sh
 #
 # Prerequisites: HydraDB built with `cargo build --locked --features server-runtime --bin graph-node`
 
@@ -43,7 +43,10 @@ echo ""
 echo "  Press Ctrl+C to stop."
 echo ""
 
-# Must run from the hydradb repo root where Cargo.toml lives.
-# If you cloned hydradb to ~/hydradb, run:
-#   cd ~/hydradb && bash /path/to/company-brain/scripts/start_hydradb.sh
-cargo run --locked --features server-runtime --bin graph-node
+# Use compiled binary if available, otherwise cargo run
+GRAPH_NODE_BIN="/home/pratham/projects/hydradb/target/debug/graph-node"
+if [ -f "$GRAPH_NODE_BIN" ]; then
+  exec "$GRAPH_NODE_BIN"
+else
+  cd /home/pratham/projects/hydradb && exec cargo run --locked --features server-runtime --bin graph-node
+fi
