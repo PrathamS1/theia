@@ -21,8 +21,11 @@
   --r-md: 6px;
   --r-lg: 10px;
 
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: Georgia, 'Times New Roman', Times, serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  /* Georgia sits visually larger than Inter at the same font-size. */
+  --serif-optical: 0.96;
 
   /* Light */
   --bg: #fbfbfa;
@@ -57,6 +60,16 @@
   --shadow-md: 0 4px 12px rgb(0 0 0 / 0.08);
 
   --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  /* Hero brand palette. #6CAAAC (the Figma swatch) is 2.6:1 on white and
+   * fails WCAG for text, so it is reserved for non-text use (borders, glass
+   * tint) and the text/fill variants below are nudged darker to pass AA.
+   * --brand-ink is used for all hero text, headline included: against the
+   * actual sky artwork (sampled, not assumed white) a lighter 3:1-class
+   * teal loses its margin once composited with a translucent scrim. */
+  --brand: #6caaac;
+  --brand-ink: #2f7175; /* 5.6:1 on white — hero headline and body copy */
+  --brand-solid: #37797b; /* 5.0:1 with white text — CTA fill */
 }
 
 /*
