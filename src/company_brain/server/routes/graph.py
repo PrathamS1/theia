@@ -16,14 +16,15 @@ from company_brain.graph.topology import cache as topology_cache, _ID_PREFIX
 
 router = APIRouter(prefix="/api/graph", tags=["Graph"])
 
-_ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact"}
+_ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact", "Topic", "Deal", "Entity"}
 
-# In-memory document text cache, for full_body lookups only (the graph stores
-# a name/subject, not full document text).
+from company_brain.config import LIVE_DATA_DIR
+
+# In-memory document text cache, for full_body lookups only
 _DOCS_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
-def _get_docs_cache() -> Dict[str, Dict[str, Any]]:
+def _get_docs_cache(workspace_id: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
     global _DOCS_CACHE
     if not _DOCS_CACHE:
         staged_path = Path("data/staged_gold_docs.json")
@@ -37,6 +38,17 @@ def _get_docs_cache() -> Dict[str, Dict[str, Any]]:
                         doc_id = d.get("doc_id")
                         if doc_id:
                             _DOCS_CACHE[doc_id] = d
+    if workspace_id:
+        live_staged_path = LIVE_DATA_DIR / workspace_id / "live_staged_docs.json"
+        if live_staged_path.exists():
+            try:
+                with open(live_staged_path, "r", encoding="utf-8") as f:
+                    live_data = json.load(f)
+                    combined = dict(_DOCS_CACHE)
+                    combined.update(live_data)
+                    return combined
+            except Exception:
+                pass
     return _DOCS_CACHE
 
 
@@ -50,24 +62,18 @@ def _filter_by_labels(nodes: List[Dict], edges: List[Dict], allowed: set) -> tup
 
 @router.get("/topology")
 def get_graph_topology(
-    doc_limit: int = Query(30, ge=5, le=80, description="Number of seed documents to expand"),
-    labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Project,Fact"),
+    doc_limit: int = Query(45, ge=5, le=100, description="Number of seed documents to expand"),
+    labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Project,Topic,Deal,Fact"),
     search: Optional[str] = Query(None, description="Filter documents by title (applies to the currently cached seed only)"),
     refresh: bool = Query(False, description="Bypass the topology cache and re-query HydraDB"),
+    workspace_id: Optional[str] = Query(None, description="Filter topology to a specific user/workspace"),
 ):
     """
     Returns a bounded seed subgraph (documents plus their MENTIONS/HAS_FACT
-    neighbours) from HydraDB, structured for Cytoscape.js. The full graph is
-    ~8k nodes / ~7.3k edges -- far past what a force-directed canvas can
-    render usefully -- so this endpoint returns a fixed-size seed and the
-    client grows it via /expand as the user clicks nodes.
-
-    NOTE: `search` filters the seed already fetched, not the full 749-document
-    corpus -- HydraDB's Cypher subset doesn't support CONTAINS, so a
-    corpus-wide search would require an unanchored scan (~1.4s) per keystroke.
+    neighbours) from HydraDB, structured for Cytoscape.js.
     """
     try:
-        seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh)
+        seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh, workspace_id=workspace_id)
     except Exception:
         return {"nodes": [], "edges": [], "total_nodes": 0, "total_edges": 0, "degraded": True}
     nodes, edges = seed["nodes"], seed["edges"]
@@ -96,11 +102,11 @@ def get_graph_topology(
     # payload bounded while still surfacing SAME_AS/SUPERSEDES when relevant.
     node_ids = {n["data"]["id"] for n in nodes}
     if "Person" in allowed_labels:
-        for e in topology_cache.fetch_same_as():
+        for e in topology_cache.fetch_same_as(workspace_id=workspace_id):
             if e["data"]["source"] in node_ids and e["data"]["target"] in node_ids:
                 edges.append(e)
     if "Fact" in allowed_labels:
-        for e in topology_cache.fetch_supersedes():
+        for e in topology_cache.fetch_supersedes(workspace_id=workspace_id):
             if e["data"]["source"] in node_ids and e["data"]["target"] in node_ids:
                 edges.append(e)
 
@@ -116,6 +122,7 @@ def get_graph_topology(
 def expand_node(
     node_id: str = Query(..., description="Cytoscape node id, e.g. doc_<doc_id> or person_<int_id>"),
     label: str = Query(..., description="Node label: Document, Person, Org, Ticket, Project, or Fact"),
+    workspace_id: Optional[str] = Query(None, description="Workspace isolation ID"),
 ):
     """
     Returns the 1-hop neighbourhood of a single node (anchored Cypher lookup,
@@ -131,7 +138,7 @@ def expand_node(
     key = node_id[len(prefix):]
 
     try:
-        result = topology_cache.expand_node(label, key)
+        result = topology_cache.expand_node(label, key, workspace_id=workspace_id)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"HydraDB query failed: {exc}")
 
@@ -144,7 +151,10 @@ def expand_node(
 
 
 @router.get("/node/{node_id}")
-def get_node_details(node_id: str):
+def get_node_details(
+    node_id: str,
+    workspace_id: Optional[str] = Query(None, description="Workspace isolation ID"),
+):
     """
     Returns full property inspector details for a selected node, reading live
     property values from HydraDB (anchored by id) plus, for documents, the
@@ -157,13 +167,40 @@ def get_node_details(node_id: str):
         key = node_id[len(prefix):]
 
         if label == "Document":
-            docs_cache = _get_docs_cache()
+            docs_cache = _get_docs_cache(workspace_id=workspace_id)
             doc = docs_cache.get(key)
+            if not doc:
+                # Fallback: Query HydraDB for this document node
+                try:
+                    with GraphClient() as client:
+                        if workspace_id:
+                            rows = client.run(
+                                "MATCH (d:Document {doc_id: $did, workspace_id: $ws}) "
+                                "RETURN d.doc_id, d.title, d.source, d.created_at",
+                                {"did": key, "ws": workspace_id}
+                            )
+                        else:
+                            rows = client.run(
+                                "MATCH (d:Document {doc_id: $did}) "
+                                "RETURN d.doc_id, d.title, d.source, d.created_at",
+                                {"did": key}
+                            )
+                        if rows:
+                            r = rows[0]
+                            doc = {
+                                "doc_id": r.get("d.doc_id", key),
+                                "title": r.get("d.title", key),
+                                "source": r.get("d.source", ""),
+                                "created_at": r.get("d.created_at", ""),
+                                "text": r.get("d.title", key),
+                            }
+                except Exception:
+                    pass
             if not doc:
                 raise HTTPException(status_code=404, detail="Document not found")
             neighbours = []
             try:
-                exp = topology_cache.expand_node("Document", key)
+                exp = topology_cache.expand_node("Document", key, workspace_id=workspace_id)
                 for n in exp["nodes"][:12]:
                     rel = "HAS_FACT" if n["data"]["label"] == "Fact" else "MENTIONS"
                     neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": rel})
@@ -200,7 +237,7 @@ def get_node_details(node_id: str):
             f = rows[0]
             neighbours = []
             try:
-                exp = topology_cache.expand_node("Fact", key)
+                exp = topology_cache.expand_node("Fact", key, workspace_id=workspace_id)
                 for n in exp["nodes"][:8]:
                     neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": "SUPERSEDES"})
             except Exception:
@@ -221,13 +258,25 @@ def get_node_details(node_id: str):
                 "connected_neighbors": neighbours,
             }
 
-        # Person / Org / Ticket / Project
+        # Person / Org / Ticket / Project / Topic / Deal / Entity
         try:
             with GraphClient() as client:
-                rows = client.run(
-                    f"MATCH (e:{label} {{id: $eid}}) RETURN e.name, e.source",
-                    {"eid": int(key)},
-                )
+                try:
+                    eid = int(key)
+                except ValueError:
+                    from company_brain.graph.schema import string_to_int_id
+                    eid = string_to_int_id(key)
+
+                if workspace_id:
+                    rows = client.run(
+                        f"MATCH (e:{label} {{id: $eid, workspace_id: $ws}}) RETURN e.name, e.source",
+                        {"eid": eid, "ws": workspace_id},
+                    )
+                else:
+                    rows = client.run(
+                        f"MATCH (e:{label} {{id: $eid}}) RETURN e.name, e.source",
+                        {"eid": eid},
+                    )
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"HydraDB query failed: {exc}")
         if not rows:
@@ -235,7 +284,7 @@ def get_node_details(node_id: str):
         e = rows[0]
         neighbours = []
         try:
-            exp = topology_cache.expand_node(label, key)
+            exp = topology_cache.expand_node(label, key, workspace_id=workspace_id)
             for n in exp["nodes"][:12]:
                 rel = "SAME_AS" if n["data"]["label"] == "Person" and label == "Person" else "MENTIONS"
                 neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": rel})

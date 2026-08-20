@@ -93,6 +93,7 @@ def main():
 
     vstore = VectorStore()
     vstore.build_chunk_index(all_chunks)
+    vstore.save("data/vectors")
     logger.info("[OK] Chunk vector index successfully built and saved (%d embeddings).", len(all_chunks))
 
     # 3. Connect to HydraDB and load graph elements

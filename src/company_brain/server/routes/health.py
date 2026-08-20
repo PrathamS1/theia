@@ -11,6 +11,17 @@ from company_brain.indexing.vector_store import VectorStore
 router = APIRouter(prefix="/api", tags=["Health"])
 
 
+_VSTORE = None
+
+
+def _get_vstore():
+    global _VSTORE
+    if _VSTORE is None:
+        _VSTORE = VectorStore()
+        _VSTORE.load()
+    return _VSTORE
+
+
 @router.get("/health")
 def get_health():
     """
@@ -20,6 +31,7 @@ def get_health():
     doc_count = 0
     person_count = 0
     org_count = 0
+    topic_count = 0
     fact_count = 0
 
     try:
@@ -29,17 +41,19 @@ def get_health():
                 doc_res = client.run("MATCH (d:Document) RETURN count(*)")
                 person_res = client.run("MATCH (p:Person) RETURN count(*)")
                 org_res = client.run("MATCH (o:Org) RETURN count(*)")
+                topic_res = client.run("MATCH (t:Topic) RETURN count(*)")
                 fact_res = client.run("MATCH (f:Fact) RETURN count(*)")
 
                 doc_count = doc_res[0].get("count(*)", 0) if doc_res else 0
                 person_count = person_res[0].get("count(*)", 0) if person_res else 0
                 org_count = org_res[0].get("count(*)", 0) if org_res else 0
+                topic_count = topic_res[0].get("count(*)", 0) if topic_res else 0
                 fact_count = fact_res[0].get("count(*)", 0) if fact_res else 0
     except Exception:
         hydra_ok = False
 
-    vstore = VectorStore()
-    vstore_loaded = vstore.load()
+    vstore = _get_vstore()
+    vstore_loaded = (vstore.chunk_embeddings is not None or vstore.doc_embeddings is not None)
     vector_count = len(vstore.chunks_meta) if (vstore_loaded and vstore.chunks_meta) else len(vstore.doc_ids)
 
     return {
@@ -49,6 +63,7 @@ def get_health():
         "total_documents": doc_count,
         "total_persons": person_count,
         "total_orgs": org_count,
+        "total_topics": topic_count,
         "total_facts": fact_count,
         "total_vectors": vector_count,
     }

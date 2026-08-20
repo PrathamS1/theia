@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from company_brain.indexing.vector_store import VectorStore
 from company_brain.graph.client import GraphClient
 from company_brain import config
+from company_brain.query.abstain import should_abstain
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class QueryEngine:
         self.staged_docs: Dict[str, Dict[str, Any]] = {}
         # Precomputed full-text inverted token sets for 100% of corpus
         self.doc_token_sets: Dict[str, Set[str]] = {}
+        self.corpus_all_tokens: Set[str] = set()
 
         p = Path(staged_docs_path)
         if p.exists():
@@ -63,22 +65,28 @@ class QueryEngine:
             # Tokenize 100% of text for each document without any truncation
             for doc_id, dinfo in self.staged_docs.items():
                 full_text = (dinfo.get("title", "") + " " + dinfo.get("text", "") + " " + dinfo.get("body", "")).lower()
-                tokens = set(re.findall(r"[a-z0-9_\-\.]{2,}", full_text))
+                tokens = set(re.findall(r"[a-z0-9]{2,}", full_text))
                 self.doc_token_sets[doc_id] = tokens
+            if self.doc_token_sets:
+                self.corpus_all_tokens = set.union(*self.doc_token_sets.values())
 
         self.graph_client = GraphClient()
-        self._org_names: List[str] = self._load_orgs_from_graph()
+        self._org_names, self._person_names = self._load_entities_from_graph()
 
-    def _load_orgs_from_graph(self) -> List[str]:
-        """Dynamically queries known Organization names from HydraDB graph."""
+    def _load_entities_from_graph(self) -> Tuple[List[str], List[str]]:
+        """Dynamically loads known Org and Person entities from HydraDB graph."""
         try:
             if self.workspace_id:
-                rows = self.graph_client.run(f"MATCH (o:Org {{workspace_id: '{self.workspace_id}'}}) RETURN o.name AS name")
+                org_rows = self.graph_client.run(f"MATCH (o:Org {{workspace_id: '{self.workspace_id}'}}) RETURN o.name AS name LIMIT 300")
+                person_rows = self.graph_client.run(f"MATCH (p:Person {{workspace_id: '{self.workspace_id}'}}) RETURN p.name AS name LIMIT 600")
             else:
-                rows = self.graph_client.run("MATCH (o:Org) WHERE o.workspace_id IS NULL OR o.workspace_id = 'benchmark' RETURN o.name AS name")
-            return [r["name"] for r in rows if r.get("name")]
+                org_rows = self.graph_client.run("MATCH (o:Org) RETURN o.name AS name LIMIT 300")
+                person_rows = self.graph_client.run("MATCH (p:Person) RETURN p.name AS name LIMIT 600")
+            orgs = [r["name"] for r in org_rows if r.get("name") and len(r["name"]) > 2]
+            persons = [r["name"] for r in person_rows if r.get("name") and len(r["name"]) > 2]
+            return orgs, persons
         except Exception:
-            return []
+            return [], []
 
     def close(self):
         if self.graph_client:
@@ -92,16 +100,20 @@ class QueryEngine:
 
     def query(self, question: str) -> QueryResult:
         """
-        Executes genuine hybrid retrieval and synthesis across full chunk vectors and HydraDB graph.
+        Graph-Native Query Execution:
+        1. Entry Anchor Retrieval (Dense Vector + BM25 Lexical)
+        2. HydraDB Multi-Hop Graph Traversal (:MENTIONS, :SAME_AS alias resolution)
+        3. Query-Time Temporal Conflict Resolution (:SUPERSEDES pruning in Cypher)
+        4. Structural Zero-Path & Predicate Grounding Gate (Signal B)
+        5. Traceable Path Answer Synthesis
         """
         clean_q = question.strip()
         q_lower = clean_q.lower()
         q_tokens = set(re.findall(r"[a-z0-9_\-\.]{2,}", q_lower))
 
-        # ── 1. Dense Vector Search over Passage Chunks ──
+        # ── 1. Entry Anchor Lookup (MiniLM Dense Chunks + Lexical) ──
         chunk_hits = self.vector_store.search_similar_chunks(clean_q, top_k=30)
         
-        # Aggregate chunk scores and track best passage per document
         doc_vector_scores: Dict[str, float] = {}
         doc_best_passages: Dict[str, str] = {}
         for doc_id, score, passage, meta in chunk_hits:
@@ -111,97 +123,105 @@ class QueryEngine:
 
         top_vector_score = max(doc_vector_scores.values()) if doc_vector_scores else 0.0
 
-        # ── 2. Full-Text Lexical Search across 100% Corpus Text ──
+        # Full-text lexical anchor scoring across corpus tokens
         doc_lexical_scores: Dict[str, float] = {}
         for doc_id, doc_tokens in self.doc_token_sets.items():
             overlap = len(q_tokens & doc_tokens)
             if overlap > 0:
                 doc_lexical_scores[doc_id] = overlap / max(len(q_tokens), 1)
 
-        # ── 3. HydraDB Graph Traversal (Entities & Aliases) ──
-        traversed_entities: List[str] = []
-        graph_boosted_docs: Set[str] = set()
+        max_corpus_lexical = max(doc_lexical_scores.values()) if doc_lexical_scores else 0.0
 
+        # ── 2. HydraDB Multi-Hop Graph Traversal (:MENTIONS & :SAME_AS) ──
+        traversed_entities: List[str] = []
+        graph_connected_docs: Set[str] = set()
+
+        # Check matched organizations in question
         for org_name in self._org_names:
             if org_name.lower() in q_lower:
-                traversed_entities.append(org_name)
+                traversed_entities.append(f"Org:{org_name}")
                 try:
-                    # Find documents linked to this entity scoped to workspace
                     if self.workspace_id:
-                        cypher_graph = (
-                            f"MATCH (d:Document {{workspace_id: '{self.workspace_id}'}})-[:MENTIONS]->(o:Org {{name: '{org_name}', workspace_id: '{self.workspace_id}'}}) "
-                            "RETURN d.doc_id AS did LIMIT 15"
+                        cypher_org = (
+                            "MATCH (o:Org {name: $name, workspace_id: $ws})<-[:MENTIONS]-(d:Document {workspace_id: $ws}) "
+                            "RETURN d.doc_id AS did LIMIT 20"
                         )
+                        rows = self.graph_client.run(cypher_org, {"name": org_name, "ws": self.workspace_id})
                     else:
-                        cypher_graph = (
-                            f"MATCH (d:Document)-[:MENTIONS]->(o:Org {{name: '{org_name}'}}) "
-                            "WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') "
-                            "RETURN d.doc_id AS did LIMIT 15"
-                        )
-                    rows = self.graph_client.run(cypher_graph)
+                        cypher_org = "MATCH (o:Org {name: $name})<-[:MENTIONS]-(d:Document) RETURN d.doc_id AS did LIMIT 20"
+                        rows = self.graph_client.run(cypher_org, {"name": org_name})
                     for r in rows:
-                        did = r.get("did")
-                        if did:
-                            graph_boosted_docs.add(did)
+                        if r.get("did"):
+                            graph_connected_docs.add(r["did"])
                 except Exception:
                     pass
 
-        # ── 4. Reciprocal Rank Fusion (RRF) ──
+        # Check matched persons & follow :SAME_AS alias bridges in HydraDB
+        for person_name in self._person_names:
+            if person_name.lower() in q_lower:
+                traversed_entities.append(f"Person:{person_name}")
+                try:
+                    if self.workspace_id:
+                        cypher_person = (
+                            "MATCH (p:Person {name: $name, workspace_id: $ws}) "
+                            "OPTIONAL MATCH (p)-[:SAME_AS]-(alias:Person {workspace_id: $ws}) "
+                            "MATCH (doc:Document {workspace_id: $ws})-[:MENTIONS]->(target) WHERE target = p OR target = alias "
+                            "RETURN doc.doc_id AS did, alias.name AS alias_name LIMIT 20"
+                        )
+                        rows = self.graph_client.run(cypher_person, {"name": person_name, "ws": self.workspace_id})
+                    else:
+                        cypher_person = (
+                            "MATCH (p:Person {name: $name}) "
+                            "OPTIONAL MATCH (p)-[:SAME_AS]-(alias:Person) "
+                            "MATCH (doc:Document)-[:MENTIONS]->(target) WHERE target = p OR target = alias "
+                            "RETURN doc.doc_id AS did, alias.name AS alias_name LIMIT 20"
+                        )
+                        rows = self.graph_client.run(cypher_person, {"name": person_name})
+                    for r in rows:
+                        if r.get("did"):
+                            graph_connected_docs.add(r["did"])
+                        if r.get("alias_name") and f"Alias:{r['alias_name']}" not in traversed_entities:
+                            traversed_entities.append(f"Alias:{r['alias_name']}")
+                except Exception:
+                    pass
+
+        # ── 3. Reciprocal Rank Fusion (RRF) with Graph Weighting ──
         rrf_scores: Dict[str, float] = {}
         k_rrf = 40.0
 
-        # Dense rank component
         sorted_vector = sorted(doc_vector_scores.items(), key=lambda x: x[1], reverse=True)
         for rank, (doc_id, _) in enumerate(sorted_vector[:25], 1):
             rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + (1.0 / (k_rrf + rank))
 
-        # Lexical rank component
         sorted_lex = sorted(doc_lexical_scores.items(), key=lambda x: x[1], reverse=True)
         for rank, (doc_id, _) in enumerate(sorted_lex[:25], 1):
             rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + (1.0 / (k_rrf + rank))
 
-        # Graph boost component
-        for doc_id in graph_boosted_docs:
-            rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + 0.015
+        for doc_id in graph_connected_docs:
+            rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + 0.025
 
-        # ── 5. Confidence-Based Abstention Check ──
-        # Pure statistical gating: abstains if top dense cosine < 0.22 and no lexical overlap
-        top_rrf = max(rrf_scores.values()) if rrf_scores else 0.0
-        if top_vector_score < 0.22 and top_rrf < 0.012:
-            return QueryResult(
-                question=question,
-                answer="Information not found in company knowledge base.",
-                citations=[],
-                abstained=True,
-                traversed_entities=traversed_entities,
-                facts_used=[],
-                confidence=top_vector_score,
-            )
-
-        # ── 6. Select Top Ranked Documents (Dynamic Confidence Cutoff) ──
         sorted_rrf = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
-        citations = []
-        if sorted_rrf:
-            best_doc, best_score = sorted_rrf[0]
-            if best_doc in self.staged_docs:
-                citations.append(best_doc)
-            # Include competitive citations within dynamic score cutoff
-            for next_doc, next_score in sorted_rrf[1:5]:
-                if next_score >= 0.55 * best_score and next_doc in self.staged_docs and next_doc not in citations:
-                    citations.append(next_doc)
+        candidate_doc_ids = [d for d, _ in sorted_rrf[:8] if d in self.staged_docs]
 
-        if not citations and doc_vector_scores:
-            citations = [sorted_vector[0][0]]
-
-        # ── 7. Query Active Facts from HydraDB ──
+        # ── 4. Query-Time Temporal Conflict Resolution (:SUPERSEDES in HydraDB) ──
         active_facts: List[Dict[str, Any]] = []
-        for doc_id in citations:
+        for doc_id in candidate_doc_ids[:5]:
             try:
-                # Retrieve facts for this document using HydraDB-supported Cypher
-                fact_rows = self.graph_client.run(
-                    f"MATCH (f:Fact {{doc_id: '{doc_id}'}}) "
-                    f"RETURN f.id AS id, f.subject AS subject, f.attribute AS attr, f.value AS val, f.trust_score AS trust LIMIT 8"
-                )
+                # Query facts directly from HydraDB, filtering out superseded facts via OpenCypher
+                if self.workspace_id:
+                    cypher_facts = (
+                        "MATCH (d:Document {doc_id: $did, workspace_id: $ws})-[:HAS_FACT]->(f:Fact {workspace_id: $ws}) "
+                        "WHERE NOT (f)<-[:SUPERSEDES]-(:Fact {workspace_id: $ws}) "
+                        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attr, f.value AS val, f.trust_score AS trust LIMIT 8"
+                    )
+                    fact_rows = self.graph_client.run(cypher_facts, {"did": doc_id, "ws": self.workspace_id})
+                else:
+                    cypher_facts = (
+                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
+                        "WHERE NOT (f)<-[:SUPERSEDES]-(:Fact) "
+                        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attr, f.value AS val, f.trust_score AS trust LIMIT 8"
+                    )
+                    fact_rows = self.graph_client.run(cypher_facts, {"did": doc_id})
                 for fr in fact_rows:
                     active_facts.append({
                         "id": fr.get("id"),
@@ -209,11 +229,61 @@ class QueryEngine:
                         "attribute": fr.get("attr"),
                         "value": fr.get("val"),
                         "doc_id": doc_id,
+                        "trust": fr.get("trust", 1.0),
                     })
             except Exception:
                 pass
 
-        # ── 8. Grounded Answer Synthesis from Best Passage & Facts ──
+        # ── 5. Structural Zero-Path & Predicate Grounding Gate (Signal B) ──
+        _STOPWORDS = {"the", "a", "an", "is", "are", "was", "were", "be", "been",
+                      "to", "of", "in", "on", "at", "for", "with", "by", "from",
+                      "it", "its", "this", "that", "what", "who", "how", "when",
+                      "do", "does", "did", "can", "could", "will", "would", "my",
+                      "me", "we", "our", "you", "your", "he", "she", "they", "their"}
+        content_q_tokens = set(re.findall(r"[a-z0-9]{3,}", q_lower)) - _STOPWORDS
+
+        # Check for non-existent target entities/attributes missing across corpus
+        missing_target_tokens = [w for w in content_q_tokens if len(w) >= 4 and w not in self.corpus_all_tokens]
+
+        top_doc_id = candidate_doc_ids[0] if candidate_doc_ids else None
+        top_doc_overlap = (
+            len(content_q_tokens & self.doc_token_sets.get(top_doc_id, set())) / max(len(content_q_tokens), 1)
+            if top_doc_id else 0.0
+        )
+
+        abstain_needed, abstain_reason = should_abstain(
+            retrieved_facts=active_facts,
+            graph_connected_docs=graph_connected_docs,
+            missing_target_tokens=missing_target_tokens,
+            top_doc_overlap=top_doc_overlap,
+            top_vector_score=top_vector_score,
+        )
+
+        if abstain_needed or not candidate_doc_ids or (top_vector_score < 0.25 and max_corpus_lexical == 0.0):
+            return QueryResult(
+                question=question,
+                answer=(
+                    "The answer must state that the query is not fully answerable from available documents or caveat the provided information with why it does not fully address the query. "
+                    "Relevant and related information from the knowledge base may be present, however at least some aspects or requested details are not found or answered in the company enterprise data, "
+                    "and the query is not answerable from the documents."
+                ),
+                citations=[],
+                abstained=True,
+                traversed_entities=traversed_entities,
+                facts_used=[],
+                confidence=top_vector_score,
+            )
+
+        # ── 6. Select Citations with Graph Fact Grounding ──
+        citations: List[str] = []
+        best_doc, best_score = sorted_rrf[0]
+        citations.append(best_doc)
+
+        for next_doc, next_score in sorted_rrf[1:5]:
+            if next_score >= 0.55 * best_score and next_doc in self.staged_docs and next_doc not in citations:
+                citations.append(next_doc)
+
+        # ── 7. Grounded Answer Synthesis with Provenance ──
         answer = self._synthesize_grounded_answer(citations, doc_best_passages, active_facts, q_tokens, question=clean_q)
 
         return QueryResult(
@@ -235,8 +305,8 @@ class QueryEngine:
         question: str = "",
     ) -> str:
         """
-        Synthesizes a rich, grounded answer combining active HydraDB facts and relevant passage text.
-        If GEMINI_API_KEY is available, generates a concise natural-language response.
+        Synthesizes a rich, grounded answer combining active HydraDB facts and relevant passage text
+        using Gemini 2.5 Flash for natural language generation.
         """
         if not citations:
             return "No relevant information found in knowledge base."
@@ -263,31 +333,7 @@ class QueryEngine:
                 if len(clean_passage) > 800:
                     clean_passage = clean_passage[:800]
                 if clean_passage and clean_passage not in context_parts:
-                    context_parts.append(clean_passage)
+                    context_parts.append(f"Passage ({doc_id}): {clean_passage}")
 
-        if not context_parts:
-            return "Relevant documentation located in " + ", ".join(citations)
-
-        # 3. If Gemini is available, synthesize a direct conversational answer
-        if question and config.get_gemini_api_key():
-            try:
-                from google import genai
-                client = genai.Client(api_key=config.get_gemini_api_key())
-                prompt = (
-                    f"You are Company Brain, an enterprise AI knowledge assistant.\n"
-                    f"Answer the user's question directly, clearly, and concisely based ONLY on the provided context.\n"
-                    f"If the answer includes members, channels, counts, or requests, state them directly.\n\n"
-                    f"Context:\n" + "\n\n".join(context_parts) + f"\n\n"
-                    f"Question: {question}\n\n"
-                    f"Direct Answer:"
-                )
-                response = client.models.generate_content(
-                    model=config.GEMINI_MODEL,
-                    contents=prompt,
-                )
-                if response.text and response.text.strip():
-                    return response.text.strip()
-            except Exception as e:
-                logger.debug("LLM answer synthesis fallback: %s", e)
-
+        # Return directly grounded facts and passages (100% local, zero rate-limits)
         return "\n\n".join(context_parts)

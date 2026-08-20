@@ -4,13 +4,8 @@ graph/client.py — thin wrapper around the Neo4j Bolt driver connecting to Hydr
 Usage:
     from company_brain.graph.client import GraphClient
 
-    client = GraphClient()
-    result = client.run("RETURN 1 AS n")
-    client.close()
-
-    # Or as a context manager:
     with GraphClient() as client:
-        client.run("MATCH (n) RETURN count(n) AS total")
+        result = client.run_read("MATCH (d:Document) RETURN count(*)")
 """
 
 from __future__ import annotations
@@ -18,7 +13,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from neo4j import GraphDatabase, Driver, Session, Result
+from neo4j import GraphDatabase, Driver, Session, Result, READ_ACCESS, WRITE_ACCESS
 from neo4j.exceptions import ServiceUnavailable
 
 # Bypass Neo4j driver's strict product check for HydraDB (SlateDBGraph/0.1.0)
@@ -40,10 +35,7 @@ logger = logging.getLogger(__name__)
 class GraphClient:
     """
     Wraps a Neo4j Bolt driver targeting HydraDB.
-
-    - Uses `causal` consistency for normal reads/writes.
-    - Use run(..., strong=True) for queries that must see the very latest write
-      (e.g. right after a bulk load, before an eval run).
+    Explicitly separates READ_ACCESS (snapshot/causal fast path) and WRITE_ACCESS.
     """
 
     def __init__(
@@ -62,8 +54,6 @@ class GraphClient:
             connection_timeout=connection_timeout,
         )
 
-    # ── Lifecycle ─────────────────────────────────────────────────────────────
-
     def close(self) -> None:
         self._driver.close()
 
@@ -73,7 +63,49 @@ class GraphClient:
     def __exit__(self, *_: Any) -> None:
         self.close()
 
-    # ── Query helpers ─────────────────────────────────────────────────────────
+    def get_session(self, write: bool = False) -> Session:
+        """Returns a Neo4j Session with explicit access mode."""
+        mode = WRITE_ACCESS if write else READ_ACCESS
+        return self._driver.session(default_access_mode=mode)
+
+    def run_read(
+        self,
+        cypher: str,
+        parameters: dict[str, Any] | None = None,
+        fetch_size: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """
+        Execute read query using HydraDB's fast snapshot read path (READ_ACCESS).
+        """
+        with self._driver.session(
+            default_access_mode=READ_ACCESS,
+            fetch_size=fetch_size,
+        ) as session:
+            result: Result = session.run(cypher, parameters or {})
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
+
+    def run_write(
+        self,
+        cypher: str,
+        parameters: dict[str, Any] | None = None,
+        session: Session | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Execute write query using WRITE_ACCESS.
+        """
+        if session is not None:
+            result: Result = session.run(cypher, parameters or {})
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
+
+        with self._driver.session(default_access_mode=WRITE_ACCESS) as s:
+            result: Result = s.run(cypher, parameters or {})
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
 
     def run(
         self,
@@ -82,31 +114,17 @@ class GraphClient:
         strong: bool = False,
     ) -> list[dict[str, Any]]:
         """
-        Run a Cypher query and return all records as plain dicts.
-
-        Args:
-            cypher:     Cypher query string.
-            parameters: Optional parameter dict for parameterised queries.
-            strong:     If True, use strong consistency (slower but guaranteed
-                        to see the latest committed write).
+        Default run method — defaults to fast READ_ACCESS unless strong is specified.
         """
-        access_mode = "WRITE" if strong else None
+        mode = WRITE_ACCESS if strong else READ_ACCESS
         with self._driver.session(
+            default_access_mode=mode,
             fetch_size=1000,
-            **({"default_access_mode": access_mode} if access_mode else {}),
         ) as session:
             result: Result = session.run(cypher, parameters or {})
-            return [dict(record) for record in result]
-
-    def run_write(
-        self,
-        cypher: str,
-        parameters: dict[str, Any] | None = None,
-    ) -> list[dict[str, Any]]:
-        """Convenience wrapper for write queries using auto-commit RUN execution."""
-        with self._driver.session() as session:
-            result: Result = session.run(cypher, parameters or {})
-            return [dict(record) for record in result]
+            records = [dict(record) for record in result]
+            result.consume()
+            return records
 
     def run_batch(
         self,
@@ -115,32 +133,29 @@ class GraphClient:
         batch_size: int | None = None,
     ) -> int:
         """
-        Execute a batched UNWIND write.
-
-        The Cypher must use `UNWIND $rows AS row` and reference `row.*`.
-        Returns the total number of rows processed.
-
-        Example:
-            client.run_batch(
-                "UNWIND $rows AS row MERGE (d:Document {doc_id: row.doc_id}) SET d += row",
-                rows=[{"doc_id": "abc", "source": "slack", ...}, ...],
-            )
+        Execute a batched UNWIND write query.
         """
-        batch_size = batch_size or config.WRITE_BATCH_SIZE
+        batch_size = batch_size or getattr(config, "WRITE_BATCH_SIZE", 200)
         total = 0
-        for i in range(0, len(rows), batch_size):
-            chunk = rows[i : i + batch_size]
-            self.run_write(cypher, {"rows": chunk})
-            total += len(chunk)
-            logger.debug("Batch write: %d / %d rows", total, len(rows))
+        with self._driver.session(default_access_mode=WRITE_ACCESS) as s:
+            for i in range(0, len(rows), batch_size):
+                chunk = rows[i : i + batch_size]
+                res = s.run(cypher, {"rows": chunk})
+                res.consume()
+                total += len(chunk)
+                logger.debug("Batch write progress: %d / %d rows", total, len(rows))
         return total
 
-    # ── Health check ──────────────────────────────────────────────────────────
+    def sync(self) -> None:
+        """Forces reader synchronization against authoritative SlateDB writer epoch."""
+        try:
+            self.run("MATCH (d:Document) RETURN count(*)", strong=True)
+        except Exception as e:
+            logger.debug("HydraDB sync epoch ping: %s", e)
 
     def ping(self) -> bool:
-        """Return True if HydraDB is reachable."""
         try:
-            result = self.run("MATCH (n:Document) RETURN count(*)")
+            result = self.run_read("MATCH (n:Document) RETURN count(*)")
             return isinstance(result, list)
         except (ServiceUnavailable, Exception) as exc:
             logger.warning("HydraDB ping failed: %s", exc)

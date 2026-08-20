@@ -11,6 +11,7 @@ Displays:
 
 import sys
 import logging
+import argparse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
@@ -21,8 +22,17 @@ logging.basicConfig(level=logging.WARNING)
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Inspect HydraDB Graph Topology.")
+    parser.add_argument("--workspace", "-w", type=str, default=None, help="Filter topology to a specific live workspace/user ID")
+    args = parser.parse_args()
+
+    ws = args.workspace
+
     print("=" * 80)
-    print("  🌐 HYDRADB KNOWLEDGE GRAPH — FULL TOPOLOGY & RESOLUTION INSPECTOR")
+    if ws:
+        print(f"  🌐 HYDRADB KNOWLEDGE GRAPH — LIVE WORKSPACE TOPOLOGY: '{ws}'")
+    else:
+        print("  🌐 HYDRADB KNOWLEDGE GRAPH — FULL CORPUS TOPOLOGY & RESOLUTION INSPECTOR")
     print("=" * 80)
 
     with GraphClient() as client:
@@ -31,7 +41,10 @@ def main():
         node_labels = ["Document", "Person", "Org", "Project", "Ticket", "Fact"]
         for label in node_labels:
             try:
-                res = client.run(f"MATCH (n:{label}) RETURN count(*)")
+                if ws:
+                    res = client.run(f"MATCH (n:{label} {{workspace_id: $ws}}) RETURN count(*)", {"ws": ws})
+                else:
+                    res = client.run(f"MATCH (n:{label}) RETURN count(*)")
                 cnt = res[0].get("count(*)", 0) if res else 0
                 print(f"   • :{label:<12} {cnt:>6} nodes")
             except Exception as e:
@@ -39,25 +52,51 @@ def main():
 
         # ── 2. Edge Counts ──
         print("\n🔗 2. EDGE COUNTS BY TYPE:")
-        print(f"   • [:MENTIONS    ]   2786 edges (Document -> Person/Org/Ticket/Project)")
-        print(f"   • [:HAS_FACT    ]   4483 edges (Document -> Fact)")
-        print(f"   • [:SAME_AS     ]    239 edges (Entity Resolution - Aliases/Clusters)")
-        print(f"   • [:SUPERSEDES  ]     70 edges (Conflict Resolution - Temporal Overrides)")
+        if ws:
+            edge_queries = [
+                ("MENTIONS", "MATCH ()-[r:MENTIONS {workspace_id: $ws}]->() RETURN count(*)", {"ws": ws}),
+                ("HAS_FACT", "MATCH ()-[r:HAS_FACT {workspace_id: $ws}]->() RETURN count(*)", {"ws": ws}),
+                ("SAME_AS", "MATCH ()-[r:SAME_AS {workspace_id: $ws}]->() RETURN count(*)", {"ws": ws}),
+                ("SUPERSEDES", "MATCH ()-[r:SUPERSEDES {workspace_id: $ws}]->() RETURN count(*)", {"ws": ws}),
+            ]
+        else:
+            edge_queries = [
+                ("MENTIONS", "MATCH ()-[r:MENTIONS]->() RETURN count(*)", {}),
+                ("HAS_FACT", "MATCH ()-[r:HAS_FACT]->() RETURN count(*)", {}),
+                ("SAME_AS", "MATCH ()-[r:SAME_AS]->() RETURN count(*)", {}),
+                ("SUPERSEDES", "MATCH ()-[r:SUPERSEDES]->() RETURN count(*)", {}),
+            ]
+
+        for item in edge_queries:
+            etype = item[0]
+            q = item[1]
+            params = item[2]
+            try:
+                res = client.run(q, params) if params else client.run(q)
+                cnt = res[0].get("count(*)", 0) if res else 0
+                print(f"   • [:{etype:<13}] {cnt:>6} edges")
+            except Exception as e:
+                print(f"   • [:{etype:<13}] [error: {e}]")
 
         # ── 3. Inspect SAME_AS Entity Resolution Edges ──
         print("\n👥 3. SAMPLE 'SAME_AS' ENTITY RESOLUTION EDGES (Aliases & Clusters):")
         try:
-            persons = {p["id"]: p["name"] for p in client.run("MATCH (p:Person) RETURN p.id AS id, p.name AS name")}
-            same_as_rows = client.run("MATCH (a:Person)-[r:SAME_AS]->(b:Person) RETURN a.id AS a_id, b.id AS b_id, r.confidence AS conf, r.evidence AS evidence LIMIT 6")
+            if ws:
+                same_as_rows = client.run(
+                    "MATCH (a:Person {workspace_id: $ws})-[r:SAME_AS]->(b:Person) RETURN a.name AS a_name, b.name AS b_name, r.confidence AS conf, r.evidence AS evidence LIMIT 6",
+                    {"ws": ws}
+                )
+            else:
+                same_as_rows = client.run("MATCH (a:Person)-[r:SAME_AS]->(b:Person) RETURN a.name AS a_name, b.name AS b_name, r.confidence AS conf, r.evidence AS evidence LIMIT 6")
 
             if not same_as_rows:
                 print("   (No SAME_AS edges found)")
             else:
                 for idx, row in enumerate(same_as_rows, 1):
-                    a_name = persons.get(row.get("a_id"), f"ID:{row.get('a_id')}")
-                    b_name = persons.get(row.get("b_id"), f"ID:{row.get('b_id')}")
-                    conf = row.get("conf", 1.0)
-                    evidence = row.get("evidence", "")
+                    a_name = row.get("a_name") or row.get("a.name", "Unknown")
+                    b_name = row.get("b_name") or row.get("b.name", "Unknown")
+                    conf = row.get("conf") or row.get("r.confidence", 1.0)
+                    evidence = row.get("evidence") or row.get("r.evidence", "")
                     print(f"   [{idx:>2}] '{a_name}' ⟷ '{b_name}'")
                     print(f"        Confidence: {conf} | Evidence: {evidence}")
         except Exception as e:
@@ -66,31 +105,34 @@ def main():
         # ── 4. Inspect SUPERSEDES Conflict Resolution Edges ──
         print("\n⚡ 4. SAMPLE 'SUPERSEDES' TEMPORAL CONFLICT EDGES (Contradiction Overrides):")
         try:
-            facts = {f["id"]: f for f in client.run("MATCH (f:Fact) RETURN f.id AS id, f.subject AS sub, f.attribute AS attr, f.value AS val, f.doc_id AS doc_id")}
-            supersedes_rows = client.run("MATCH (w:Fact)-[r:SUPERSEDES]->(l:Fact) RETURN w.id AS w_id, l.id AS l_id, r.reason AS reason LIMIT 6")
+            if ws:
+                supersedes_rows = client.run("MATCH ()-[r:SUPERSEDES {workspace_id: $ws}]->() RETURN r.winner_id AS w_id, r.loser_id AS l_id, r.reason AS reason, r.timestamp AS ts LIMIT 6", {"ws": ws})
+            else:
+                supersedes_rows = client.run("MATCH ()-[r:SUPERSEDES]->() RETURN r.winner_id AS w_id, r.loser_id AS l_id, r.reason AS reason, r.timestamp AS ts LIMIT 6")
 
             if not supersedes_rows:
                 print("   (No SUPERSEDES edges found)")
             else:
                 for idx, row in enumerate(supersedes_rows, 1):
-                    w_fact = facts.get(row.get("w_id"), {})
-                    l_fact = facts.get(row.get("l_id"), {})
-                    sub = w_fact.get("sub") or l_fact.get("sub") or "Fact"
-                    attr = w_fact.get("attr") or l_fact.get("attr") or "value"
-                    w_val = w_fact.get("val", "N/A")
-                    l_val = l_fact.get("val", "N/A")
-                    reason = row.get("reason", "")
-                    print(f"   [{idx:>2}] Subject: '{sub}' | Attribute: '{attr}'")
-                    print(f"        🟢 Active / Winner:     '{w_val}' (Doc: {w_fact.get('doc_id')})")
-                    print(f"        🔴 Superseded / Old:    '{l_val}' (Doc: {l_fact.get('doc_id')})")
-                    print(f"        ℹ️  Reason: {reason}")
+                    w_id = row.get("w_id") or row.get("r.winner_id", "N/A")
+                    l_id = row.get("l_id") or row.get("r.loser_id", "N/A")
+                    reason = row.get("reason") or row.get("r.reason", "Temporal override")
+                    ts = row.get("ts") or row.get("r.timestamp", "latest")
+                    print(f"   [{idx:>2}] ℹ️  Reason:    {reason}")
+                    print(f"        🕒 Timestamp: {ts} (Winner Fact ID: {w_id} ➔ Loser Fact ID: {l_id})")
         except Exception as e:
             print(f"   [Error inspecting SUPERSEDES: {e}]")
 
         # ── 5. Key Connected Hubs ──
         print("\n🏢 5. KEY ENTERPRISE ORGS & PROJECTS IN GRAPH:")
         try:
-            orgs = client.run("MATCH (o:Org) RETURN o.id AS id, o.name AS name LIMIT 12")
+            if ws:
+                orgs = client.run("MATCH (o:Org {workspace_id: $ws}) RETURN o.id AS id, o.name AS name LIMIT 12", {"ws": ws})
+                tickets = client.run("MATCH (t:Ticket {workspace_id: $ws}) RETURN t.id AS id, t.name AS name LIMIT 10", {"ws": ws})
+            else:
+                orgs = client.run("MATCH (o:Org) RETURN o.id AS id, o.name AS name LIMIT 12")
+                tickets = client.run("MATCH (t:Ticket) RETURN t.id AS id, t.name AS name LIMIT 10")
+            
             org_names = [o.get("name") for o in orgs if o.get("name")]
             print(f"   Orgs / Clients:  {', '.join(org_names)}")
 

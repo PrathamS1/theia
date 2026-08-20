@@ -14,6 +14,8 @@ from fastapi import APIRouter, Query, HTTPException
 
 from company_brain.query.engine import QueryEngine
 
+from company_brain.config import LIVE_DATA_DIR
+
 router = APIRouter(prefix="/api", tags=["Query & Questions"])
 
 # In-memory question bank cache
@@ -41,6 +43,7 @@ def _get_questions() -> List[Dict[str, Any]]:
 class QueryRequest(BaseModel):
     question: str
     question_id: Optional[str] = None
+    workspace_id: Optional[str] = None
 
 
 @router.get("/questions")
@@ -86,7 +89,21 @@ def execute_query(req: QueryRequest):
     if not req.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-    engine = _get_query_engine()
+    if req.workspace_id:
+        user_live_dir = LIVE_DATA_DIR / req.workspace_id
+        vectors_dir = user_live_dir / "vectors"
+        staged_file = user_live_dir / "live_staged_docs.json"
+        if staged_file.exists():
+            engine = QueryEngine(
+                vector_dir=str(vectors_dir),
+                staged_docs_path=str(staged_file),
+                workspace_id=req.workspace_id,
+            )
+        else:
+            engine = _get_query_engine()
+    else:
+        engine = _get_query_engine()
+
     start_time = time.time()
 
     # 1. Execute real blind inference

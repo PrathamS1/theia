@@ -32,6 +32,17 @@ download() {
   fi
 }
 
+extract_zip() {
+  local zip_file="$1"
+  local dest_dir="$2"
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -q -o "$zip_file" -d "$dest_dir"
+  else
+    echo "[extract] Using Python zipfile module..."
+    python3 -c "import zipfile, sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$zip_file" "$dest_dir"
+  fi
+}
+
 download_questions() {
   echo "=== Downloading gold question sets ==="
   download "$BASE_URL/questions.jsonl"       "$QUESTIONS_DIR/questions.jsonl"
@@ -43,7 +54,7 @@ download_all() {
   echo "=== Downloading all_documents.zip (~1.2 GB) ==="
   download "$BASE_URL/all_documents.zip" "$DATA_DIR/all_documents.zip"
   echo "Extracting..."
-  unzip -q "$DATA_DIR/all_documents.zip" -d "$DATA_DIR/"
+  extract_zip "$DATA_DIR/all_documents.zip" "$DATA_DIR/"
   echo "Done."
 }
 
@@ -63,7 +74,7 @@ download_source_slices() {
       break
     fi
     download "$url" "$DATA_DIR/$fname"
-    unzip -q "$DATA_DIR/$fname" -d "$DATA_DIR/$source/"
+    extract_zip "$DATA_DIR/$fname" "$DATA_DIR/$source/"
     i=$((i + 1))
   done
 }
@@ -79,7 +90,7 @@ download_first_slices() {
     if [ "$http_code" = "200" ]; then
       mkdir -p "$DATA_DIR/$src"
       download "$url" "$DATA_DIR/$fname"
-      unzip -q -o "$DATA_DIR/$fname" -d "$DATA_DIR/$src/"
+      extract_zip "$DATA_DIR/$fname" "$DATA_DIR/$src/"
     else
       echo "[skip] No slice_0001 found for $src (http $http_code)"
     fi

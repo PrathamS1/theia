@@ -27,7 +27,7 @@ which write is last, they all agree.
 
 import logging
 import zlib
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from company_brain.graph.client import GraphClient
 from company_brain.graph.schema import trust_for
@@ -57,6 +57,7 @@ class GraphLoader:
         text_snippet: str,
         extraction: DocumentExtractionResult,
         title: str = "",
+        workspace_id: Optional[str] = None,
     ) -> Dict[str, int]:
         """
         Loads a document and its extracted entities and facts into HydraDB.
@@ -64,8 +65,15 @@ class GraphLoader:
         facts_failed}) rather than swallowing failures silently.
         """
         stats = {"entities_ok": 0, "entities_failed": 0, "facts_ok": 0, "facts_failed": 0}
-        doc_int_id = string_to_int_id(f"doc_{doc_id}")
+        effective_ws = workspace_id or self.workspace_id
+        
+        doc_key = f"doc_{doc_id}"
+        if effective_ws:
+            doc_key = f"{effective_ws}_{doc_key}"
+        doc_int_id = string_to_int_id(doc_key)
+        
         source_trust = trust_for(source)
+
         doc_props = {
             "doc_int_id": doc_int_id,
             "doc_id": doc_id,
@@ -73,14 +81,55 @@ class GraphLoader:
             "title": title,
             "created_at": created_at,
         }
-        if self.workspace_id:
-            doc_props["workspace_id"] = self.workspace_id
+        if effective_ws:
+            doc_props["workspace_id"] = effective_ws
 
-        ws_prop = ", workspace_id: $workspace_id" if self.workspace_id else ""
+        ws_prop = ", workspace_id: $workspace_id" if effective_ws else ""
+
+        # Always ensure Document node exists in HydraDB
+        create_doc_cypher = (
+            f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+            f"title: $title, created_at: $created_at{ws_prop}}})"
+        )
+        try:
+            self.client.run_write(create_doc_cypher, doc_props)
+        except Exception as e:
+            logger.debug("Failed to write Document node: %s", e)
+
+        # 0. If extraction yielded zero entities, synthesize a minimum structural
+        #    entity from the document's source/title so HydraDB doesn't reject the
+        #    standalone CREATE (it requires at least one edge pattern).
+        if not extraction.entities and not extraction.facts:
+            fallback_name = title.strip() if title.strip() else doc_id
+            # Use source as the entity type label hint
+            fallback_label = "Topic"
+            fallback_key = f"{fallback_label}_{fallback_name}"
+            if effective_ws:
+                fallback_key = f"{effective_ws}_{fallback_key}"
+            fallback_int_id = string_to_int_id(fallback_key)
+
+            fb_cypher = (
+                f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+                f"title: $title, created_at: $created_at{ws_prop}}})"
+                f"-[r:MENTIONS {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                f"(t:{fallback_label} {{id: $fb_int_id, name: $fb_name, source: $source{ws_prop}}})"
+            )
+            try:
+                self.client.run_write(fb_cypher, {
+                    **doc_props,
+                    "fb_int_id": fallback_int_id,
+                    "fb_name": fallback_name,
+                })
+                stats["entities_ok"] += 1
+            except Exception as e:
+                stats["entities_failed"] += 1
+                logger.debug("Failed to write fallback entity for %s: %s", doc_id, e)
 
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
         for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
+            if effective_ws:
+                entity_key = f"{effective_ws}_{entity_key}"
             entity_int_id = string_to_int_id(entity_key)
             label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
 
@@ -104,6 +153,8 @@ class GraphLoader:
         # 2. Load facts via one-hop (Document)-[:HAS_FACT]->(Fact) pattern.
         for idx, fact in enumerate(extraction.facts):
             fact_key = f"fact_{doc_id}_{idx}"
+            if effective_ws:
+                fact_key = f"{effective_ws}_{fact_key}"
             fact_int_id = string_to_int_id(fact_key)
 
             cypher = (
@@ -127,4 +178,81 @@ class GraphLoader:
                 stats["facts_failed"] += 1
                 logger.debug("Failed to write fact %s: %s", fact.subject, e)
 
+            # 3. Structural (Fact)-[:ABOUT]->(Entity | Topic) edge
+            if fact.subject:
+                subj_label = "Topic"
+                subj_name = fact.subject.strip()
+                for entity in extraction.entities:
+                    if entity.name and (entity.name.lower() in fact.subject.lower() or fact.subject.lower() in entity.name.lower()):
+                        subj_label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
+                        subj_name = entity.name
+                        break
+
+                target_key = f"{subj_label}_{subj_name}"
+                if effective_ws:
+                    target_key = f"{effective_ws}_{target_key}"
+                target_int_id = string_to_int_id(target_key)
+
+                about_cypher = (
+                    f"CREATE (f:Fact {{id: $fact_int_id, subject: $subject, attribute: $attribute, "
+                    f"value: $value, trust_score: $trust_score, doc_id: $doc_id{ws_prop}}})"
+                    f"-[:ABOUT {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                    f"(t:{subj_label} {{id: $target_int_id, name: $target_name{ws_prop}}})"
+                )
+                try:
+                    self.client.run_write(about_cypher, {
+                        **doc_props,
+                        "fact_int_id": fact_int_id,
+                        "subject": fact.subject,
+                        "attribute": fact.attribute,
+                        "value": fact.value,
+                        "trust_score": source_trust,
+                        "target_int_id": target_int_id,
+                        "target_name": subj_name,
+                    })
+                except Exception as e:
+                    logger.debug("Failed to write ABOUT edge: %s", e)
+
         return stats
+
+    def create_belongs_to(
+        self,
+        child_doc_id: str,
+        parent_doc_id: str,
+        workspace_id: Optional[str] = None,
+    ) -> bool:
+        """
+        Creates a structural (ChildDoc)-[:BELONGS_TO]->(ParentDoc) edge so that
+        commits, PRs, and issues are visibly linked to their parent repository
+        in the graph.
+        """
+        effective_ws = workspace_id or self.workspace_id
+        child_key = f"doc_{child_doc_id}"
+        parent_key = f"doc_{parent_doc_id}"
+        if effective_ws:
+            child_key = f"{effective_ws}_{child_key}"
+            parent_key = f"{effective_ws}_{parent_key}"
+        child_int_id = string_to_int_id(child_key)
+        parent_int_id = string_to_int_id(parent_key)
+
+        ws_prop = f", workspace_id: $workspace_id" if effective_ws else ""
+        params: Dict[str, Any] = {
+            "child_id": child_int_id,
+            "parent_id": parent_int_id,
+            "child_doc_id": child_doc_id,
+            "parent_doc_id": parent_doc_id,
+        }
+        if effective_ws:
+            params["workspace_id"] = effective_ws
+
+        cypher = (
+            f"CREATE (c:Document {{id: $child_id, doc_id: $child_doc_id{ws_prop}}})"
+            f"-[:BELONGS_TO {{doc_id: $child_doc_id{ws_prop}}}]->"
+            f"(p:Document {{id: $parent_id, doc_id: $parent_doc_id{ws_prop}}})"
+        )
+        try:
+            self.client.run_write(cypher, params)
+            return True
+        except Exception as e:
+            logger.debug("Failed to write BELONGS_TO edge %s -> %s: %s", child_doc_id, parent_doc_id, e)
+            return False

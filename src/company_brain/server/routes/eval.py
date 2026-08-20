@@ -128,6 +128,31 @@ def get_eval_status():
     }
 
 
+@router.get("/questions")
+def get_benchmark_questions(limit: Optional[int] = 50, category: Optional[str] = None):
+    """
+    Returns benchmark questions for UI explorer or picker.
+    """
+    q_path = Path("data/questions/questions.jsonl")
+    if not q_path.exists():
+        return {"questions": [], "total": 0}
+
+    with open(q_path, "r", encoding="utf-8") as f:
+        questions = [json.loads(line) for line in f if line.strip()]
+
+    if category and category != "all":
+        questions = [q for q in questions if q.get("question_type") == category]
+
+    total = len(questions)
+    if limit:
+        questions = questions[:limit]
+
+    return {
+        "questions": questions,
+        "total": total,
+    }
+
+
 @router.post("/run")
 def start_eval(req: EvalRunRequest, background_tasks: BackgroundTasks):
     """

@@ -18,30 +18,14 @@ def detect_and_tag_conflicts(client: GraphClient, workspace_id: Optional[str] = 
     Creates (f_newer)-[:SUPERSEDES]->(f_older) edges based on timestamp and source trust.
     Returns: count of SUPERSEDES edges created.
     """
-    if workspace_id:
-        cypher = (
-            f"MATCH (d:Document {{workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact {{workspace_id: '{workspace_id}'}}) "
-            "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
-            "f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, d.created_at AS created_at"
-        )
-    else:
-        cypher = (
-            "MATCH (d:Document)-[:HAS_FACT]->(f:Fact) "
-            "WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') "
-            "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
-            "f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, d.created_at AS created_at"
-        )
     try:
-        facts = client.run(cypher)
+        if workspace_id:
+            facts = client.run(f"MATCH (f:Fact {{workspace_id: '{workspace_id}'}}) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, f.created_at AS created_at")
+        else:
+            facts = client.run("MATCH (f:Fact) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id, f.created_at AS created_at")
     except Exception as exc:
         logger.warning("Could not fetch facts for conflict detection: %s", exc)
-        try:
-            if workspace_id:
-                facts = client.run(f"MATCH (f:Fact {{workspace_id: '{workspace_id}'}}) RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
-            else:
-                facts = client.run("MATCH (f:Fact) WHERE f.workspace_id IS NULL OR f.workspace_id = 'benchmark' RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id")
-        except Exception:
-            facts = []
+        facts = []
 
     if not facts:
         return 0

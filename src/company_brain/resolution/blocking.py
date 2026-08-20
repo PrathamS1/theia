@@ -29,7 +29,7 @@ def generate_candidate_pairs(
         if workspace_id:
             persons = client.run(f"MATCH (p:Person {{workspace_id: '{workspace_id}'}}) RETURN p.id AS id, p.name AS name, p.source AS source")
         else:
-            persons = client.run("MATCH (p:Person) WHERE p.workspace_id IS NULL OR p.workspace_id = 'benchmark' RETURN p.id AS id, p.name AS name, p.source AS source")
+            persons = client.run("MATCH (p:Person) RETURN p.id AS id, p.name AS name, p.source AS source")
     except Exception as e:
         logger.warning("Failed to fetch Person nodes: %s", e)
         persons = []
@@ -50,7 +50,7 @@ def generate_candidate_pairs(
             )
         else:
             doc_mentions = client.run(
-                "MATCH (d:Document)-[:MENTIONS]->(p:Person) WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') RETURN p.id AS person_id, d.doc_id AS doc_id"
+                "MATCH (d:Document)-[:MENTIONS]->(p:Person) RETURN p.id AS person_id, d.doc_id AS doc_id"
             )
         for row in doc_mentions:
             pid = row.get("person_id")
@@ -62,15 +62,18 @@ def generate_candidate_pairs(
 
     # Compare pairs
     n = len(persons)
+    cross_source_threshold = 70  # Lower threshold for cross-platform handle matching
     for i in range(n):
         p1 = persons[i]
         name1 = str(p1.get("name", "")).strip()
         id1 = p1.get("id")
+        source1 = str(p1.get("source", "")).lower()
 
         for j in range(i + 1, n):
             p2 = persons[j]
             name2 = str(p2.get("name", "")).strip()
             id2 = p2.get("id")
+            source2 = str(p2.get("source", "")).lower()
 
             if not name1 or not name2 or name1.lower() == name2.lower():
                 if name1 and name2 and name1.lower() == name2.lower():
@@ -79,15 +82,24 @@ def generate_candidate_pairs(
                     candidate_pairs.append((p1, p2, 100.0, shared_docs))
                 continue
 
-            # Normalized name comparison (handles "S. Ratnaparkhi" vs "Soham Ratnaparkhi" vs "@soham")
-            score = _compute_name_similarity(name1, name2)
+            # Determine if this is a cross-source pair (e.g., slack vs github)
+            is_cross_source = source1 != source2 and source1 and source2
+
+            if is_cross_source:
+                # Use handle-aware cross-source similarity with lower threshold
+                score = _cross_source_similarity(name1, name2)
+                effective_threshold = cross_source_threshold
+            else:
+                # Same-source: use standard name comparison
+                score = _compute_name_similarity(name1, name2)
+                effective_threshold = threshold
 
             # Check shared graph context
             shared_docs = list(co_occurrences.get(id1, set()).intersection(co_occurrences.get(id2, set())))
-            if shared_docs and score >= 70.0:
+            if shared_docs and score >= 60.0:
                 score = min(100.0, score + 20.0)  # Boost confidence if they co-occur in the same documents
 
-            if score >= threshold:
+            if score >= effective_threshold:
                 candidate_pairs.append((p1, p2, score, shared_docs))
 
     logger.info("Generated %d candidate entity pairs for resolution.", len(candidate_pairs))
@@ -107,3 +119,37 @@ def _compute_name_similarity(name1: str, name2: str) -> float:
     partial_score = fuzz.partial_ratio(n1, n2)
 
     return max(sort_score, (set_score * 0.7 + partial_score * 0.3))
+
+
+def _normalize_handle(name: str) -> str:
+    """
+    Strips platform-specific noise from handles/logins for cross-source matching.
+    '@pratham' -> 'pratham', 'PrathamS1' -> 'prathams', 'soham.r' -> 'soham r'
+    """
+    import re
+    n = name.lower().strip()
+    n = n.lstrip("@")
+    n = re.sub(r"[._-]", " ", n)
+    # Strip trailing digits (GitHub login suffixes like 'PrathamS1' -> 'prathams')
+    n = re.sub(r"\d+$", "", n)
+    return n.strip()
+
+
+def _cross_source_similarity(name1: str, name2: str) -> float:
+    """
+    Computes similarity between handles from different platforms.
+    Uses normalized handles for a fairer comparison.
+    """
+    h1 = _normalize_handle(name1)
+    h2 = _normalize_handle(name2)
+
+    sort_score = fuzz.token_sort_ratio(h1, h2)
+    set_score = fuzz.token_set_ratio(h1, h2)
+    partial_score = fuzz.partial_ratio(h1, h2)
+
+    # Exact prefix match (e.g., 'pratham' starts with 'pratham' in 'prathams')
+    if h1.startswith(h2) or h2.startswith(h1):
+        return max(90.0, sort_score)
+
+    return max(sort_score, (set_score * 0.6 + partial_score * 0.4))
+

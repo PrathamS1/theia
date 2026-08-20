@@ -6,12 +6,13 @@ import './NodeInspector.css';
 
 interface Props {
   nodeId: string;
+  workspaceId?: string | null;
   onClose: () => void;
   onExpand: (nodeId: string, label: NodeLabel) => Promise<void>;
 }
 
-export default function NodeInspector({ nodeId, onClose, onExpand }: Props) {
-  const { data, loading, error } = useAsync((s) => getNodeDetail(nodeId, s), [nodeId]);
+export default function NodeInspector({ nodeId, workspaceId, onClose, onExpand }: Props) {
+  const { data, loading, error } = useAsync((s) => getNodeDetail(nodeId, workspaceId, s), [nodeId, workspaceId]);
   const [expanding, setExpanding] = useState(false);
 
   async function handleExpand() {

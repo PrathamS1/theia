@@ -148,19 +148,4 @@ def extract_entities_and_facts(
             confidence=0.90,
         ))
 
-    # If Gemini API is available and configured, optionally enrich with LLM facts
-    if config.get_gemini_api_key():
-        try:
-            from company_brain.extraction.extractor import extract_from_document
-            llm_res = extract_from_document(doc_text=doc_text, doc_id=doc_id, source=source)
-            if llm_res.entities:
-                for e in llm_res.entities:
-                    if e.name not in seen_entities:
-                        seen_entities.add(e.name)
-                        entities.append(e)
-            if llm_res.facts:
-                facts.extend(llm_res.facts)
-        except Exception as e:
-            logger.debug("LLM enrichment skipped for %s: %s", doc_id, e)
-
     return DocumentExtractionResult(entities=entities, facts=facts)

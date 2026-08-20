@@ -27,7 +27,7 @@ from company_brain.graph.client import GraphClient
 logger = logging.getLogger(__name__)
 
 # label -> id property prefix used in Cytoscape node ids (doc_<doc_id>, person_<id>, ...)
-_ENTITY_LABELS = ("Person", "Org", "Ticket", "Project")
+_ENTITY_LABELS = ("Person", "Org", "Ticket", "Project", "Topic", "Deal")
 
 # Cytoscape node-id prefix per label. Document uses "doc_" (not "document_")
 # to match the frontend's existing citation-highlight convention, which
@@ -39,6 +39,9 @@ _ID_PREFIX = {
     "Ticket": "ticket",
     "Project": "project",
     "Fact": "fact",
+    "Topic": "topic",
+    "Deal": "deal",
+    "Entity": "entity",
 }
 
 
@@ -95,16 +98,7 @@ def _edge(edge_id: str, source: str, target: str, etype: str, **extra: Any) -> D
     return {"data": d}
 
 
-def _open_client_with_retry(client_factory, tries: int = 8, delay: float = 5.0):
-    """This dev environment's HydraDB graph-node process restarts roughly
-    every 1-2 minutes (a manifest/GC issue on its local-filesystem storage
-    backend, not something this app controls), with down-windows up to
-    ~50s. A single failed connection attempt would otherwise 500 the whole
-    dashboard for a condition that reliably clears within a minute, so
-    retry with a budget wide enough to span one down-window. This only
-    costs latency on the *first* successful fetch of a given cache key —
-    fetch_seed/fetch_same_as/fetch_supersedes all cache their result
-    indefinitely once they succeed once."""
+def _open_client_with_retry(client_factory, tries: int = 2, delay: float = 0.5):
     last_exc: Optional[Exception] = None
     for attempt in range(tries):
         try:
@@ -119,12 +113,15 @@ def _open_client_with_retry(client_factory, tries: int = 8, delay: float = 5.0):
 
 
 @contextmanager
-def _client_ctx(client_factory, tries: int = 3, delay: float = 2.0):
+def _client_ctx(client_factory, tries: int = 2, delay: float = 0.5):
     client = _open_client_with_retry(client_factory, tries, delay)
     try:
         yield client
     finally:
-        client.close()
+        try:
+            client.close()
+        except Exception:
+            pass
 
 
 class TopologyCache:
@@ -141,11 +138,11 @@ class TopologyCache:
         # which re-acquires it -- a plain Lock deadlocks on that same-thread
         # re-entry.
         self._lock = threading.RLock()
-        self._seed_cache: Dict[int, Dict[str, Any]] = {}
+        self._seed_cache: Dict[str, Dict[str, Any]] = {}
         self._expand_cache: Dict[Tuple[str, str], Dict[str, Any]] = {}
-        self._same_as: Optional[List[Dict[str, Any]]] = None
-        self._supersedes: Optional[List[Dict[str, Any]]] = None
-        self._loser_ids: Optional[set] = None
+        self._same_as: Dict[str, List[Dict[str, Any]]] = {}
+        self._supersedes: Dict[str, List[Dict[str, Any]]] = {}
+        self._loser_ids: Dict[str, set] = {}
 
     # ---- warm-up -----------------------------------------------------------
 
@@ -164,68 +161,135 @@ class TopologyCache:
 
         threading.Thread(target=_run, name="topology-warm", daemon=True).start()
 
+    def clear_cache(self, workspace_id: Optional[str] = None) -> None:
+        with self._lock:
+            if workspace_id:
+                keys_to_del = [k for k in self._seed_cache if str(k).startswith(f"{workspace_id}_") or str(k).startswith(f"{workspace_id}")]
+                for k in keys_to_del:
+                    self._seed_cache.pop(k, None)
+                self._same_as.pop(workspace_id, None)
+                self._supersedes.pop(workspace_id, None)
+                self._loser_ids.pop(workspace_id, None)
+            else:
+                self._seed_cache.clear()
+                self._same_as.clear()
+                self._supersedes.clear()
+                self._loser_ids.clear()
+            self._expand_cache.clear()
+
     # ---- seed ----------------------------------------------------------------
 
-    def fetch_seed(self, doc_limit: int = 30, refresh: bool = False) -> Dict[str, Any]:
-        if not refresh and doc_limit in self._seed_cache:
-            return self._seed_cache[doc_limit]
+    def fetch_seed(self, doc_limit: int = 30, refresh: bool = False, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+        cache_key = f"{workspace_id or 'default'}_{doc_limit}"
+        if not refresh and cache_key in self._seed_cache:
+            return self._seed_cache[cache_key]
 
         with self._lock:
-            if not refresh and doc_limit in self._seed_cache:
-                return self._seed_cache[doc_limit]
+            if not refresh and cache_key in self._seed_cache:
+                return self._seed_cache[cache_key]
 
             with _client_ctx(self._client_factory) as client:
-                doc_rows = client.run(
-                    "MATCH (d:Document) RETURN d.doc_id, d.title, d.source, d.created_at "
-                    "ORDER BY d.doc_id LIMIT $lim",
-                    {"lim": doc_limit},
-                )
+                if workspace_id:
+                    doc_rows = client.run(
+                        "MATCH (d:Document {workspace_id: $ws}) RETURN d.doc_id, d.title, d.source, d.created_at "
+                        "ORDER BY d.doc_id LIMIT $lim",
+                        {"ws": workspace_id, "lim": doc_limit},
+                    )
+                else:
+                    doc_rows = client.run(
+                        "MATCH (d:Document) RETURN d.doc_id, d.title, d.source, d.created_at "
+                        "ORDER BY d.doc_id LIMIT $lim",
+                        {"lim": doc_limit},
+                    )
 
                 nodes: List[Dict[str, Any]] = [_doc_node(r) for r in doc_rows]
                 node_ids = {n["data"]["id"] for n in nodes}
                 edges: List[Dict[str, Any]] = []
                 eidx = 0
-                losers = self._get_loser_ids()
+                losers = self._get_loser_ids(workspace_id=workspace_id)
 
-                for r in doc_rows:
-                    did = r["d.doc_id"]
+                doc_id_set = [r.get("d.doc_id") or r.get("doc_id") for r in doc_rows if (r.get("d.doc_id") or r.get("doc_id"))]
+
+                # Rich seed expansion to populate 120-150 nodes
+                for did in doc_id_set[:40]:
                     doc_nid = _node_id("Document", did)
-
-                    for label in _ENTITY_LABELS:
-                        rows = client.run(
-                            f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{label}) "
-                            f"RETURN e.id, e.name LIMIT 15",
-                            {"did": did},
-                        )
+                    
+                    # 1. Expand Persons
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Person) RETURN e.id, e.name LIMIT 6"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:Person) RETURN e.id, e.name LIMIT 6"
+                        rows = client.run(query)
                         for row in rows:
-                            nid = _node_id(label, row["e.id"])
+                            nid = _node_id("Person", row["e.id"])
                             if nid not in node_ids:
                                 node_ids.add(nid)
-                                nodes.append(_entity_node(label, "e.name", "e.id", row))
+                                nodes.append(_entity_node("Person", "e.name", "e.id", row))
                             eidx += 1
                             edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
+                    except Exception:
+                        pass
 
-                    fact_rows = client.run(
-                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
-                        "RETURN f.id, f.subject, f.attribute, f.value LIMIT 8",
-                        {"did": did},
-                    )
-                    for row in fact_rows:
-                        nid = _node_id("Fact", row["f.id"])
-                        if nid not in node_ids:
-                            node_ids.add(nid)
-                            nodes.append(_fact_node(row, is_active=row["f.id"] not in losers))
-                        eidx += 1
-                        edges.append(_edge(f"e{eidx}", doc_nid, nid, "HAS_FACT"))
+                    # 2. Expand Orgs
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Org) RETURN e.id, e.name LIMIT 3"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:Org) RETURN e.id, e.name LIMIT 3"
+                        rows = client.run(query)
+                        for row in rows:
+                            nid = _node_id("Org", row["e.id"])
+                            if nid not in node_ids:
+                                node_ids.add(nid)
+                                nodes.append(_entity_node("Org", "e.name", "e.id", row))
+                            eidx += 1
+                            edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
+                    except Exception:
+                        pass
+
+                    # 3. Expand Topics
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Topic) RETURN e.id, e.name LIMIT 3"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:Topic) RETURN e.id, e.name LIMIT 3"
+                        rows = client.run(query)
+                        for row in rows:
+                            nid = _node_id("Topic", row["e.id"])
+                            if nid not in node_ids:
+                                node_ids.add(nid)
+                                nodes.append(_entity_node("Topic", "e.name", "e.id", row))
+                            eidx += 1
+                            edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
+                    except Exception:
+                        pass
+
+                    # 4. Expand Facts
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 4"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 4"
+                        fact_rows = client.run(query)
+                        for row in fact_rows:
+                            nid = _node_id("Fact", row["f.id"])
+                            if nid not in node_ids:
+                                node_ids.add(nid)
+                                nodes.append(_fact_node(row, is_active=row["f.id"] not in losers))
+                            eidx += 1
+                            edges.append(_edge(f"e{eidx}", doc_nid, nid, "HAS_FACT"))
+                    except Exception:
+                        pass
 
                 result = {"nodes": nodes, "edges": edges}
-                self._seed_cache[doc_limit] = result
+                self._seed_cache[cache_key] = result
                 return result
 
     # ---- expand one node -----------------------------------------------------
 
-    def expand_node(self, label: str, key: str, refresh: bool = False) -> Dict[str, Any]:
-        cache_key = (label, key)
+    def expand_node(self, label: str, key: str, refresh: bool = False, workspace_id: Optional[str] = None) -> Dict[str, Any]:
+        cache_key = (workspace_id or 'default', label, key)
         if not refresh and cache_key in self._expand_cache:
             return self._expand_cache[cache_key]
 
@@ -241,28 +305,66 @@ class TopologyCache:
                 if label == "Document":
                     origin = _node_id("Document", key)
                     for ent_label in _ENTITY_LABELS:
-                        rows = client.run(
-                            f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{ent_label}) "
-                            f"RETURN e.id, e.name LIMIT 25",
-                            {"did": key},
-                        )
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: $did, workspace_id: $ws}})-[:MENTIONS]->(e:{ent_label} {{workspace_id: $ws}}) RETURN e.id, e.name LIMIT 25"
+                            params = {"did": key, "ws": workspace_id}
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{ent_label}) RETURN e.id, e.name LIMIT 25"
+                            params = {"did": key}
+                        rows = client.run(query, params)
                         for row in rows:
                             nid = _node_id(ent_label, row["e.id"])
                             nodes.append(_entity_node(ent_label, "e.name", "e.id", row))
                             eidx += 1
                             edges.append(_edge(f"x{eidx}", origin, nid, "MENTIONS"))
 
-                    fact_rows = client.run(
-                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
-                        "RETURN f.id, f.subject, f.attribute, f.value LIMIT 15",
-                        {"did": key},
-                    )
-                    fact_losers = self._get_loser_ids()
+                    if workspace_id:
+                        query = "MATCH (d:Document {doc_id: $did, workspace_id: $ws})-[:HAS_FACT]->(f:Fact {workspace_id: $ws}) RETURN f.id, f.subject, f.attribute, f.value LIMIT 15"
+                        params = {"did": key, "ws": workspace_id}
+                    else:
+                        query = "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 15"
+                        params = {"did": key}
+                    fact_rows = client.run(query, params)
+                    fact_losers = self._get_loser_ids(workspace_id=workspace_id)
                     for row in fact_rows:
                         nid = _node_id("Fact", row["f.id"])
                         nodes.append(_fact_node(row, is_active=row["f.id"] not in fact_losers))
                         eidx += 1
                         edges.append(_edge(f"x{eidx}", origin, nid, "HAS_FACT"))
+
+                    # BELONGS_TO: find parent doc (this doc belongs to a repo)
+                    try:
+                        if workspace_id:
+                            bt_query = "MATCH (c:Document {doc_id: $did, workspace_id: $ws})-[:BELONGS_TO]->(p:Document {workspace_id: $ws}) RETURN p.doc_id, p.title, p.source, p.created_at LIMIT 5"
+                            bt_params = {"did": key, "ws": workspace_id}
+                        else:
+                            bt_query = "MATCH (c:Document {doc_id: $did})-[:BELONGS_TO]->(p:Document) RETURN p.doc_id, p.title, p.source, p.created_at LIMIT 5"
+                            bt_params = {"did": key}
+                        parent_rows = client.run(bt_query, bt_params)
+                        for row in parent_rows:
+                            nid = _node_id("Document", row["p.doc_id"])
+                            nodes.append({"data": {"id": nid, "label": "Document", "name": row.get("p.title") or row["p.doc_id"], "source": row.get("p.source", "")}})
+                            eidx += 1
+                            edges.append(_edge(f"x{eidx}", origin, nid, "BELONGS_TO"))
+                    except Exception:
+                        pass
+
+                    # BELONGS_TO: find child docs (commits/PRs/issues that belong to this repo)
+                    try:
+                        if workspace_id:
+                            bt_query = "MATCH (c:Document {workspace_id: $ws})-[:BELONGS_TO]->(p:Document {doc_id: $did, workspace_id: $ws}) RETURN c.doc_id, c.title, c.source, c.created_at LIMIT 25"
+                            bt_params = {"did": key, "ws": workspace_id}
+                        else:
+                            bt_query = "MATCH (c:Document)-[:BELONGS_TO]->(p:Document {doc_id: $did}) RETURN c.doc_id, c.title, c.source, c.created_at LIMIT 25"
+                            bt_params = {"did": key}
+                        child_rows = client.run(bt_query, bt_params)
+                        for row in child_rows:
+                            nid = _node_id("Document", row["c.doc_id"])
+                            nodes.append({"data": {"id": nid, "label": "Document", "name": row.get("c.title") or row["c.doc_id"], "source": row.get("c.source", "")}})
+                            eidx += 1
+                            edges.append(_edge(f"x{eidx}", nid, origin, "BELONGS_TO"))
+                    except Exception:
+                        pass
 
                 elif label in _ENTITY_LABELS:
                     origin = _node_id(label, key)
@@ -337,17 +439,34 @@ class TopologyCache:
 
     # ---- full edge-set pulls (small, safe to cache whole) ---------------------
 
-    def fetch_same_as(self, refresh: bool = False) -> List[Dict[str, Any]]:
-        if not refresh and self._same_as is not None:
-            return self._same_as
+    def fetch_same_as(self, refresh: bool = False, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        # For simplicity in caching, we don't cache workspace-specific same_as yet or use a dict
+        # Given it's requested per workspace, we can fetch live or cache per workspace
+        cache_key = workspace_id or 'default'
+        if self._same_as is None:
+            self._same_as = {}
+        if not refresh and cache_key in self._same_as:
+            return self._same_as[cache_key]
         with self._lock:
-            if not refresh and self._same_as is not None:
-                return self._same_as
+            if not refresh and cache_key in self._same_as:
+                return self._same_as[cache_key]
             with _client_ctx(self._client_factory) as client:
-                rows = client.run(
-                    "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
-                    "RETURN a.id, a.name, b.id, b.name, r.confidence"
-                )
+                try:
+                    if workspace_id:
+                        rows = client.run(
+                            "MATCH (a:Person {workspace_id: $ws})-[r:SAME_AS]->(b:Person {workspace_id: $ws}) "
+                            "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300",
+                            {"ws": workspace_id}
+                        )
+                    else:
+                        rows = client.run(
+                            "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
+                            "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300"
+                        )
+                except Exception as exc:
+                    logger.debug("fetch_same_as skipped: %s", exc)
+                    rows = []
+
                 edges = []
                 for i, row in enumerate(rows):
                     edges.append(_edge(
@@ -357,20 +476,37 @@ class TopologyCache:
                         "SAME_AS",
                         confidence=row.get("r.confidence", 1.0),
                     ))
-                self._same_as = edges
+                self._same_as[cache_key] = edges
                 return edges
 
-    def fetch_supersedes(self, refresh: bool = False) -> List[Dict[str, Any]]:
-        if not refresh and self._supersedes is not None:
-            return self._supersedes
+    def fetch_supersedes(self, refresh: bool = False, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        cache_key = workspace_id or 'default'
+        if self._supersedes is None:
+            self._supersedes = {}
+            self._loser_ids = {}
+            
+        if not refresh and cache_key in self._supersedes:
+            return self._supersedes[cache_key]
         with self._lock:
-            if not refresh and self._supersedes is not None:
-                return self._supersedes
+            if not refresh and cache_key in self._supersedes:
+                return self._supersedes[cache_key]
             with _client_ctx(self._client_factory) as client:
-                rows = client.run(
-                    "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
-                    "RETURN a.id, a.subject, a.value, b.id, b.value"
-                )
+                try:
+                    if workspace_id:
+                        rows = client.run(
+                            "MATCH (a:Fact {workspace_id: $ws})-[:SUPERSEDES]->(b:Fact {workspace_id: $ws}) "
+                            "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150",
+                            {"ws": workspace_id}
+                        )
+                    else:
+                        rows = client.run(
+                            "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
+                            "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150"
+                        )
+                except Exception as exc:
+                    logger.debug("fetch_supersedes skipped: %s", exc)
+                    rows = []
+
                 edges = []
                 losers = set()
                 for i, row in enumerate(rows):
@@ -383,16 +519,19 @@ class TopologyCache:
                         reason=reason,
                     ))
                     losers.add(row["b.id"])
-                self._supersedes = edges
-                self._loser_ids = losers
+                self._supersedes[cache_key] = edges
+                self._loser_ids[cache_key] = losers
                 return edges
 
-    def _get_loser_ids(self) -> set:
-        """Fact ids on the losing side of a SUPERSEDES edge (piggybacks on the
-        already-cached fetch_supersedes() result -- no extra HydraDB round trip)."""
-        if self._loser_ids is None:
-            self.fetch_supersedes()
-        return self._loser_ids or set()
+    def _get_loser_ids(self, workspace_id: Optional[str] = None) -> set:
+        """Fact ids on the losing side of a SUPERSEDES edge."""
+        cache_key = workspace_id or 'default'
+        if self._loser_ids is None or cache_key not in self._loser_ids:
+            try:
+                self.fetch_supersedes(workspace_id=workspace_id)
+            except Exception:
+                return set()
+        return self._loser_ids.get(cache_key, set()) if self._loser_ids else set()
 
 
 # Module-level singleton -- the graph is process-wide and read-only from this

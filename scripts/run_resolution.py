@@ -5,10 +5,11 @@ scripts/run_resolution.py — Entry point for Entity Resolution & Conflict Taggi
 Runs candidate pair blocking, SAME_AS edge creation, and SUPERSEDES conflict edge tagging in HydraDB.
 
 Usage:
-    python3 scripts/run_resolution.py
+    python3 scripts/run_resolution.py [--heuristic]
 """
 
 import sys
+import argparse
 import logging
 from pathlib import Path
 
@@ -23,6 +24,10 @@ logger = logging.getLogger("run_resolution")
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Run Entity & Conflict Resolution")
+    parser.add_argument("--workspace", "-w", type=str, default=None, help="Scope resolution to a specific live workspace user_id")
+    args = parser.parse_args()
+
     logger.info("Starting Entity Resolution & Conflict Layer processing...")
 
     with GraphClient() as client:
@@ -32,11 +37,11 @@ def main():
 
         # Step 1: Entity Resolution -> SAME_AS edges
         logger.info("Step 1: Entity Resolution...")
-        same_as_count = resolve_entities(client)
+        same_as_count = resolve_entities(client, workspace_id=args.workspace)
 
         # Step 2: Conflict Layer -> SUPERSEDES edges
         logger.info("Step 2: Conflict Detection & Tagging...")
-        conflict_count = detect_and_tag_conflicts(client)
+        conflict_count = detect_and_tag_conflicts(client, workspace_id=args.workspace)
 
         logger.info("Resolution completed successfully!")
         logger.info("  SAME_AS edges created:   %d", same_as_count)

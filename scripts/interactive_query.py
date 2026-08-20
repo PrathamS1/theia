@@ -16,8 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from company_brain.graph.client import GraphClient
-from company_brain.indexing.vector_store import VectorStore
+from company_brain.query.engine import QueryEngine
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -27,7 +26,8 @@ PRESET_QUESTIONS = [
     ("qst_0005 (Multi-Hop SLA)", "What failover sequence and recovery targets did MedThink specify for handling an EU region outage, including any limits on how long traffic can shift to the US?"),
     ("qst_0016 (Policy)", "What is the company policy for how long contractor access should last by default before it expires, according to the access and permissions playbook?"),
     ("qst_0036 (Temporal Conflict)", "On Streamly AI's dedicated pool dp-132-usw, what % of interactive burst credits should be reserved exclusively for priority=high routes?"),
-    ("qst_0026 (Abstention)", "For the hot-route capacity protection rollout in us-east, which specific enterprise accounts were on the initial allowlist?"),
+    ("qst_0481 (Abstention / Not in Data)", "For the hot-route capacity protection rollout in us-east, which specific enterprise accounts were on the initial allowlist, and what were the exact per-route-group budget values (RPS, estimated TPS, and concurrency) configured for each of those accounts?"),
+    ("qst_0483 (Abstention / Missing Blockchain)", "For the admin activity chronicle's daily Merkle-root anchoring, which public blockchain network do we anchor to and what smart contract address is used, and how should an auditor verify the anchor end-to-end?"),
 ]
 
 
@@ -36,28 +36,11 @@ def main():
     print("  🧠 COMPANY BRAIN — INTERACTIVE HYDRADB & VECTOR QUERY EXPLORER")
     print("=" * 70)
 
-    # 1. Load Vector Store
-    vstore = VectorStore()
-    if not vstore.load():
-        print("[ERROR] Vector index not found. Run python3 scripts/run_ingest.py first.")
-        return
-
-    # 2. Connect to HydraDB
     try:
-        client = GraphClient()
-        if not client.ping():
-            print("[ERROR] HydraDB is not reachable. Ensure bash scripts/start_hydradb.sh is running.")
-            return
+        engine = QueryEngine()
     except Exception as e:
-        print(f"[ERROR] Could not connect to HydraDB: {e}")
+        print(f"[ERROR] Failed to initialize QueryEngine: {e}")
         return
-
-    # Load staged doc text cache for deep inspection
-    staged_docs_path = Path("data/staged_gold_docs.json")
-    staged_docs = {}
-    if staged_docs_path.exists():
-        with open(staged_docs_path, "r", encoding="utf-8") as f:
-            staged_docs = json.load(f)
 
     while True:
         print("\nPreset Questions:")
@@ -85,55 +68,41 @@ def main():
         print(f"❓ Question: {query}")
         print("-" * 70)
 
+        # ── Execute Hybrid QueryEngine ──
+        res = engine.query(query)
+
         # ── 1. Vector Anchor Search ──
-        hits = vstore.search_similar(query, top_k=3)
+        hits = engine.vector_store.search_similar_chunks(query, top_k=3)
         print("\n🔍 1. Vector Anchor Retrieval (all-MiniLM-L6-v2):")
-        top_doc_id = None
-        top_score = 0.0
-        for rank, (doc_id, score, meta) in enumerate(hits, 1):
-            source = meta.get("source", "unknown").upper()
-            title = meta.get("title", doc_id)
+        for rank, (doc_id, score, text, meta) in enumerate(hits, 1):
+            source = meta.get("source", "unknown").upper() if meta else "DOC"
+            title = meta.get("title", doc_id) if meta else doc_id
             print(f"   #{rank} [{score:.4f}] [{source}] {doc_id} — {title}")
-            if rank == 1:
-                top_doc_id = doc_id
-                top_score = score
 
         # ── 2. HydraDB Graph Inspection ──
         print("\n🕸️  2. HydraDB Graph Traversal & Ontology:")
-        if top_doc_id:
-            # Query Document node & related facts from HydraDB
-            facts = client.run(f"MATCH (f:Fact {{doc_id: '{top_doc_id}'}}) RETURN f.subject, f.attribute, f.value, f.trust_score LIMIT 5")
-            entities = client.run(f"MATCH (d:Document {{doc_id: '{top_doc_id}'}})-[:MENTIONS]->(e) RETURN e.name, e.source LIMIT 5")
-            
-            if entities:
-                ent_names = [e.get("e.name") for e in entities if e.get("e.name")]
-                print(f"   Entities Connected: {', '.join(ent_names)}")
-            
-            if facts:
-                print(f"   Extracted Facts ({len(facts)}):")
-                for f in facts:
-                    print(f"     • {f.get('f.subject')}: {f.get('f.attribute')} = '{f.get('f.value')}' (trust: {f.get('f.trust_score')})")
+        if res.traversed_entities:
+            print(f"   Entities Traversed: {', '.join(res.traversed_entities)}")
+        if res.facts_used:
+            print(f"   Active Graph Facts Used ({len(res.facts_used)}):")
+            for f in res.facts_used[:5]:
+                print(f"     • {f.get('subject')}: {f.get('attribute')} = '{f.get('value')}'")
+        else:
+            print("   Active Graph Facts Used: (none / ungrounded)")
 
         # ── 3. Decision & Answer Synthesis ──
         print("\n💡 3. Query Engine Output:")
-        if top_score < 0.25:
-            print("   ⚠️  Graph Abstention Triggered: Zero connected path in available data.")
-            print("   Answer: \"The answer is not available in the company enterprise records.\"")
+        if res.abstained:
+            print("   ⚠️  Fact-Level Abstention Triggered: Target information is NOT in company knowledge base.")
+            print(f"   Citations: {res.citations} (empty as required)")
+            print(f"   Answer: \"{res.answer}\"")
         else:
-            doc_data = staged_docs.get(top_doc_id, {})
-            text = doc_data.get("text", "")
-            title = doc_data.get("title", "")
-            source = doc_data.get("source", "")
-            created_at = doc_data.get("created_at", "")
-
-            # Show text snippet
-            first_lines = "\n".join([line for line in text.splitlines() if line.strip()][:5])
-            print(f"   Citations: [{source.upper()}] {top_doc_id} (Date: {created_at})")
-            print(f"   Relevant Knowledge Snippet:\n   \"\"\"\n   {first_lines}\n   \"\"\"")
+            print(f"   Citations: {res.citations}")
+            print(f"   Answer:\n   \"\"\"\n   {res.answer}\n   \"\"\"")
 
         print("=" * 70)
 
-    client.close()
+    engine.close()
     print("Goodbye!")
 
 

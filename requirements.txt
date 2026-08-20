@@ -5,6 +5,7 @@ pandas==2.2.3
 rapidfuzz==3.12.2
 python-dotenv==1.0.1
 streamlit==1.45.1
+streamlit-agraph==0.0.45
 pytest==8.3.5
 tqdm==4.67.1
 sentence-transformers>=3.0.0
