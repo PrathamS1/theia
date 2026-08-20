@@ -16,7 +16,7 @@ from company_brain.graph.topology import cache as topology_cache, _ID_PREFIX
 
 router = APIRouter(prefix="/api/graph", tags=["Graph"])
 
-_ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact"}
+_ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact", "Topic", "Deal", "Entity"}
 
 # In-memory document text cache, for full_body lookups only (the graph stores
 # a name/subject, not full document text).

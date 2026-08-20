@@ -1,12 +1,10 @@
 """
 graph/schema.py — all node labels, edge types, and property name constants.
-
-No logic here. Import from this module everywhere labels/properties are needed
-so that a single rename propagates across the codebase.
+Updated for graph-native rebuild: adds Topic (for facts not about a named entity)
+and ABOUT (structural link from Fact to Entity or Topic).
 """
 
 
-# ── Node labels ───────────────────────────────────────────────────────────────
 class NodeLabel:
     PERSON = "Person"
     ORG = "Org"
@@ -15,25 +13,24 @@ class NodeLabel:
     TICKET = "Ticket"
     DOCUMENT = "Document"
     FACT = "Fact"
+    TOPIC = "Topic"          # Subject anchor for facts not about a named entity
+    ENTITY = "Entity"        # Fallback label for untyped extracted entities
 
 
-# ── Edge (relationship) types ─────────────────────────────────────────────────
 class EdgeType:
     # Raw extraction
-    MENTIONS = "MENTIONS"
-    # Entity resolution
-    SAME_AS = "SAME_AS"
-    # Structural / participation
+    MENTIONS = "MENTIONS"          # (Document)->(Entity), carries provenance properties
+    SAME_AS = "SAME_AS"            # (Person)->(Person), resolved identity
     ASSIGNED_TO = "ASSIGNED_TO"
     DISCUSSED_IN = "DISCUSSED_IN"
     OWNED_BY = "OWNED_BY"
     WORKS_AT = "WORKS_AT"
     PART_OF = "PART_OF"
-    # Conflict resolution
-    SUPERSEDES = "SUPERSEDES"
+    HAS_FACT = "HAS_FACT"          # (Document)->(Fact)
+    ABOUT = "ABOUT"                # (Fact)->(Entity|Topic), the structural link
+    SUPERSEDES = "SUPERSEDES"      # (Fact)->(Fact)
 
 
-# ── Property names — nodes ────────────────────────────────────────────────────
 class NodeProp:
     # Shared
     ID = "id"
@@ -44,8 +41,8 @@ class NodeProp:
     # Person
     CANONICAL_NAME = "canonical_name"
     EMAILS = "emails"           # list[str]
-    HANDLES = "handles"         # list[str]  (Slack handles, GitHub logins, etc.)
-    RESOLVED_FROM = "resolved_from"  # list[str] — original mention strings
+    HANDLES = "handles"         # list[str]
+    RESOLVED_FROM = "resolved_from"
 
     # Org
     DOMAIN = "domain"
@@ -60,10 +57,11 @@ class NodeProp:
     AMOUNT = "amount"
 
     # Document
-    SOURCE = "source"       # e.g. "slack", "gmail", "linear"
+    SOURCE = "source"              # fine-grained category (e.g. "terraform-and-iac")
+    SOURCE_ROOT = "source_root"    # top-level folder (e.g. "confluence"), used for trust
     DOC_ID = "doc_id"
     URL = "url"
-    RAW_TEXT_REF = "raw_text_ref"  # path or key to raw text if needed
+    RAW_TEXT_REF = "raw_text_ref"
 
     # Fact
     SUBJECT = "subject"
@@ -72,36 +70,33 @@ class NodeProp:
     TRUST_SCORE = "trust_score"   # float 0..1, derived from source
 
 
-# ── Property names — edges ────────────────────────────────────────────────────
 class EdgeProp:
-    # Provenance — on EVERY fact-bearing edge
+    # Provenance
     SOURCE = "source"           # e.g. "slack", "gmail"
     TIMESTAMP = "timestamp"     # ISO-8601 string
     CONFIDENCE = "confidence"   # float 0..1
     DOC_ID = "doc_id"           # back-reference to Document.doc_id
-
-    # SAME_AS
-    EVIDENCE = "evidence"       # list[str] — doc_ids that justify the merge
-
-    # SUPERSEDES
-    REASON = "reason"           # brief free-text explanation
+    EVIDENCE = "evidence"
+    METHOD = "method"           # "structural" | "name_similarity" | "llm"
+    REASON = "reason"
 
 
-# ── Source trust ranking (higher = more authoritative) ───────────────────────
-# Used as a tie-breaker when two facts have the same timestamp.
 SOURCE_TRUST: dict[str, float] = {
-    "linear": 0.95,        # structured, intentional project records
-    "github": 0.92,        # code/PR records are rarely wrong
-    "confluence": 0.90,    # official wiki content
-    "hubspot": 0.88,       # CRM system of record for deals
-    "fireflies": 0.75,     # meeting transcripts — spoken word, may be noisy
-    "slack": 0.65,         # conversational, opinions and drafts mixed in
-    "drive": 0.70,         # docs vary wildly in authority
-    "gmail": 0.60,         # emails include speculation and outdated threads
+    "linear": 0.95,
+    "jira": 0.95,
+    "github": 0.92,
+    "confluence": 0.90,
+    "hubspot": 0.88,
+    "fireflies": 0.75,
+    "slack": 0.65,
+    "google_drive": 0.70,
+    "drive": 0.70,
+    "gmail": 0.60,
 }
+DEFAULT_TRUST: float = 0.50
 
-DEFAULT_TRUST: float = 0.50  # for unknown/unclassified sources
+KNOWN_ENTITY_LABELS = {"Person", "Org", "Project", "Ticket", "Deal"}
 
 
-def trust_for(source: str) -> float:
-    return SOURCE_TRUST.get(source.lower(), DEFAULT_TRUST)
+def trust_for(source_root: str) -> float:
+    return SOURCE_TRUST.get((source_root or "").lower(), DEFAULT_TRUST)

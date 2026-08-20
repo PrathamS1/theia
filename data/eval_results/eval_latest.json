@@ -1,83 +1,83 @@
 {
   "summary": {
     "total_questions": 500,
-    "overall_composite_score": 67.88,
-    "overall_correctness": 78.57,
-    "overall_completeness": 69.41,
-    "overall_doc_recall": 74.29,
-    "overall_invalid_extra_docs": 73.78,
+    "overall_composite_score": 65.76,
+    "overall_correctness": 75.57,
+    "overall_completeness": 66.36,
+    "overall_doc_recall": 73.99,
+    "overall_invalid_extra_docs": 73.91,
     "by_category": {
       "basic": {
         "count": 175,
-        "doc_recall": 87.43,
-        "invalid_extra_docs": 75.53,
-        "correctness": 85.69,
-        "completeness": 79.95,
-        "composite_score": 77.16
+        "doc_recall": 88.0,
+        "invalid_extra_docs": 75.14,
+        "correctness": 81.81,
+        "completeness": 75.34,
+        "composite_score": 74.5
       },
       "semantic": {
         "count": 125,
-        "doc_recall": 62.4,
-        "invalid_extra_docs": 83.49,
-        "correctness": 72.89,
-        "completeness": 61.23,
-        "composite_score": 58.53
+        "doc_recall": 64.8,
+        "invalid_extra_docs": 82.88,
+        "correctness": 71.28,
+        "completeness": 60.45,
+        "composite_score": 58.44
       },
       "intra_document_reasoning": {
         "count": 40,
-        "doc_recall": 92.5,
-        "invalid_extra_docs": 72.54,
-        "correctness": 87.9,
-        "completeness": 78.9,
-        "composite_score": 79.33
+        "doc_recall": 87.5,
+        "invalid_extra_docs": 72.58,
+        "correctness": 83.88,
+        "completeness": 74.88,
+        "composite_score": 75.26
       },
       "project_related": {
         "count": 40,
-        "doc_recall": 79.09,
-        "invalid_extra_docs": 33.37,
-        "correctness": 91.46,
-        "completeness": 77.41,
-        "composite_score": 80.2
+        "doc_recall": 72.15,
+        "invalid_extra_docs": 37.37,
+        "correctness": 91.21,
+        "completeness": 77.38,
+        "composite_score": 77.6
       },
       "constrained": {
         "count": 30,
         "doc_recall": 98.33,
-        "invalid_extra_docs": 63.94,
-        "correctness": 81.21,
-        "completeness": 63.15,
-        "composite_score": 74.53
+        "invalid_extra_docs": 65.0,
+        "correctness": 77.38,
+        "completeness": 59.11,
+        "composite_score": 71.68
       },
       "conflicting_info": {
         "count": 20,
-        "doc_recall": 92.5,
-        "invalid_extra_docs": 57.42,
-        "correctness": 81.92,
-        "completeness": 67.12,
-        "composite_score": 74.91
+        "doc_recall": 95.0,
+        "invalid_extra_docs": 57.33,
+        "correctness": 82.92,
+        "completeness": 67.95,
+        "composite_score": 76.32
       },
       "completeness": {
         "count": 20,
-        "doc_recall": 24.07,
-        "invalid_extra_docs": 72.83,
-        "correctness": 80.41,
-        "completeness": 68.57,
-        "composite_score": 52.67
+        "doc_recall": 23.06,
+        "invalid_extra_docs": 72.5,
+        "correctness": 74.5,
+        "completeness": 63.67,
+        "composite_score": 49.57
       },
       "miscellaneous": {
         "count": 20,
-        "doc_recall": 95.0,
-        "invalid_extra_docs": 73.75,
-        "correctness": 84.58,
-        "completeness": 81.58,
-        "composite_score": 79.93
+        "doc_recall": 90.0,
+        "invalid_extra_docs": 75.0,
+        "correctness": 75.08,
+        "completeness": 72.08,
+        "composite_score": 72.16
       },
       "high_level": {
         "count": 10,
         "doc_recall": 0.0,
         "invalid_extra_docs": 100.0,
-        "correctness": 62.83,
-        "completeness": 56.83,
-        "composite_score": 35.18
+        "correctness": 58.33,
+        "completeness": 50.33,
+        "composite_score": 31.43
       },
       "info_not_found": {
         "count": 20,
@@ -88,8 +88,8 @@
         "composite_score": 0.0
       }
     },
-    "execution_time_seconds": 107.13,
-    "questions_per_second": 4.67
+    "execution_time_seconds": 88.58,
+    "questions_per_second": 5.64
   },
   "per_question": [
     {
@@ -105,19 +105,19 @@
       "question_id": "qst_0002",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.5
     },
     {
       "question_id": "qst_0003",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 0.8333,
-      "composite_score": 87.5
+      "invalid_extra_docs": 0.6667,
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 78.0
     },
     {
       "question_id": "qst_0004",
@@ -132,19 +132,19 @@
       "question_id": "qst_0005",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0006",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.8667,
       "completeness": 0.6667,
-      "composite_score": 76.67
+      "composite_score": 77.17
     },
     {
       "question_id": "qst_0007",
@@ -168,22 +168,13 @@
       "question_id": "qst_0009",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 0.8,
-      "composite_score": 86.0
+      "composite_score": 86.5
     },
     {
       "question_id": "qst_0010",
-      "question_type": "basic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
-    },
-    {
-      "question_id": "qst_0011",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
@@ -192,22 +183,31 @@
       "composite_score": 92.0
     },
     {
-      "question_id": "qst_0012",
+      "question_id": "qst_0011",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
+    },
+    {
+      "question_id": "qst_0012",
+      "question_type": "basic",
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.95,
       "completeness": 0.75,
-      "composite_score": 83.0
+      "composite_score": 82.5
     },
     {
       "question_id": "qst_0013",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.8,
-      "completeness": 0.6,
-      "composite_score": 72.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0014",
@@ -222,19 +222,19 @@
       "question_id": "qst_0015",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0016",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 22.0
+      "composite_score": 22.5
     },
     {
       "question_id": "qst_0017",
@@ -268,27 +268,27 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 77.17
     },
     {
       "question_id": "qst_0021",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0022",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 76.67
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 53.33
     },
     {
       "question_id": "qst_0023",
@@ -303,10 +303,10 @@
       "question_id": "qst_0024",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.5,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 95.0
     },
     {
       "question_id": "qst_0025",
@@ -330,10 +330,10 @@
       "question_id": "qst_0027",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 93.33
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0028",
@@ -365,11 +365,11 @@
     {
       "question_id": "qst_0031",
       "question_type": "basic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 50.5
     },
     {
       "question_id": "qst_0032",
@@ -385,18 +385,18 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 22.0
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0034",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.8667,
       "completeness": 0.6667,
-      "composite_score": 77.17
+      "composite_score": 78.0
     },
     {
       "question_id": "qst_0035",
@@ -412,54 +412,54 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.5,
-      "correctness": 0.9143,
-      "completeness": 0.7143,
-      "composite_score": 83.0
+      "correctness": 0.7714,
+      "completeness": 0.5714,
+      "composite_score": 73.0
     },
     {
       "question_id": "qst_0037",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 82.5
     },
     {
       "question_id": "qst_0038",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0039",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.0,
+      "invalid_extra_docs": 0.5,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 30.0
+      "composite_score": 25.0
     },
     {
       "question_id": "qst_0040",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 54.67
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 25.0
     },
     {
       "question_id": "qst_0041",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0042",
@@ -475,9 +475,9 @@
       "question_type": "basic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.6,
-      "completeness": 0.4,
-      "composite_score": 26.0
+      "correctness": 0.4,
+      "completeness": 0.2,
+      "composite_score": 12.0
     },
     {
       "question_id": "qst_0044",
@@ -510,10 +510,10 @@
       "question_id": "qst_0047",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 22.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.5
     },
     {
       "question_id": "qst_0048",
@@ -545,20 +545,20 @@
     {
       "question_id": "qst_0051",
       "question_type": "basic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0052",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0053",
@@ -572,11 +572,11 @@
     {
       "question_id": "qst_0054",
       "question_type": "basic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 60.0
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0055",
@@ -628,18 +628,18 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.5,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 95.0
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 79.67
     },
     {
       "question_id": "qst_0061",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 79.67
+      "invalid_extra_docs": 0.0,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 61.33
     },
     {
       "question_id": "qst_0062",
@@ -653,11 +653,11 @@
     {
       "question_id": "qst_0063",
       "question_type": "basic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 60.0
     },
     {
       "question_id": "qst_0064",
@@ -690,10 +690,10 @@
       "question_id": "qst_0067",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.5,
       "correctness": 0.8667,
       "completeness": 0.6667,
-      "composite_score": 78.0
+      "composite_score": 79.67
     },
     {
       "question_id": "qst_0068",
@@ -727,9 +727,9 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 65.5
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.5
     },
     {
       "question_id": "qst_0072",
@@ -753,10 +753,10 @@
       "question_id": "qst_0074",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 78.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0075",
@@ -779,38 +779,38 @@
     {
       "question_id": "qst_0077",
       "question_type": "basic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 0.0
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0078",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0079",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 95.0
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0080",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
+      "completeness": 0.8333,
+      "composite_score": 88.33
     },
     {
       "question_id": "qst_0081",
@@ -843,10 +843,10 @@
       "question_id": "qst_0084",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 95.0
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0085",
@@ -869,20 +869,20 @@
     {
       "question_id": "qst_0087",
       "question_type": "basic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0088",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.0,
+      "invalid_extra_docs": 0.5,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 30.0
+      "composite_score": 25.0
     },
     {
       "question_id": "qst_0089",
@@ -898,9 +898,9 @@
       "question_type": "basic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0091",
@@ -934,9 +934,9 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 53.83
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 77.17
     },
     {
       "question_id": "qst_0095",
@@ -961,36 +961,36 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0098",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.0,
       "correctness": 0.5333,
       "completeness": 0.3333,
-      "composite_score": 54.67
+      "composite_score": 61.33
     },
     {
       "question_id": "qst_0099",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 76.67
     },
     {
       "question_id": "qst_0100",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 66.33
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0101",
@@ -1014,10 +1014,10 @@
       "question_id": "qst_0103",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.5,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 95.0
     },
     {
       "question_id": "qst_0104",
@@ -1041,10 +1041,10 @@
       "question_id": "qst_0106",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 25.0
     },
     {
       "question_id": "qst_0107",
@@ -1086,10 +1086,10 @@
       "question_id": "qst_0111",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 93.33
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0112",
@@ -1104,10 +1104,10 @@
       "question_id": "qst_0113",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 0.8,
-      "composite_score": 86.5
+      "invalid_extra_docs": 0.6667,
+      "correctness": 0.4,
+      "completeness": 0.2,
+      "composite_score": 45.33
     },
     {
       "question_id": "qst_0114",
@@ -1124,8 +1124,8 @@
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
       "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "completeness": 0.8,
+      "composite_score": 86.0
     },
     {
       "question_id": "qst_0116",
@@ -1141,18 +1141,18 @@
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.2909,
-      "completeness": 0.0909,
-      "composite_score": 36.36
+      "correctness": 0.4727,
+      "completeness": 0.2727,
+      "composite_score": 49.09
     },
     {
       "question_id": "qst_0118",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 0.875,
-      "composite_score": 88.25
+      "invalid_extra_docs": 0.75,
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 83.0
     },
     {
       "question_id": "qst_0119",
@@ -1185,19 +1185,19 @@
       "question_id": "qst_0122",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0123",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 22.5
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0124",
@@ -1240,9 +1240,9 @@
       "question_type": "basic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 44.67
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 60.0
     },
     {
       "question_id": "qst_0129",
@@ -1257,10 +1257,10 @@
       "question_id": "qst_0130",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.8667,
       "completeness": 0.6667,
-      "composite_score": 76.67
+      "composite_score": 77.17
     },
     {
       "question_id": "qst_0131",
@@ -1284,10 +1284,10 @@
       "question_id": "qst_0133",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 65.0
+      "composite_score": 65.5
     },
     {
       "question_id": "qst_0134",
@@ -1319,20 +1319,20 @@
     {
       "question_id": "qst_0137",
       "question_type": "basic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 60.0
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0138",
       "question_type": "basic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0139",
@@ -1347,37 +1347,37 @@
       "question_id": "qst_0140",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.0,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 73.0
+      "composite_score": 65.5
     },
     {
       "question_id": "qst_0141",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.0,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 30.0
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 56.33
     },
     {
       "question_id": "qst_0142",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.95,
-      "completeness": 0.75,
-      "composite_score": 82.5
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0143",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 65.5
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 83.0
     },
     {
       "question_id": "qst_0144",
@@ -1392,28 +1392,28 @@
       "question_id": "qst_0145",
       "question_type": "basic",
       "doc_recall": 1.0,
+      "invalid_extra_docs": 0.6667,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 93.33
+    },
+    {
+      "question_id": "qst_0146",
+      "question_type": "basic",
+      "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
       "composite_score": 92.5
     },
     {
-      "question_id": "qst_0146",
+      "question_id": "qst_0147",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
-    },
-    {
-      "question_id": "qst_0147",
-      "question_type": "basic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 0.0
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0148",
@@ -1427,11 +1427,11 @@
     {
       "question_id": "qst_0149",
       "question_type": "basic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 60.0
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0150",
@@ -1482,10 +1482,10 @@
       "question_id": "qst_0155",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.3429,
-      "completeness": 0.1429,
-      "composite_score": 41.33
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.4857,
+      "completeness": 0.2857,
+      "composite_score": 50.0
     },
     {
       "question_id": "qst_0156",
@@ -1509,19 +1509,19 @@
       "question_id": "qst_0158",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0159",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 68.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0160",
@@ -1554,19 +1554,19 @@
       "question_id": "qst_0163",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.5,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 95.0
     },
     {
       "question_id": "qst_0164",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0165",
@@ -1581,10 +1581,10 @@
       "question_id": "qst_0166",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0167",
@@ -1607,20 +1607,20 @@
     {
       "question_id": "qst_0169",
       "question_type": "basic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 65.0
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0170",
       "question_type": "basic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0171",
@@ -1645,18 +1645,18 @@
       "question_type": "basic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.45,
-      "completeness": 0.25,
-      "composite_score": 15.5
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0174",
       "question_type": "basic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.6545,
-      "completeness": 0.4545,
-      "composite_score": 61.82
+      "correctness": 0.3818,
+      "completeness": 0.1818,
+      "composite_score": 42.73
     },
     {
       "question_id": "qst_0175",
@@ -1670,11 +1670,11 @@
     {
       "question_id": "qst_0176",
       "question_type": "semantic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 21.33
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0177",
@@ -1690,27 +1690,27 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0179",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.9143,
-      "completeness": 0.7143,
-      "composite_score": 80.0
+      "correctness": 1.0,
+      "completeness": 0.8571,
+      "composite_score": 87.71
     },
     {
       "question_id": "qst_0180",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 78.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 53.83
     },
     {
       "question_id": "qst_0181",
@@ -1726,9 +1726,9 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0183",
@@ -1761,37 +1761,37 @@
       "question_id": "qst_0186",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 66.33
+      "composite_score": 65.5
     },
     {
       "question_id": "qst_0187",
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0188",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 66.33
+      "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0189",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 0.8,
-      "composite_score": 86.0
+      "correctness": 0.8,
+      "completeness": 0.6,
+      "composite_score": 72.0
     },
     {
       "question_id": "qst_0190",
@@ -1807,18 +1807,18 @@
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 53.33
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0192",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6667,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 66.33
+      "correctness": 0.45,
+      "completeness": 0.25,
+      "composite_score": 48.83
     },
     {
       "question_id": "qst_0193",
@@ -1833,28 +1833,28 @@
       "question_id": "qst_0194",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
-      "correctness": 1.0,
-      "completeness": 0.8333,
-      "composite_score": 90.0
+      "invalid_extra_docs": 0.0,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 61.33
     },
     {
       "question_id": "qst_0195",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 0.8,
-      "composite_score": 87.33
+      "composite_score": 86.5
     },
     {
       "question_id": "qst_0196",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
-      "correctness": 0.45,
-      "completeness": 0.25,
-      "composite_score": 50.5
+      "invalid_extra_docs": 0.6667,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0197",
@@ -1879,18 +1879,18 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 21.33
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0200",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 65.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0201",
@@ -1905,10 +1905,10 @@
       "question_id": "qst_0202",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0203",
@@ -1933,36 +1933,36 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 21.33
+      "correctness": 0.3667,
+      "completeness": 0.1667,
+      "composite_score": 9.67
     },
     {
       "question_id": "qst_0206",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.0,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 25.0
+      "composite_score": 30.0
     },
     {
       "question_id": "qst_0207",
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 0.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0208",
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 33.0
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 60.0
     },
     {
       "question_id": "qst_0209",
@@ -1977,10 +1977,10 @@
       "question_id": "qst_0210",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.825,
-      "completeness": 0.625,
-      "composite_score": 74.25
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.45,
+      "completeness": 0.25,
+      "composite_score": 47.5
     },
     {
       "question_id": "qst_0211",
@@ -2012,20 +2012,20 @@
     {
       "question_id": "qst_0214",
       "question_type": "semantic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 65.0
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0215",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
-      "completeness": 0.8,
-      "composite_score": 86.0
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0216",
@@ -2094,28 +2094,28 @@
       "question_id": "qst_0223",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 0.8,
-      "composite_score": 86.0
+      "composite_score": 87.33
     },
     {
       "question_id": "qst_0224",
       "question_type": "semantic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 33.0
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0225",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 25.0
+      "invalid_extra_docs": 0.6667,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 66.33
     },
     {
       "question_id": "qst_0226",
@@ -2147,11 +2147,11 @@
     {
       "question_id": "qst_0229",
       "question_type": "semantic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 33.0
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 82.5
     },
     {
       "question_id": "qst_0230",
@@ -2203,9 +2203,9 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.95,
-      "completeness": 0.75,
-      "composite_score": 50.5
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0236",
@@ -2220,19 +2220,19 @@
       "question_id": "qst_0237",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 77.17
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 53.33
     },
     {
       "question_id": "qst_0238",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.6167,
       "completeness": 0.4167,
-      "composite_score": 59.67
+      "composite_score": 59.17
     },
     {
       "question_id": "qst_0239",
@@ -2256,19 +2256,19 @@
       "question_id": "qst_0241",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.75,
       "correctness": 0.9143,
       "completeness": 0.7143,
-      "composite_score": 81.33
+      "composite_score": 80.5
     },
     {
       "question_id": "qst_0242",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0243",
@@ -2310,28 +2310,28 @@
       "question_id": "qst_0247",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 93.33
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0248",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0249",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 76.67
+      "correctness": 0.7833,
+      "completeness": 0.5833,
+      "composite_score": 70.83
     },
     {
       "question_id": "qst_0250",
@@ -2354,11 +2354,11 @@
     {
       "question_id": "qst_0252",
       "question_type": "semantic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.95,
-      "completeness": 0.75,
-      "composite_score": 82.5
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0253",
@@ -2400,19 +2400,19 @@
       "question_id": "qst_0257",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0258",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 65.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 53.83
     },
     {
       "question_id": "qst_0259",
@@ -2445,19 +2445,19 @@
       "question_id": "qst_0262",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.8,
-      "completeness": 0.6,
-      "composite_score": 72.5
+      "invalid_extra_docs": 0.8,
+      "correctness": 1.0,
+      "completeness": 0.8,
+      "composite_score": 86.0
     },
     {
       "question_id": "qst_0263",
       "question_type": "semantic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 33.0
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0264",
@@ -2482,9 +2482,9 @@
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 82.5
     },
     {
       "question_id": "qst_0267",
@@ -2509,27 +2509,27 @@
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 77.17
+      "correctness": 0.8,
+      "completeness": 0.6,
+      "composite_score": 72.5
     },
     {
       "question_id": "qst_0270",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.6,
       "completeness": 0.4,
-      "composite_score": 58.0
+      "composite_score": 59.33
     },
     {
       "question_id": "qst_0271",
       "question_type": "semantic",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 65.0
+      "correctness": 0.6,
+      "completeness": 0.4,
+      "composite_score": 58.0
     },
     {
       "question_id": "qst_0272",
@@ -2543,11 +2543,11 @@
     {
       "question_id": "qst_0273",
       "question_type": "semantic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 21.33
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 76.67
     },
     {
       "question_id": "qst_0274",
@@ -2572,9 +2572,9 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.8,
-      "completeness": 0.6,
-      "composite_score": 40.0
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 60.0
     },
     {
       "question_id": "qst_0277",
@@ -2598,19 +2598,19 @@
       "question_id": "qst_0279",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 65.0
+      "composite_score": 66.33
     },
     {
       "question_id": "qst_0280",
       "question_type": "semantic",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 65.0
+      "composite_score": 33.0
     },
     {
       "question_id": "qst_0281",
@@ -2626,9 +2626,9 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.7,
-      "completeness": 0.5,
-      "composite_score": 33.0
+      "correctness": 0.45,
+      "completeness": 0.25,
+      "composite_score": 15.5
     },
     {
       "question_id": "qst_0283",
@@ -2643,19 +2643,19 @@
       "question_id": "qst_0284",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 25.0
+      "composite_score": 23.33
     },
     {
       "question_id": "qst_0285",
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.6,
-      "completeness": 0.4,
-      "composite_score": 26.0
+      "correctness": 0.3,
+      "completeness": 0.1,
+      "composite_score": 5.0
     },
     {
       "question_id": "qst_0286",
@@ -2679,19 +2679,19 @@
       "question_id": "qst_0288",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0289",
       "question_type": "semantic",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.6,
       "completeness": 0.4,
-      "composite_score": 26.0
+      "composite_score": 58.0
     },
     {
       "question_id": "qst_0290",
@@ -2707,9 +2707,9 @@
       "question_type": "semantic",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 0.0
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 21.33
     },
     {
       "question_id": "qst_0292",
@@ -2733,10 +2733,10 @@
       "question_id": "qst_0294",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.9143,
-      "completeness": 0.7143,
-      "composite_score": 80.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0295",
@@ -2778,28 +2778,28 @@
       "question_id": "qst_0299",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.0,
       "completeness": 0.0,
-      "composite_score": 25.0
+      "composite_score": 23.33
     },
     {
       "question_id": "qst_0300",
       "question_type": "semantic",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 93.33
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0301",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 53.83
+      "invalid_extra_docs": 0.8,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0302",
@@ -2814,37 +2814,37 @@
       "question_id": "qst_0303",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
+      "invalid_extra_docs": 0.6667,
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 78.0
     },
     {
       "question_id": "qst_0304",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.5,
       "correctness": 0.5333,
       "completeness": 0.3333,
-      "composite_score": 54.67
+      "composite_score": 56.33
     },
     {
       "question_id": "qst_0305",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.5,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 95.0
     },
     {
       "question_id": "qst_0306",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.8667,
       "completeness": 0.6667,
-      "composite_score": 77.17
+      "composite_score": 78.0
     },
     {
       "question_id": "qst_0307",
@@ -2860,18 +2860,18 @@
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 82.5
     },
     {
       "question_id": "qst_0309",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 53.33
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0310",
@@ -2885,11 +2885,11 @@
     {
       "question_id": "qst_0311",
       "question_type": "intra_document_reasoning",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 76.67
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.5333,
+      "completeness": 0.3333,
+      "composite_score": 21.33
     },
     {
       "question_id": "qst_0312",
@@ -2913,19 +2913,19 @@
       "question_id": "qst_0314",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 93.33
-    },
-    {
-      "question_id": "qst_0315",
-      "question_type": "intra_document_reasoning",
-      "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
       "correctness": 1.0,
       "completeness": 1.0,
       "composite_score": 92.5
+    },
+    {
+      "question_id": "qst_0315",
+      "question_type": "intra_document_reasoning",
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0316",
@@ -2959,9 +2959,9 @@
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.75,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 77.17
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.5
     },
     {
       "question_id": "qst_0320",
@@ -3013,18 +3013,18 @@
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6667,
-      "correctness": 0.3429,
-      "completeness": 0.1429,
-      "composite_score": 41.33
+      "correctness": 0.4857,
+      "completeness": 0.2857,
+      "composite_score": 51.33
     },
     {
       "question_id": "qst_0326",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0327",
@@ -3039,10 +3039,10 @@
       "question_id": "qst_0328",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0329",
@@ -3057,10 +3057,10 @@
       "question_id": "qst_0330",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.0,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 95.0
+      "composite_score": 100.0
     },
     {
       "question_id": "qst_0331",
@@ -3111,10 +3111,10 @@
       "question_id": "qst_0336",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 68.0
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0337",
@@ -3147,28 +3147,28 @@
       "question_id": "qst_0340",
       "question_type": "intra_document_reasoning",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 95.0
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0341",
       "question_type": "project_related",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.3333,
       "correctness": 1.0,
       "completeness": 0.8,
-      "composite_score": 89.0
+      "composite_score": 90.67
     },
     {
       "question_id": "qst_0342",
       "question_type": "project_related",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.2,
+      "doc_recall": 0.75,
+      "invalid_extra_docs": 0.4,
       "correctness": 1.0,
       "completeness": 0.9,
-      "composite_score": 95.0
+      "composite_score": 85.5
     },
     {
       "question_id": "qst_0343",
@@ -3184,18 +3184,18 @@
       "question_type": "project_related",
       "doc_recall": 0.75,
       "invalid_extra_docs": 0.25,
-      "correctness": 0.9,
-      "completeness": 0.7,
-      "composite_score": 77.0
+      "correctness": 1.0,
+      "completeness": 0.9,
+      "composite_score": 87.0
     },
     {
       "question_id": "qst_0345",
       "question_type": "project_related",
-      "doc_recall": 0.5,
-      "invalid_extra_docs": 0.8,
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
       "correctness": 0.8875,
       "completeness": 0.6875,
-      "composite_score": 63.13
+      "composite_score": 46.13
     },
     {
       "question_id": "qst_0346",
@@ -3218,20 +3218,20 @@
     {
       "question_id": "qst_0348",
       "question_type": "project_related",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.2,
+      "doc_recall": 0.75,
+      "invalid_extra_docs": 0.25,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 98.0
+      "composite_score": 90.0
     },
     {
       "question_id": "qst_0349",
       "question_type": "project_related",
       "doc_recall": 0.6667,
-      "invalid_extra_docs": 0.3333,
-      "correctness": 0.7556,
-      "completeness": 0.5556,
-      "composite_score": 63.56
+      "invalid_extra_docs": 0.6,
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 68.67
     },
     {
       "question_id": "qst_0350",
@@ -3282,46 +3282,46 @@
       "question_id": "qst_0355",
       "question_type": "project_related",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.4,
+      "invalid_extra_docs": 0.25,
       "correctness": 1.0,
       "completeness": 0.8571,
-      "composite_score": 91.71
+      "composite_score": 93.21
     },
     {
       "question_id": "qst_0356",
       "question_type": "project_related",
       "doc_recall": 0.5,
       "invalid_extra_docs": 0.6,
-      "correctness": 0.95,
-      "completeness": 0.75,
-      "composite_score": 69.5
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 79.0
     },
     {
       "question_id": "qst_0357",
       "question_type": "project_related",
-      "doc_recall": 0.6667,
-      "invalid_extra_docs": 0.6,
+      "doc_recall": 0.3333,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
-      "completeness": 0.8333,
-      "composite_score": 79.0
+      "completeness": 1.0,
+      "composite_score": 72.0
     },
     {
       "question_id": "qst_0358",
       "question_type": "project_related",
       "doc_recall": 0.75,
       "invalid_extra_docs": 0.4,
-      "correctness": 0.9,
-      "completeness": 0.7,
-      "composite_score": 75.5
+      "correctness": 0.75,
+      "completeness": 0.55,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0359",
       "question_type": "project_related",
       "doc_recall": 0.6667,
-      "invalid_extra_docs": 0.2,
+      "invalid_extra_docs": 0.0,
       "correctness": 0.8667,
       "completeness": 0.6667,
-      "composite_score": 72.67
+      "composite_score": 74.67
     },
     {
       "question_id": "qst_0360",
@@ -3346,36 +3346,36 @@
       "question_type": "project_related",
       "doc_recall": 0.5556,
       "invalid_extra_docs": 0.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 86.67
+      "correctness": 0.9692,
+      "completeness": 0.7692,
+      "composite_score": 78.51
     },
     {
       "question_id": "qst_0363",
       "question_type": "project_related",
       "doc_recall": 0.6667,
       "invalid_extra_docs": 0.2,
-      "correctness": 1.0,
-      "completeness": 0.9091,
-      "composite_score": 85.27
+      "correctness": 0.9273,
+      "completeness": 0.7273,
+      "composite_score": 76.91
     },
     {
       "question_id": "qst_0364",
       "question_type": "project_related",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.4,
+      "doc_recall": 0.6667,
+      "invalid_extra_docs": 0.6,
       "correctness": 0.8429,
       "completeness": 0.6429,
-      "composite_score": 79.0
+      "composite_score": 67.0
     },
     {
       "question_id": "qst_0365",
       "question_type": "project_related",
-      "doc_recall": 0.5556,
-      "invalid_extra_docs": 0.0,
-      "correctness": 0.8538,
-      "completeness": 0.6538,
-      "composite_score": 70.44
+      "doc_recall": 0.4444,
+      "invalid_extra_docs": 0.2,
+      "correctness": 0.7769,
+      "completeness": 0.5769,
+      "composite_score": 59.72
     },
     {
       "question_id": "qst_0366",
@@ -3398,11 +3398,11 @@
     {
       "question_id": "qst_0368",
       "question_type": "project_related",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6,
+      "doc_recall": 0.5,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 0.9,
-      "composite_score": 91.0
+      "composite_score": 74.0
     },
     {
       "question_id": "qst_0369",
@@ -3427,9 +3427,9 @@
       "question_type": "project_related",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.4,
-      "correctness": 0.9,
-      "completeness": 0.7,
-      "composite_score": 83.0
+      "correctness": 0.8,
+      "completeness": 0.6,
+      "composite_score": 76.0
     },
     {
       "question_id": "qst_0372",
@@ -3443,20 +3443,20 @@
     {
       "question_id": "qst_0373",
       "question_type": "project_related",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.4,
+      "doc_recall": 0.6667,
+      "invalid_extra_docs": 0.6,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 96.0
+      "composite_score": 84.0
     },
     {
       "question_id": "qst_0374",
       "question_type": "project_related",
       "doc_recall": 0.6667,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6,
       "correctness": 1.0,
       "completeness": 0.8462,
-      "composite_score": 80.38
+      "composite_score": 79.38
     },
     {
       "question_id": "qst_0375",
@@ -3471,19 +3471,19 @@
       "question_id": "qst_0376",
       "question_type": "project_related",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.0,
+      "invalid_extra_docs": 0.25,
       "correctness": 0.8154,
       "completeness": 0.6154,
-      "composite_score": 81.08
+      "composite_score": 78.58
     },
     {
       "question_id": "qst_0377",
       "question_type": "project_related",
-      "doc_recall": 0.6667,
-      "invalid_extra_docs": 0.2,
-      "correctness": 0.9333,
-      "completeness": 0.7333,
-      "composite_score": 77.33
+      "doc_recall": 0.5,
+      "invalid_extra_docs": 0.25,
+      "correctness": 1.0,
+      "completeness": 0.9333,
+      "composite_score": 80.5
     },
     {
       "question_id": "qst_0378",
@@ -3509,8 +3509,8 @@
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.5,
       "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 95.0
+      "completeness": 0.8,
+      "composite_score": 89.0
     },
     {
       "question_id": "qst_0381",
@@ -3543,10 +3543,10 @@
       "question_id": "qst_0384",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.3333,
       "correctness": 1.0,
       "completeness": 0.8333,
-      "composite_score": 90.0
+      "composite_score": 91.67
     },
     {
       "question_id": "qst_0385",
@@ -3561,19 +3561,19 @@
       "question_id": "qst_0386",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.9143,
-      "completeness": 0.7143,
-      "composite_score": 80.5
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.7714,
+      "completeness": 0.5714,
+      "composite_score": 70.0
     },
     {
       "question_id": "qst_0387",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 0.7,
       "completeness": 0.5,
-      "composite_score": 65.5
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0388",
@@ -3588,28 +3588,28 @@
       "question_id": "qst_0389",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.9778,
-      "completeness": 0.7778,
-      "composite_score": 84.94
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.7556,
+      "completeness": 0.5556,
+      "composite_score": 68.89
     },
     {
       "question_id": "qst_0390",
       "question_type": "constrained",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6,
-      "correctness": 0.6615,
-      "completeness": 0.4615,
-      "composite_score": 64.31
+      "correctness": 0.5077,
+      "completeness": 0.3077,
+      "composite_score": 53.54
     },
     {
       "question_id": "qst_0391",
       "question_type": "constrained",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6667,
-      "correctness": 0.6,
-      "completeness": 0.4,
-      "composite_score": 59.33
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 66.33
     },
     {
       "question_id": "qst_0392",
@@ -3624,28 +3624,28 @@
       "question_id": "qst_0393",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.0,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 84.67
+      "invalid_extra_docs": 0.3333,
+      "correctness": 0.9778,
+      "completeness": 0.7778,
+      "composite_score": 89.11
     },
     {
       "question_id": "qst_0394",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6,
       "correctness": 1.0,
       "completeness": 0.9375,
-      "composite_score": 93.12
+      "composite_score": 92.12
     },
     {
       "question_id": "qst_0395",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.825,
-      "completeness": 0.625,
-      "composite_score": 74.25
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.0
     },
     {
       "question_id": "qst_0396",
@@ -3661,18 +3661,18 @@
       "question_type": "constrained",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6,
-      "correctness": 0.95,
-      "completeness": 0.75,
-      "composite_score": 84.5
+      "correctness": 1.0,
+      "completeness": 0.8125,
+      "composite_score": 88.38
     },
     {
       "question_id": "qst_0398",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.7385,
-      "completeness": 0.5385,
-      "composite_score": 69.03
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.6615,
+      "completeness": 0.4615,
+      "composite_score": 65.31
     },
     {
       "question_id": "qst_0399",
@@ -3680,17 +3680,17 @@
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
       "correctness": 1.0,
-      "completeness": 0.9231,
-      "composite_score": 89.69
+      "completeness": 0.8462,
+      "composite_score": 87.38
     },
     {
       "question_id": "qst_0400",
       "question_type": "constrained",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6,
-      "correctness": 0.9778,
-      "completeness": 0.7778,
-      "composite_score": 86.44
+      "correctness": 0.7556,
+      "completeness": 0.5556,
+      "composite_score": 70.89
     },
     {
       "question_id": "qst_0401",
@@ -3714,10 +3714,10 @@
       "question_id": "qst_0403",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.3333,
+      "invalid_extra_docs": 0.6,
       "correctness": 0.3429,
       "completeness": 0.1429,
-      "composite_score": 44.67
+      "composite_score": 42.0
     },
     {
       "question_id": "qst_0404",
@@ -3768,28 +3768,28 @@
       "question_id": "qst_0409",
       "question_type": "constrained",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 0.6,
-      "completeness": 0.4,
-      "composite_score": 58.5
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.4667,
+      "completeness": 0.2667,
+      "composite_score": 51.67
     },
     {
       "question_id": "qst_0410",
       "question_type": "constrained",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.9778,
-      "completeness": 0.7778,
-      "composite_score": 84.44
+      "correctness": 0.6444,
+      "completeness": 0.4444,
+      "composite_score": 61.11
     },
     {
       "question_id": "qst_0411",
       "question_type": "conflicting_info",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6,
+      "invalid_extra_docs": 0.5,
       "correctness": 1.0,
       "completeness": 0.8,
-      "composite_score": 88.0
+      "composite_score": 89.0
     },
     {
       "question_id": "qst_0412",
@@ -3804,10 +3804,10 @@
       "question_id": "qst_0413",
       "question_type": "conflicting_info",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.6667,
       "correctness": 0.95,
       "completeness": 0.75,
-      "composite_score": 83.0
+      "composite_score": 83.83
     },
     {
       "question_id": "qst_0414",
@@ -3831,10 +3831,10 @@
       "question_id": "qst_0416",
       "question_type": "conflicting_info",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 55.33
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.3667,
+      "completeness": 0.1667,
+      "composite_score": 44.67
     },
     {
       "question_id": "qst_0417",
@@ -3848,20 +3848,20 @@
     {
       "question_id": "qst_0418",
       "question_type": "conflicting_info",
-      "doc_recall": 0.5,
-      "invalid_extra_docs": 0.5,
-      "correctness": 0.3,
-      "completeness": 0.1,
-      "composite_score": 25.0
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.6,
+      "correctness": 0.9,
+      "completeness": 0.7,
+      "composite_score": 81.0
     },
     {
       "question_id": "qst_0419",
       "question_type": "conflicting_info",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.3333,
+      "invalid_extra_docs": 0.5,
       "correctness": 0.5333,
       "completeness": 0.3333,
-      "composite_score": 58.0
+      "composite_score": 56.33
     },
     {
       "question_id": "qst_0420",
@@ -3877,9 +3877,9 @@
       "question_type": "conflicting_info",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6,
-      "correctness": 1.0,
-      "completeness": 0.8333,
-      "composite_score": 89.0
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 78.67
     },
     {
       "question_id": "qst_0422",
@@ -3904,9 +3904,9 @@
       "question_type": "conflicting_info",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.6,
-      "correctness": 0.4,
-      "completeness": 0.2,
-      "composite_score": 46.0
+      "correctness": 0.3,
+      "completeness": 0.1,
+      "composite_score": 39.0
     },
     {
       "question_id": "qst_0425",
@@ -3975,19 +3975,19 @@
       "question_id": "qst_0432",
       "question_type": "completeness",
       "doc_recall": 0.1667,
-      "invalid_extra_docs": 0.6667,
+      "invalid_extra_docs": 0.5,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 68.33
+      "composite_score": 70.0
     },
     {
       "question_id": "qst_0433",
       "question_type": "completeness",
-      "doc_recall": 0.1667,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.8667,
-      "completeness": 0.6667,
-      "composite_score": 51.67
+      "doc_recall": 0.3333,
+      "invalid_extra_docs": 0.6,
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 64.5
     },
     {
       "question_id": "qst_0434",
@@ -4021,63 +4021,63 @@
       "question_type": "completeness",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0438",
       "question_type": "completeness",
-      "doc_recall": 0.2222,
-      "invalid_extra_docs": 0.6,
+      "doc_recall": 0.1111,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 70.67
+      "composite_score": 65.33
     },
     {
       "question_id": "qst_0439",
       "question_type": "completeness",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.4,
-      "completeness": 0.2,
-      "composite_score": 12.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0440",
       "question_type": "completeness",
-      "doc_recall": 0.5,
-      "invalid_extra_docs": 0.4,
-      "correctness": 0.8786,
-      "completeness": 0.6786,
-      "composite_score": 66.5
+      "doc_recall": 0.1667,
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.5929,
+      "completeness": 0.3929,
+      "composite_score": 32.5
     },
     {
       "question_id": "qst_0441",
       "question_type": "completeness",
       "doc_recall": 0.3333,
       "invalid_extra_docs": 0.6,
-      "correctness": 0.6222,
-      "completeness": 0.4222,
-      "composite_score": 41.56
+      "correctness": 0.6,
+      "completeness": 0.4,
+      "composite_score": 40.0
     },
     {
       "question_id": "qst_0442",
       "question_type": "completeness",
-      "doc_recall": 0.25,
-      "invalid_extra_docs": 0.6,
-      "correctness": 0.5696,
-      "completeness": 0.3696,
-      "composite_score": 35.37
+      "doc_recall": 0.125,
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.5261,
+      "completeness": 0.3261,
+      "composite_score": 26.58
     },
     {
       "question_id": "qst_0443",
       "question_type": "completeness",
-      "doc_recall": 0.0,
-      "invalid_extra_docs": 1.0,
-      "correctness": 0.4,
-      "completeness": 0.2,
-      "composite_score": 12.0
+      "doc_recall": 0.2,
+      "invalid_extra_docs": 0.8,
+      "correctness": 0.8,
+      "completeness": 0.6,
+      "composite_score": 48.0
     },
     {
       "question_id": "qst_0444",
@@ -4092,46 +4092,46 @@
       "question_id": "qst_0445",
       "question_type": "completeness",
       "doc_recall": 0.25,
-      "invalid_extra_docs": 0.6,
-      "correctness": 0.725,
-      "completeness": 0.525,
-      "composite_score": 46.25
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.775,
+      "completeness": 0.575,
+      "composite_score": 50.75
     },
     {
       "question_id": "qst_0446",
       "question_type": "completeness",
       "doc_recall": 0.8,
-      "invalid_extra_docs": 0.2,
+      "invalid_extra_docs": 0.0,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.0
+      "composite_score": 94.0
     },
     {
       "question_id": "qst_0447",
       "question_type": "completeness",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.5636,
-      "completeness": 0.3636,
-      "composite_score": 23.45
+      "correctness": 0.5182,
+      "completeness": 0.3182,
+      "composite_score": 20.27
     },
     {
       "question_id": "qst_0448",
       "question_type": "completeness",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.5333,
-      "completeness": 0.3333,
-      "composite_score": 21.33
+      "correctness": 0.8667,
+      "completeness": 0.6667,
+      "composite_score": 44.67
     },
     {
       "question_id": "qst_0449",
       "question_type": "completeness",
       "doc_recall": 0.1667,
       "invalid_extra_docs": 0.8,
-      "correctness": 0.95,
-      "completeness": 0.75,
-      "composite_score": 57.5
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 40.0
     },
     {
       "question_id": "qst_0450",
@@ -4146,10 +4146,10 @@
       "question_id": "qst_0451",
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0452",
@@ -4165,27 +4165,27 @@
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 22.0
     },
     {
       "question_id": "qst_0454",
-      "question_type": "miscellaneous",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.5
-    },
-    {
-      "question_id": "qst_0455",
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
       "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
       "composite_score": 92.0
+    },
+    {
+      "question_id": "qst_0455",
+      "question_type": "miscellaneous",
+      "doc_recall": 1.0,
+      "invalid_extra_docs": 0.75,
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 92.5
     },
     {
       "question_id": "qst_0456",
@@ -4199,20 +4199,20 @@
     {
       "question_id": "qst_0457",
       "question_type": "miscellaneous",
-      "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 92.0
+      "doc_recall": 0.0,
+      "invalid_extra_docs": 1.0,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0458",
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.5,
+      "invalid_extra_docs": 0.6667,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 95.0
+      "composite_score": 93.33
     },
     {
       "question_id": "qst_0459",
@@ -4245,10 +4245,10 @@
       "question_id": "qst_0462",
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.6667,
-      "correctness": 0.6,
-      "completeness": 0.4,
-      "composite_score": 59.33
+      "invalid_extra_docs": 0.5,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 25.0
     },
     {
       "question_id": "qst_0463",
@@ -4290,10 +4290,10 @@
       "question_id": "qst_0467",
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.75,
+      "invalid_extra_docs": 0.8,
       "correctness": 1.0,
       "completeness": 1.0,
-      "composite_score": 92.5
+      "composite_score": 92.0
     },
     {
       "question_id": "qst_0468",
@@ -4308,10 +4308,10 @@
       "question_id": "qst_0469",
       "question_type": "miscellaneous",
       "doc_recall": 1.0,
-      "invalid_extra_docs": 0.8,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 22.0
+      "invalid_extra_docs": 0.75,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "composite_score": 65.5
     },
     {
       "question_id": "qst_0470",
@@ -4327,9 +4327,9 @@
       "question_type": "high_level",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.0,
-      "completeness": 0.0,
-      "composite_score": 0.0
+      "correctness": 1.0,
+      "completeness": 1.0,
+      "composite_score": 60.0
     },
     {
       "question_id": "qst_0472",
@@ -4354,9 +4354,9 @@
       "question_type": "high_level",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.8,
-      "completeness": 0.6,
-      "composite_score": 40.0
+      "correctness": 0.4,
+      "completeness": 0.2,
+      "composite_score": 12.0
     },
     {
       "question_id": "qst_0475",
@@ -4381,9 +4381,9 @@
       "question_type": "high_level",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.95,
+      "completeness": 0.75,
+      "composite_score": 50.5
     },
     {
       "question_id": "qst_0478",
@@ -4408,9 +4408,9 @@
       "question_type": "high_level",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 1.0,
-      "completeness": 1.0,
-      "composite_score": 60.0
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "composite_score": 0.0
     },
     {
       "question_id": "qst_0481",

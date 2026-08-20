@@ -27,7 +27,7 @@ from company_brain.graph.client import GraphClient
 logger = logging.getLogger(__name__)
 
 # label -> id property prefix used in Cytoscape node ids (doc_<doc_id>, person_<id>, ...)
-_ENTITY_LABELS = ("Person", "Org", "Ticket", "Project")
+_ENTITY_LABELS = ("Person", "Org", "Ticket", "Project", "Topic", "Deal")
 
 # Cytoscape node-id prefix per label. Document uses "doc_" (not "document_")
 # to match the frontend's existing citation-highlight convention, which
@@ -39,6 +39,9 @@ _ID_PREFIX = {
     "Ticket": "ticket",
     "Project": "project",
     "Fact": "fact",
+    "Topic": "topic",
+    "Deal": "deal",
+    "Entity": "entity",
 }
 
 
@@ -202,36 +205,42 @@ class TopologyCache:
                 eidx = 0
                 losers = self._get_loser_ids(workspace_id=workspace_id)
 
-                doc_id_set = {r.get("d.doc_id") or r.get("doc_id") for r in doc_rows if (r.get("d.doc_id") or r.get("doc_id"))}
+                doc_id_set = [r.get("d.doc_id") or r.get("doc_id") for r in doc_rows if (r.get("d.doc_id") or r.get("doc_id"))]
 
-                for did in doc_id_set:
+                # Fast bounded expansion for seed documents
+                for did in doc_id_set[:20]:
                     doc_nid = _node_id("Document", did)
-                    for label in _ENTITY_LABELS:
+                    try:
                         if workspace_id:
-                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:{label}) RETURN e.id, e.name LIMIT 8"
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Person) RETURN e.id, e.name LIMIT 6"
                         else:
-                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:{label}) RETURN e.id, e.name LIMIT 8"
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:Person) RETURN e.id, e.name LIMIT 6"
                         rows = client.run(query)
                         for row in rows:
-                            nid = _node_id(label, row["e.id"])
+                            nid = _node_id("Person", row["e.id"])
                             if nid not in node_ids:
                                 node_ids.add(nid)
-                                nodes.append(_entity_node(label, "e.name", "e.id", row))
+                                nodes.append(_entity_node("Person", "e.name", "e.id", row))
                             eidx += 1
                             edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
+                    except Exception:
+                        pass
 
-                    if workspace_id:
-                        query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 6"
-                    else:
-                        query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 6"
-                    fact_rows = client.run(query)
-                    for row in fact_rows:
-                        nid = _node_id("Fact", row["f.id"])
-                        if nid not in node_ids:
-                            node_ids.add(nid)
-                            nodes.append(_fact_node(row, is_active=row["f.id"] not in losers))
-                        eidx += 1
-                        edges.append(_edge(f"e{eidx}", doc_nid, nid, "HAS_FACT"))
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 4"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 4"
+                        fact_rows = client.run(query)
+                        for row in fact_rows:
+                            nid = _node_id("Fact", row["f.id"])
+                            if nid not in node_ids:
+                                node_ids.add(nid)
+                                nodes.append(_fact_node(row, is_active=row["f.id"] not in losers))
+                            eidx += 1
+                            edges.append(_edge(f"e{eidx}", doc_nid, nid, "HAS_FACT"))
+                    except Exception:
+                        pass
 
                 result = {"nodes": nodes, "edges": edges}
                 self._seed_cache[cache_key] = result
@@ -368,17 +377,22 @@ class TopologyCache:
             if not refresh and cache_key in self._same_as:
                 return self._same_as[cache_key]
             with _client_ctx(self._client_factory) as client:
-                if workspace_id:
-                    rows = client.run(
-                        "MATCH (a:Person {workspace_id: $ws})-[r:SAME_AS]->(b:Person {workspace_id: $ws}) "
-                        "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300",
-                        {"ws": workspace_id}
-                    )
-                else:
-                    rows = client.run(
-                        "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
-                        "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300"
-                    )
+                try:
+                    if workspace_id:
+                        rows = client.run(
+                            "MATCH (a:Person {workspace_id: $ws})-[r:SAME_AS]->(b:Person {workspace_id: $ws}) "
+                            "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300",
+                            {"ws": workspace_id}
+                        )
+                    else:
+                        rows = client.run(
+                            "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
+                            "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300"
+                        )
+                except Exception as exc:
+                    logger.debug("fetch_same_as skipped: %s", exc)
+                    rows = []
+
                 edges = []
                 for i, row in enumerate(rows):
                     edges.append(_edge(
@@ -403,17 +417,22 @@ class TopologyCache:
             if not refresh and cache_key in self._supersedes:
                 return self._supersedes[cache_key]
             with _client_ctx(self._client_factory) as client:
-                if workspace_id:
-                    rows = client.run(
-                        "MATCH (a:Fact {workspace_id: $ws})-[:SUPERSEDES]->(b:Fact {workspace_id: $ws}) "
-                        "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150",
-                        {"ws": workspace_id}
-                    )
-                else:
-                    rows = client.run(
-                        "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
-                        "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150"
-                    )
+                try:
+                    if workspace_id:
+                        rows = client.run(
+                            "MATCH (a:Fact {workspace_id: $ws})-[:SUPERSEDES]->(b:Fact {workspace_id: $ws}) "
+                            "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150",
+                            {"ws": workspace_id}
+                        )
+                    else:
+                        rows = client.run(
+                            "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
+                            "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150"
+                        )
+                except Exception as exc:
+                    logger.debug("fetch_supersedes skipped: %s", exc)
+                    rows = []
+
                 edges = []
                 losers = set()
                 for i, row in enumerate(rows):
@@ -434,8 +453,11 @@ class TopologyCache:
         """Fact ids on the losing side of a SUPERSEDES edge."""
         cache_key = workspace_id or 'default'
         if self._loser_ids is None or cache_key not in self._loser_ids:
-            self.fetch_supersedes(workspace_id=workspace_id)
-        return self._loser_ids.get(cache_key, set())
+            try:
+                self.fetch_supersedes(workspace_id=workspace_id)
+            except Exception:
+                return set()
+        return self._loser_ids.get(cache_key, set()) if self._loser_ids else set()
 
 
 # Module-level singleton -- the graph is process-wide and read-only from this

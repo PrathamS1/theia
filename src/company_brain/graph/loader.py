@@ -149,4 +149,39 @@ class GraphLoader:
                 stats["facts_failed"] += 1
                 logger.debug("Failed to write fact %s: %s", fact.subject, e)
 
+            # 3. Structural (Fact)-[:ABOUT]->(Entity | Topic) edge
+            if fact.subject:
+                subj_label = "Topic"
+                subj_name = fact.subject.strip()
+                for entity in extraction.entities:
+                    if entity.name and (entity.name.lower() in fact.subject.lower() or fact.subject.lower() in entity.name.lower()):
+                        subj_label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
+                        subj_name = entity.name
+                        break
+
+                target_key = f"{subj_label}_{subj_name}"
+                if effective_ws:
+                    target_key = f"{effective_ws}_{target_key}"
+                target_int_id = string_to_int_id(target_key)
+
+                about_cypher = (
+                    f"CREATE (f:Fact {{id: $fact_int_id, subject: $subject, attribute: $attribute, "
+                    f"value: $value, trust_score: $trust_score, doc_id: $doc_id{ws_prop}}})"
+                    f"-[:ABOUT {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                    f"(t:{subj_label} {{id: $target_int_id, name: $target_name{ws_prop}}})"
+                )
+                try:
+                    self.client.run_write(about_cypher, {
+                        **doc_props,
+                        "fact_int_id": fact_int_id,
+                        "subject": fact.subject,
+                        "attribute": fact.attribute,
+                        "value": fact.value,
+                        "trust_score": source_trust,
+                        "target_int_id": target_int_id,
+                        "target_name": subj_name,
+                    })
+                except Exception as e:
+                    logger.debug("Failed to write ABOUT edge: %s", e)
+
         return stats

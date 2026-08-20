@@ -31,6 +31,7 @@ def get_health():
     doc_count = 0
     person_count = 0
     org_count = 0
+    topic_count = 0
     fact_count = 0
 
     try:
@@ -40,11 +41,13 @@ def get_health():
                 doc_res = client.run("MATCH (d:Document) RETURN count(*)")
                 person_res = client.run("MATCH (p:Person) RETURN count(*)")
                 org_res = client.run("MATCH (o:Org) RETURN count(*)")
+                topic_res = client.run("MATCH (t:Topic) RETURN count(*)")
                 fact_res = client.run("MATCH (f:Fact) RETURN count(*)")
 
                 doc_count = doc_res[0].get("count(*)", 0) if doc_res else 0
                 person_count = person_res[0].get("count(*)", 0) if person_res else 0
                 org_count = org_res[0].get("count(*)", 0) if org_res else 0
+                topic_count = topic_res[0].get("count(*)", 0) if topic_res else 0
                 fact_count = fact_res[0].get("count(*)", 0) if fact_res else 0
     except Exception:
         hydra_ok = False
@@ -60,6 +63,7 @@ def get_health():
         "total_documents": doc_count,
         "total_persons": person_count,
         "total_orgs": org_count,
+        "total_topics": topic_count,
         "total_facts": fact_count,
         "total_vectors": vector_count,
     }

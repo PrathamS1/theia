@@ -1,8 +1,7 @@
+#!/usr/bin/env python3
 """
-scripts/create_indexes.py — Create node constraints and indexes in HydraDB.
-
-Usage:
-    python3 scripts/create_indexes.py
+scripts/create_indexes.py — run once to setup constraints & indexes in HydraDB.
+Updated for the graph-native schema (adds Topic).
 """
 
 import sys
@@ -16,36 +15,31 @@ from company_brain.graph.client import GraphClient
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("create_indexes")
 
-# OpenCypher index & constraint syntax variants
-INDEX_STATEMENTS = [
-    # OpenCypher / Neo4j 4.x syntax: CREATE CONSTRAINT ON (node:Label) ASSERT node.prop IS UNIQUE
-    ("Document.id constraint", "CREATE CONSTRAINT ON (d:Document) ASSERT d.id IS UNIQUE"),
-    ("Document.doc_id constraint", "CREATE CONSTRAINT ON (d:Document) ASSERT d.doc_id IS UNIQUE"),
-    ("Person.id constraint", "CREATE CONSTRAINT ON (p:Person) ASSERT p.id IS UNIQUE"),
-    ("Fact.id constraint", "CREATE CONSTRAINT ON (f:Fact) ASSERT f.id IS UNIQUE"),
-    # OpenCypher / Neo4j 4.x index syntax: CREATE INDEX ON :Label(prop)
-    ("Document.source index", "CREATE INDEX ON :Document(source)"),
-    ("Person.name index", "CREATE INDEX ON :Person(name)"),
-    ("Fact.subject index", "CREATE INDEX ON :Fact(subject)"),
-    ("Fact.attribute index", "CREATE INDEX ON :Fact(attribute)"),
+STATEMENTS = [
+    "CREATE CONSTRAINT doc_id_unique IF NOT EXISTS FOR (d:Document) REQUIRE d.id IS UNIQUE",
+    "CREATE CONSTRAINT person_id_unique IF NOT EXISTS FOR (p:Person) REQUIRE p.id IS UNIQUE",
+    "CREATE CONSTRAINT org_id_unique IF NOT EXISTS FOR (o:Org) REQUIRE o.id IS UNIQUE",
+    "CREATE CONSTRAINT ticket_id_unique IF NOT EXISTS FOR (t:Ticket) REQUIRE t.id IS UNIQUE",
+    "CREATE CONSTRAINT project_id_unique IF NOT EXISTS FOR (pr:Project) REQUIRE pr.id IS UNIQUE",
+    "CREATE CONSTRAINT deal_id_unique IF NOT EXISTS FOR (de:Deal) REQUIRE de.id IS UNIQUE",
+    "CREATE CONSTRAINT topic_id_unique IF NOT EXISTS FOR (tp:Topic) REQUIRE tp.id IS UNIQUE",
+    "CREATE CONSTRAINT fact_id_unique IF NOT EXISTS FOR (f:Fact) REQUIRE f.id IS UNIQUE",
+    "CREATE INDEX fact_attribute_idx IF NOT EXISTS FOR (f:Fact) ON (f.attribute)",
+    "CREATE INDEX doc_source_idx IF NOT EXISTS FOR (d:Document) ON (d.source)",
+    "CREATE INDEX person_name_idx IF NOT EXISTS FOR (p:Person) ON (p.name)",
+    "CREATE INDEX topic_name_idx IF NOT EXISTS FOR (tp:Topic) ON (tp.name)",
 ]
 
 
 def main():
-    logger.info("Connecting to HydraDB to create constraints and indexes...")
+    logger.info("Setting up constraints and indexes in HydraDB...")
     with GraphClient() as client:
-        if not client.ping():
-            logger.error("HydraDB is not reachable.")
-            sys.exit(1)
-
-        for name, stmt in INDEX_STATEMENTS:
+        for stmt in STATEMENTS:
             try:
                 client.run_write(stmt)
-                logger.info("✓ Created: %s", name)
-            except Exception as exc:
-                logger.warning("Note on %s: %s", name, exc)
-
-    logger.info("Index setup complete.")
+                logger.info("OK: %s", stmt)
+            except Exception as e:
+                logger.info("Constraint/index note: %s -> %s", stmt, e)
 
 
 if __name__ == "__main__":

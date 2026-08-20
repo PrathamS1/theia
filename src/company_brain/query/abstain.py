@@ -1,28 +1,39 @@
 """
-query/abstain.py — Abstention engine.
+query/abstain.py — Graph-Native Abstention Engine for HydraDB.
 
-Evaluates retrieved fact sets and entity paths. If no path or relevant fact is found,
-returns structured abstention ("I don't know" / "Not in the data") to prevent hallucination.
+Evaluates retrieved fact sets, graph connectivity, and target predicates.
+If no traversable path or relevant fact is confirmed in HydraDB,
+returns structured abstention ("Not in company knowledge base") with zero citations.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional, Set
 
 
-def should_abstain(retrieved_facts: List[Dict[str, Any]], min_facts: int = 1) -> Tuple[bool, str]:
+def should_abstain(
+    retrieved_facts: List[Dict[str, Any]],
+    graph_connected_docs: Optional[Set[str]] = None,
+    missing_target_tokens: Optional[List[str]] = None,
+    top_doc_overlap: float = 1.0,
+    top_vector_score: float = 1.0,
+) -> Tuple[bool, str]:
     """
-    Determines if the query engine should abstain from answering.
-    Returns tuple: (should_abstain: bool, abstention_reason: str)
+    Evaluates multi-signal graph grounding for closed-world verification.
+    Balances precision on missing facts without sacrificing recall on semantic paraphrases.
     """
-    if not retrieved_facts or len(retrieved_facts) < min_facts:
-        return True, "Information requested is not found in the company data graph."
+    # If dense semantic vector score is strong (>= 0.46), trust the semantic topic match
+    if top_vector_score >= 0.46:
+        return False, ""
 
-    # Check if facts contain any non-empty subject and value
-    has_valid = any(
-        (f.get("subject") or f.get("f.subject")) and (f.get("value") or f.get("f.value"))
-        for f in retrieved_facts
-    )
-    if not has_valid:
-        return True, "No verifiable graph facts match the query target."
+    # Signal B1: Multiple required domain entities/tokens completely absent from entire company corpus
+    if missing_target_tokens and len(missing_target_tokens) >= 2 and top_vector_score < 0.40:
+        return True, f"Multiple target entities ({', '.join(missing_target_tokens[:2])}) do not exist in company records."
 
+    # Signal B2: A single essential domain term missing AND candidate document cannot ground it
+    if missing_target_tokens and len(missing_target_tokens) == 1 and top_vector_score < 0.35:
+        return True, f"Target concept ({missing_target_tokens[0]}) is not recorded in company knowledge base."
+
+    # Signal B3: Zero graph facts and zero graph paths with weak match
+    if not retrieved_facts and not graph_connected_docs and top_vector_score < 0.28 and top_doc_overlap < 0.10:
+        return True, "No traversable path or verifiable facts exist in HydraDB graph."
 
     return False, ""

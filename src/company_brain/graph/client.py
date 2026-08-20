@@ -146,6 +146,13 @@ class GraphClient:
                 logger.debug("Batch write progress: %d / %d rows", total, len(rows))
         return total
 
+    def sync(self) -> None:
+        """Forces reader synchronization against authoritative SlateDB writer epoch."""
+        try:
+            self.run("MATCH (d:Document) RETURN count(*)", strong=True)
+        except Exception as e:
+            logger.debug("HydraDB sync epoch ping: %s", e)
+
     def ping(self) -> bool:
         try:
             result = self.run_read("MATCH (n:Document) RETURN count(*)")
