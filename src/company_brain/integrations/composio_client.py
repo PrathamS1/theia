@@ -21,13 +21,20 @@ class ComposioManager:
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or COMPOSIO_API_KEY
-        if not self.api_key:
-            raise ValueError(
-                "COMPOSIO_API_KEY is not set. Please set it in .env or pass it explicitly."
-            )
+        self.sdk = None
+        if self.api_key:
+            try:
+                from composio import Composio
+                self.sdk = Composio(api_key=self.api_key)
+            except Exception as e:
+                logger.debug("Could not initialize Composio SDK: %s", e)
 
-        from composio import Composio
-        self.sdk = Composio(api_key=self.api_key)
+    def _ensure_sdk(self):
+        if not self.sdk:
+            if not self.api_key:
+                raise ValueError("COMPOSIO_API_KEY is not set. Please configure it in .env to use live SaaS integrations.")
+            from composio import Composio
+            self.sdk = Composio(api_key=self.api_key)
 
     def initiate_slack_connection(self, user_id: str = "default_user", callback_url: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -271,6 +278,66 @@ class ComposioManager:
             logger.error("Failed to fetch GitHub issues for %s/%s: %s", owner, repo, e)
             return []
 
+    def fetch_github_commits(
+        self,
+        owner: str,
+        repo: str,
+        user_id: str = "default_user",
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetches recent repository commits using GITHUB_LIST_COMMITS.
+        """
+        logger.info("Fetching GitHub commits for %s/%s...", owner, repo)
+        try:
+            res = self.sdk.tools.execute(
+                slug="GITHUB_LIST_COMMITS",
+                user_id=user_id,
+                arguments={
+                    "owner": owner,
+                    "repo": repo,
+                    "per_page": limit,
+                },
+                dangerously_skip_version_check=True,
+            )
+            data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
+            if isinstance(data, list):
+                return data
+            elif isinstance(data, dict):
+                return data.get("commits") or []
+            return []
+        except Exception as e:
+            logger.error("Failed to fetch GitHub commits for %s/%s: %s", owner, repo, e)
+            return []
+
+    def fetch_github_readme(
+        self,
+        owner: str,
+        repo: str,
+        user_id: str = "default_user",
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Fetches repository README using GITHUB_GET_A_REPOSITORY_README.
+        """
+        logger.info("Fetching GitHub README for %s/%s...", owner, repo)
+        try:
+            res = self.sdk.tools.execute(
+                slug="GITHUB_GET_A_REPOSITORY_README",
+                user_id=user_id,
+                arguments={
+                    "owner": owner,
+                    "repo": repo,
+                },
+                dangerously_skip_version_check=True,
+            )
+            data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
+            if isinstance(data, dict) and (data.get("content") or data.get("download_url")):
+                return data
+            return None
+        except Exception as e:
+            logger.debug("README fetch skipped for %s/%s: %s", owner, repo, e)
+            return None
+
     # ── Discord Toolkit Methods ───────────────────────────────────────────────
 
     def initiate_discord_connection(self, user_id: str = "default_user", callback_url: Optional[str] = None) -> Dict[str, Any]:
@@ -402,23 +469,24 @@ class ComposioManager:
         Returns a list of message_id strings for subsequent GMAIL_GET_MESSAGE calls.
         """
         logger.info("Listing Gmail emails for user_id=%s (query=%r, max=%d)...", user_id, query, max_results)
-        try:
-            res = self.sdk.tools.execute(
-                slug="GMAIL_LIST_EMAILS",
-                user_id=user_id,
-                arguments={"q": query, "max_results": max_results},
-                dangerously_skip_version_check=True,
-            )
-            data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
-            if isinstance(data, list):
-                return [str(m.get("id") or m) for m in data if m]
-            if isinstance(data, dict):
-                messages = data.get("messages") or []
-                return [str(m.get("id") or m) for m in messages if m]
-            return []
-        except Exception as e:
-            logger.error("Failed to list Gmail emails: %s", e)
-            return []
+        for slug in ["GMAIL_FETCH_EMAILS", "GMAIL_LIST_MESSAGES", "GMAIL_LIST_EMAILS"]:
+            try:
+                res = self.sdk.tools.execute(
+                    slug=slug,
+                    user_id=user_id,
+                    arguments={"q": query, "max_results": max_results},
+                    dangerously_skip_version_check=True,
+                )
+                data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
+                if isinstance(data, list):
+                    return [str(m.get("id") or m.get("message_id") or m) for m in data if m]
+                if isinstance(data, dict):
+                    messages = data.get("messages") or data.get("response_data") or data.get("emails") or []
+                    if isinstance(messages, list):
+                        return [str(m.get("id") or m.get("message_id") or m) for m in messages if m]
+            except Exception as e:
+                logger.debug("Gmail tool slug %s failed: %s", slug, e)
+        return []
 
     def fetch_gmail_message(
         self,

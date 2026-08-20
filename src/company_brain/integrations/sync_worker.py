@@ -170,13 +170,35 @@ class LiveSyncWorker:
             elif not owner:
                 owner = self.user_id
 
-            # Normalize repository metadata
+            # 1. Normalize repository metadata
             repo_doc = normalizer.normalize_repository(repo)
             if repo_doc:
                 repo_doc["workspace_id"] = self.user_id
                 all_normalized_docs.append(repo_doc)
 
-            # Fetch & normalize PRs
+            # 2. Fetch & normalize README documentation
+            try:
+                readme_data = self.composio.fetch_github_readme(owner=owner, repo=repo_name, user_id=self.user_id)
+                if readme_data:
+                    doc = normalizer.normalize_readme(readme_data, repo_name=repo_name, owner=owner)
+                    if doc:
+                        doc["workspace_id"] = self.user_id
+                        all_normalized_docs.append(doc)
+            except Exception as e:
+                logger.debug("Failed to fetch README for %s/%s: %s", owner, repo_name, e)
+
+            # 3. Fetch & normalize Commits
+            try:
+                commits = self.composio.fetch_github_commits(owner=owner, repo=repo_name, user_id=self.user_id, limit=15)
+                for commit in commits:
+                    doc = normalizer.normalize_commit(commit)
+                    if doc:
+                        doc["workspace_id"] = self.user_id
+                        all_normalized_docs.append(doc)
+            except Exception as e:
+                logger.debug("Failed to fetch commits for %s/%s: %s", owner, repo_name, e)
+
+            # 4. Fetch & normalize PRs
             prs = self.composio.fetch_github_pull_requests(
                 owner=owner,
                 repo=repo_name,
@@ -189,7 +211,7 @@ class LiveSyncWorker:
                     doc["workspace_id"] = self.user_id
                     all_normalized_docs.append(doc)
 
-            # Fetch & normalize Issues
+            # 5. Fetch & normalize Issues
             issues = self.composio.fetch_github_issues(
                 owner=owner,
                 repo=repo_name,
@@ -544,13 +566,16 @@ class LiveSyncWorker:
         """
         logger.info("Purging all live workspace data for user_id=%s...", self.user_id)
 
-        # 1. Purge from HydraDB (clean labeled node deletion)
+        # 1. Purge from HydraDB with clean DETACH DELETE and parameter binding
         try:
             with GraphClient() as client:
                 ws = self.user_id
-                for label in ["Document", "Fact", "Person", "Org", "Project", "Ticket"]:
+                for label in ["Document", "Fact", "Person", "Org", "Project", "Ticket", "Topic", "Deal", "Entity"]:
                     try:
-                        client.run(f"MATCH (n:{label} {{workspace_id: '{ws}'}}) DELETE n")
+                        client.run(
+                            f"MATCH (n:{label} {{workspace_id: $ws}}) DETACH DELETE n",
+                            {"ws": ws}
+                        )
                     except Exception as e:
                         logger.debug("Node deletion for :%s failed: %s", label, e)
         except Exception as exc:

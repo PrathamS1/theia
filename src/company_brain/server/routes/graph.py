@@ -18,12 +18,13 @@ router = APIRouter(prefix="/api/graph", tags=["Graph"])
 
 _ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact", "Topic", "Deal", "Entity"}
 
-# In-memory document text cache, for full_body lookups only (the graph stores
-# a name/subject, not full document text).
+from company_brain.config import LIVE_DATA_DIR
+
+# In-memory document text cache, for full_body lookups only
 _DOCS_CACHE: Dict[str, Dict[str, Any]] = {}
 
 
-def _get_docs_cache() -> Dict[str, Dict[str, Any]]:
+def _get_docs_cache(workspace_id: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
     global _DOCS_CACHE
     if not _DOCS_CACHE:
         staged_path = Path("data/staged_gold_docs.json")
@@ -37,6 +38,17 @@ def _get_docs_cache() -> Dict[str, Dict[str, Any]]:
                         doc_id = d.get("doc_id")
                         if doc_id:
                             _DOCS_CACHE[doc_id] = d
+    if workspace_id:
+        live_staged_path = LIVE_DATA_DIR / workspace_id / "live_staged_docs.json"
+        if live_staged_path.exists():
+            try:
+                with open(live_staged_path, "r", encoding="utf-8") as f:
+                    live_data = json.load(f)
+                    combined = dict(_DOCS_CACHE)
+                    combined.update(live_data)
+                    return combined
+            except Exception:
+                pass
     return _DOCS_CACHE
 
 
@@ -50,8 +62,8 @@ def _filter_by_labels(nodes: List[Dict], edges: List[Dict], allowed: set) -> tup
 
 @router.get("/topology")
 def get_graph_topology(
-    doc_limit: int = Query(30, ge=5, le=80, description="Number of seed documents to expand"),
-    labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Project,Fact"),
+    doc_limit: int = Query(45, ge=5, le=100, description="Number of seed documents to expand"),
+    labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Project,Topic,Deal,Fact"),
     search: Optional[str] = Query(None, description="Filter documents by title (applies to the currently cached seed only)"),
     refresh: bool = Query(False, description="Bypass the topology cache and re-query HydraDB"),
     workspace_id: Optional[str] = Query(None, description="Filter topology to a specific user/workspace"),
@@ -155,8 +167,35 @@ def get_node_details(
         key = node_id[len(prefix):]
 
         if label == "Document":
-            docs_cache = _get_docs_cache()
+            docs_cache = _get_docs_cache(workspace_id=workspace_id)
             doc = docs_cache.get(key)
+            if not doc:
+                # Fallback: Query HydraDB for this document node
+                try:
+                    with GraphClient() as client:
+                        if workspace_id:
+                            rows = client.run(
+                                "MATCH (d:Document {doc_id: $did, workspace_id: $ws}) "
+                                "RETURN d.doc_id, d.title, d.source, d.created_at",
+                                {"did": key, "ws": workspace_id}
+                            )
+                        else:
+                            rows = client.run(
+                                "MATCH (d:Document {doc_id: $did}) "
+                                "RETURN d.doc_id, d.title, d.source, d.created_at",
+                                {"did": key}
+                            )
+                        if rows:
+                            r = rows[0]
+                            doc = {
+                                "doc_id": r.get("d.doc_id", key),
+                                "title": r.get("d.title", key),
+                                "source": r.get("d.source", ""),
+                                "created_at": r.get("d.created_at", ""),
+                                "text": r.get("d.title", key),
+                            }
+                except Exception:
+                    pass
             if not doc:
                 raise HTTPException(status_code=404, detail="Document not found")
             neighbours = []
@@ -219,13 +258,25 @@ def get_node_details(
                 "connected_neighbors": neighbours,
             }
 
-        # Person / Org / Ticket / Project
+        # Person / Org / Ticket / Project / Topic / Deal / Entity
         try:
             with GraphClient() as client:
-                rows = client.run(
-                    f"MATCH (e:{label} {{id: $eid}}) RETURN e.name, e.source",
-                    {"eid": int(key)},
-                )
+                try:
+                    eid = int(key)
+                except ValueError:
+                    from company_brain.graph.schema import string_to_int_id
+                    eid = string_to_int_id(key)
+
+                if workspace_id:
+                    rows = client.run(
+                        f"MATCH (e:{label} {{id: $eid, workspace_id: $ws}}) RETURN e.name, e.source",
+                        {"eid": eid, "ws": workspace_id},
+                    )
+                else:
+                    rows = client.run(
+                        f"MATCH (e:{label} {{id: $eid}}) RETURN e.name, e.source",
+                        {"eid": eid},
+                    )
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"HydraDB query failed: {exc}")
         if not rows:

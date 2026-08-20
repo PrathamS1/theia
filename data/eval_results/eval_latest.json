@@ -1,9 +1,9 @@
 {
   "summary": {
     "total_questions": 500,
-    "overall_composite_score": 65.76,
-    "overall_correctness": 75.57,
-    "overall_completeness": 66.36,
+    "overall_composite_score": 65.79,
+    "overall_correctness": 75.61,
+    "overall_completeness": 66.4,
     "overall_doc_recall": 73.99,
     "overall_invalid_extra_docs": 73.91,
     "by_category": {
@@ -75,9 +75,9 @@
         "count": 10,
         "doc_recall": 0.0,
         "invalid_extra_docs": 100.0,
-        "correctness": 58.33,
-        "completeness": 50.33,
-        "composite_score": 31.43
+        "correctness": 60.33,
+        "completeness": 52.33,
+        "composite_score": 32.83
       },
       "info_not_found": {
         "count": 20,
@@ -88,8 +88,8 @@
         "composite_score": 0.0
       }
     },
-    "execution_time_seconds": 88.58,
-    "questions_per_second": 5.64
+    "execution_time_seconds": 112.37,
+    "questions_per_second": 4.45
   },
   "per_question": [
     {
@@ -4354,9 +4354,9 @@
       "question_type": "high_level",
       "doc_recall": 0.0,
       "invalid_extra_docs": 1.0,
-      "correctness": 0.4,
-      "completeness": 0.2,
-      "composite_score": 12.0
+      "correctness": 0.6,
+      "completeness": 0.4,
+      "composite_score": 26.0
     },
     {
       "question_id": "qst_0475",

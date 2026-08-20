@@ -143,12 +143,13 @@ class QueryEngine:
                 try:
                     if self.workspace_id:
                         cypher_org = (
-                            f"MATCH (o:Org {{name: '{org_name}', workspace_id: '{self.workspace_id}'}})<-[:MENTIONS]-(d:Document {{workspace_id: '{self.workspace_id}'}}) "
+                            "MATCH (o:Org {name: $name, workspace_id: $ws})<-[:MENTIONS]-(d:Document {workspace_id: $ws}) "
                             "RETURN d.doc_id AS did LIMIT 20"
                         )
+                        rows = self.graph_client.run(cypher_org, {"name": org_name, "ws": self.workspace_id})
                     else:
-                        cypher_org = f"MATCH (o:Org {{name: '{org_name}'}})<-[:MENTIONS]-(d:Document) RETURN d.doc_id AS did LIMIT 20"
-                    rows = self.graph_client.run(cypher_org)
+                        cypher_org = "MATCH (o:Org {name: $name})<-[:MENTIONS]-(d:Document) RETURN d.doc_id AS did LIMIT 20"
+                        rows = self.graph_client.run(cypher_org, {"name": org_name})
                     for r in rows:
                         if r.get("did"):
                             graph_connected_docs.add(r["did"])
@@ -162,19 +163,20 @@ class QueryEngine:
                 try:
                     if self.workspace_id:
                         cypher_person = (
-                            f"MATCH (p:Person {{name: '{person_name}', workspace_id: '{self.workspace_id}'}}) "
-                            "OPTIONAL MATCH (p)-[:SAME_AS]-(alias:Person) "
-                            "MATCH (doc:Document)-[:MENTIONS]->(target) WHERE target = p OR target = alias "
+                            "MATCH (p:Person {name: $name, workspace_id: $ws}) "
+                            "OPTIONAL MATCH (p)-[:SAME_AS]-(alias:Person {workspace_id: $ws}) "
+                            "MATCH (doc:Document {workspace_id: $ws})-[:MENTIONS]->(target) WHERE target = p OR target = alias "
                             "RETURN doc.doc_id AS did, alias.name AS alias_name LIMIT 20"
                         )
+                        rows = self.graph_client.run(cypher_person, {"name": person_name, "ws": self.workspace_id})
                     else:
                         cypher_person = (
-                            f"MATCH (p:Person {{name: '{person_name}'}}) "
+                            "MATCH (p:Person {name: $name}) "
                             "OPTIONAL MATCH (p)-[:SAME_AS]-(alias:Person) "
                             "MATCH (doc:Document)-[:MENTIONS]->(target) WHERE target = p OR target = alias "
                             "RETURN doc.doc_id AS did, alias.name AS alias_name LIMIT 20"
                         )
-                    rows = self.graph_client.run(cypher_person)
+                        rows = self.graph_client.run(cypher_person, {"name": person_name})
                     for r in rows:
                         if r.get("did"):
                             graph_connected_docs.add(r["did"])
@@ -206,12 +208,20 @@ class QueryEngine:
         for doc_id in candidate_doc_ids[:5]:
             try:
                 # Query facts directly from HydraDB, filtering out superseded facts via OpenCypher
-                cypher_facts = (
-                    f"MATCH (d:Document {{doc_id: '{doc_id}'}})-[:HAS_FACT]->(f:Fact) "
-                    "WHERE NOT (f)<-[:SUPERSEDES]-(:Fact) "
-                    "RETURN f.id AS id, f.subject AS subject, f.attribute AS attr, f.value AS val, f.trust_score AS trust LIMIT 8"
-                )
-                fact_rows = self.graph_client.run(cypher_facts)
+                if self.workspace_id:
+                    cypher_facts = (
+                        "MATCH (d:Document {doc_id: $did, workspace_id: $ws})-[:HAS_FACT]->(f:Fact {workspace_id: $ws}) "
+                        "WHERE NOT (f)<-[:SUPERSEDES]-(:Fact {workspace_id: $ws}) "
+                        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attr, f.value AS val, f.trust_score AS trust LIMIT 8"
+                    )
+                    fact_rows = self.graph_client.run(cypher_facts, {"did": doc_id, "ws": self.workspace_id})
+                else:
+                    cypher_facts = (
+                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
+                        "WHERE NOT (f)<-[:SUPERSEDES]-(:Fact) "
+                        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attr, f.value AS val, f.trust_score AS trust LIMIT 8"
+                    )
+                    fact_rows = self.graph_client.run(cypher_facts, {"did": doc_id})
                 for fr in fact_rows:
                     active_facts.append({
                         "id": fr.get("id"),

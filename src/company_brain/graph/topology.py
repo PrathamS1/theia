@@ -138,11 +138,11 @@ class TopologyCache:
         # which re-acquires it -- a plain Lock deadlocks on that same-thread
         # re-entry.
         self._lock = threading.RLock()
-        self._seed_cache: Dict[int, Dict[str, Any]] = {}
+        self._seed_cache: Dict[str, Dict[str, Any]] = {}
         self._expand_cache: Dict[Tuple[str, str], Dict[str, Any]] = {}
-        self._same_as: Optional[List[Dict[str, Any]]] = None
-        self._supersedes: Optional[List[Dict[str, Any]]] = None
-        self._loser_ids: Optional[set] = None
+        self._same_as: Dict[str, List[Dict[str, Any]]] = {}
+        self._supersedes: Dict[str, List[Dict[str, Any]]] = {}
+        self._loser_ids: Dict[str, set] = {}
 
     # ---- warm-up -----------------------------------------------------------
 
@@ -167,12 +167,15 @@ class TopologyCache:
                 keys_to_del = [k for k in self._seed_cache if str(k).startswith(f"{workspace_id}_") or str(k).startswith(f"{workspace_id}")]
                 for k in keys_to_del:
                     self._seed_cache.pop(k, None)
+                self._same_as.pop(workspace_id, None)
+                self._supersedes.pop(workspace_id, None)
+                self._loser_ids.pop(workspace_id, None)
             else:
                 self._seed_cache.clear()
+                self._same_as.clear()
+                self._supersedes.clear()
+                self._loser_ids.clear()
             self._expand_cache.clear()
-            self._same_as = None
-            self._supersedes = None
-            self._loser_ids = None
 
     # ---- seed ----------------------------------------------------------------
 
@@ -207,9 +210,11 @@ class TopologyCache:
 
                 doc_id_set = [r.get("d.doc_id") or r.get("doc_id") for r in doc_rows if (r.get("d.doc_id") or r.get("doc_id"))]
 
-                # Fast bounded expansion for seed documents
-                for did in doc_id_set[:20]:
+                # Rich seed expansion to populate 120-150 nodes
+                for did in doc_id_set[:40]:
                     doc_nid = _node_id("Document", did)
+                    
+                    # 1. Expand Persons
                     try:
                         if workspace_id:
                             query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Person) RETURN e.id, e.name LIMIT 6"
@@ -226,6 +231,41 @@ class TopologyCache:
                     except Exception:
                         pass
 
+                    # 2. Expand Orgs
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Org) RETURN e.id, e.name LIMIT 3"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:Org) RETURN e.id, e.name LIMIT 3"
+                        rows = client.run(query)
+                        for row in rows:
+                            nid = _node_id("Org", row["e.id"])
+                            if nid not in node_ids:
+                                node_ids.add(nid)
+                                nodes.append(_entity_node("Org", "e.name", "e.id", row))
+                            eidx += 1
+                            edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
+                    except Exception:
+                        pass
+
+                    # 3. Expand Topics
+                    try:
+                        if workspace_id:
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:Topic) RETURN e.id, e.name LIMIT 3"
+                        else:
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:Topic) RETURN e.id, e.name LIMIT 3"
+                        rows = client.run(query)
+                        for row in rows:
+                            nid = _node_id("Topic", row["e.id"])
+                            if nid not in node_ids:
+                                node_ids.add(nid)
+                                nodes.append(_entity_node("Topic", "e.name", "e.id", row))
+                            eidx += 1
+                            edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
+                    except Exception:
+                        pass
+
+                    # 4. Expand Facts
                     try:
                         if workspace_id:
                             query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 4"

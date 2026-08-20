@@ -294,3 +294,32 @@ class GitHubNormalizer(BaseNormalizer):
                 "language": language,
             },
         )
+
+    def normalize_readme(self, readme_data: Dict[str, Any], repo_name: str, owner: str = "") -> Optional[Dict[str, Any]]:
+        """Transforms repository README content into a rich StagedDocument."""
+        import base64
+        content_b64 = readme_data.get("content") or ""
+        text = ""
+        if content_b64:
+            try:
+                text = base64.b64decode(content_b64.replace("\n", "")).decode("utf-8", errors="replace")
+            except Exception:
+                text = content_b64
+        if not text or len(text.strip()) < 10:
+            return None
+
+        full_repo = f"{owner}/{repo_name}" if owner else repo_name
+        doc_id = f"gh_readme_{full_repo.replace('/', '_')}"
+
+        return create_staged_document(
+            doc_id=doc_id,
+            source=self.source_name,
+            title=f"README: {full_repo}",
+            text=f"# README: {full_repo}\n\n{text}",
+            author=owner,
+            workspace_id=self.workspace_id,
+            metadata={
+                "type": "readme",
+                "repo": full_repo,
+            },
+        )
