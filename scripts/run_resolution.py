@@ -25,7 +25,7 @@ logger = logging.getLogger("run_resolution")
 
 def main():
     parser = argparse.ArgumentParser(description="Run Entity & Conflict Resolution")
-    parser.add_argument("--heuristic", action="store_true", help="Bypass LLM API and run instant rule-based resolution")
+    parser.add_argument("--workspace", "-w", type=str, default=None, help="Scope resolution to a specific live workspace user_id")
     args = parser.parse_args()
 
     logger.info("Starting Entity Resolution & Conflict Layer processing...")
@@ -37,11 +37,11 @@ def main():
 
         # Step 1: Entity Resolution -> SAME_AS edges
         logger.info("Step 1: Entity Resolution...")
-        same_as_count = resolve_entities(client, force_heuristic=args.heuristic)
+        same_as_count = resolve_entities(client, workspace_id=args.workspace)
 
         # Step 2: Conflict Layer -> SUPERSEDES edges
         logger.info("Step 2: Conflict Detection & Tagging...")
-        conflict_count = detect_and_tag_conflicts(client)
+        conflict_count = detect_and_tag_conflicts(client, workspace_id=args.workspace)
 
         logger.info("Resolution completed successfully!")
         logger.info("  SAME_AS edges created:   %d", same_as_count)

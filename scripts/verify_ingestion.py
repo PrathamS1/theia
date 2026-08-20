@@ -31,11 +31,13 @@ def main():
     if not vstore.load():
         logger.error("[FAIL] Vector store could not be loaded from data/vectors/.")
     else:
-        logger.info("[OK]   Vector store loaded %d document embeddings.", len(vstore.doc_ids))
+        num_items = len(vstore.chunks_meta) if vstore.chunks_meta else len(vstore.doc_ids)
+        emb_shape = vstore.chunk_embeddings.shape if vstore.chunk_embeddings is not None else (vstore.doc_embeddings.shape if vstore.doc_embeddings is not None else "None")
+        logger.info("[OK]   Vector store loaded %d passage embeddings (matrix shape: %s).", num_items, emb_shape)
         
         sample_q = "What are the default size limits for multipart file uploads?"
         hits = vstore.search_similar(sample_q, top_k=3)
-        logger.info("  Sample Query: '%s'", sample_q)
+        logger.info("  Sample Semantic Search Query: '%s'", sample_q)
         for rank, (doc_id, score, meta) in enumerate(hits, 1):
             logger.info("    #%d: doc_id=%s (score=%.4f, source=%s, title='%s')",
                         rank, doc_id, score, meta.get("source"), meta.get("title"))

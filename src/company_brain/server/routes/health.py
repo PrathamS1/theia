@@ -11,6 +11,17 @@ from company_brain.indexing.vector_store import VectorStore
 router = APIRouter(prefix="/api", tags=["Health"])
 
 
+_VSTORE = None
+
+
+def _get_vstore():
+    global _VSTORE
+    if _VSTORE is None:
+        _VSTORE = VectorStore()
+        _VSTORE.load()
+    return _VSTORE
+
+
 @router.get("/health")
 def get_health():
     """
@@ -38,8 +49,8 @@ def get_health():
     except Exception:
         hydra_ok = False
 
-    vstore = VectorStore()
-    vstore_loaded = vstore.load()
+    vstore = _get_vstore()
+    vstore_loaded = (vstore.chunk_embeddings is not None or vstore.doc_embeddings is not None)
     vector_count = len(vstore.chunks_meta) if (vstore_loaded and vstore.chunks_meta) else len(vstore.doc_ids)
 
     return {

@@ -544,27 +544,17 @@ class LiveSyncWorker:
         """
         logger.info("Purging all live workspace data for user_id=%s...", self.user_id)
 
-        # 1. Purge from HydraDB
-        with GraphClient() as client:
-            ws = self.user_id
-            # Delete relationships first
-            for edge_q in [
-                f"MATCH (d:Document {{workspace_id: '{ws}'}})-[r:MENTIONS]->() DELETE r",
-                f"MATCH (d:Document {{workspace_id: '{ws}'}})-[r:HAS_FACT]->() DELETE r",
-                f"MATCH (p:Person {{workspace_id: '{ws}'}})-[r:SAME_AS]->() DELETE r",
-                f"MATCH ()-[r:SUPERSEDES {{workspace_id: '{ws}'}}]->() DELETE r",
-            ]:
-                try:
-                    client.run(edge_q)
-                except Exception as e:
-                    logger.debug("Edge deletion failed: %s", e)
-
-            # Delete labeled nodes
-            for label in ["Document", "Fact", "Person", "Org", "Project", "Ticket"]:
-                try:
-                    client.run(f"MATCH (n:{label} {{workspace_id: '{ws}'}}) DELETE n")
-                except Exception as e:
-                    logger.debug("Node deletion for :%s failed: %s", label, e)
+        # 1. Purge from HydraDB (clean labeled node deletion)
+        try:
+            with GraphClient() as client:
+                ws = self.user_id
+                for label in ["Document", "Fact", "Person", "Org", "Project", "Ticket"]:
+                    try:
+                        client.run(f"MATCH (n:{label} {{workspace_id: '{ws}'}}) DELETE n")
+                    except Exception as e:
+                        logger.debug("Node deletion for :%s failed: %s", label, e)
+        except Exception as exc:
+            logger.warning("HydraDB purge skipped or failed: %s", exc)
 
         # 2. Purge local disk files
         import shutil

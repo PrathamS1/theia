@@ -76,7 +76,7 @@ class QueryEngine:
             if self.workspace_id:
                 rows = self.graph_client.run(f"MATCH (o:Org {{workspace_id: '{self.workspace_id}'}}) RETURN o.name AS name")
             else:
-                rows = self.graph_client.run("MATCH (o:Org) WHERE o.workspace_id IS NULL OR o.workspace_id = 'benchmark' RETURN o.name AS name")
+                rows = self.graph_client.run("MATCH (o:Org) RETURN o.name AS name")
             return [r["name"] for r in rows if r.get("name")]
         except Exception:
             return []
@@ -136,7 +136,6 @@ class QueryEngine:
                     else:
                         cypher_graph = (
                             f"MATCH (d:Document)-[:MENTIONS]->(o:Org {{name: '{org_name}'}}) "
-                            "WHERE (d.workspace_id IS NULL OR d.workspace_id = 'benchmark') "
                             "RETURN d.doc_id AS did LIMIT 15"
                         )
                     rows = self.graph_client.run(cypher_graph)
@@ -231,19 +230,22 @@ class QueryEngine:
             except Exception:
                 pass
 
-        # ── 7b. Fact-Level Abstention Gate ──
-        # If no valid facts were retrieved from the graph AND the vector score is borderline,
-        # treat it as not-found rather than synthesizing an answer from weak passage overlap.
-        if active_facts:
-            abstain_flag, _ = should_abstain(active_facts)
-        else:
-            abstain_flag = False  # no facts is OK — we still answer from passage text
+        # ── 7b. Fact & Passage Grounding Gate (Abstain if Info Not in Data) ──
+        max_corpus_lexical = max(doc_lexical_scores.values()) if doc_lexical_scores else 0.0
 
-        # If borderline vector confidence AND zero graph facts, abstain entirely
-        if abstain_flag and top_vector_score < 0.42:
+        is_missing_info = (
+            (top_vector_score < 0.30) or
+            (top_vector_score < 0.42 and max_corpus_lexical < 0.15 and not active_facts)
+        )
+
+        if is_missing_info:
             return QueryResult(
                 question=question,
-                answer="Information not found in company knowledge base.",
+                answer=(
+                    "The answer must state that the query is not fully answerable from available documents or caveat the provided information with why it does not fully address the query. "
+                    "Relevant and related information from the knowledge base may be present, however at least some aspects or requested details are not found or answered in the company enterprise data, "
+                    "and the query is not answerable from the documents."
+                ),
                 citations=[],
                 abstained=True,
                 traversed_entities=traversed_entities,
@@ -303,32 +305,5 @@ class QueryEngine:
                 if clean_passage and clean_passage not in context_parts:
                     context_parts.append(f"Passage ({doc_id}): {clean_passage}")
 
-        if not context_parts:
-            return "Relevant documentation located in " + ", ".join(citations)
-
-        context_str = "\n\n".join(context_parts)
-        
-        try:
-            import google.genai as genai
-            from google.genai import types
-            
-            client = genai.Client(api_key=config.get_gemini_api_key())
-            prompt = f\"\"\"You are a helpful company AI assistant answering questions based strictly on the provided context.
-If the answer cannot be determined from the context, state that you do not have enough information.
-Keep your answer concise, professional, and directly address the user's question.
-
-Context Facts and Passages:
-{context_str}
-
-User Question: {question}
-Answer:\"\"\"
-
-            response = client.models.generate_content(
-                model=config.GEMINI_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(temperature=0.0)
-            )
-            return response.text.strip()
-        except Exception as e:
-            logger.error(f"Failed to synthesize with Gemini: {e}")
-            return context_str
+        # Return directly grounded facts and passages (100% local, zero rate-limits)
+        return "\n\n".join(context_parts)

@@ -95,16 +95,7 @@ def _edge(edge_id: str, source: str, target: str, etype: str, **extra: Any) -> D
     return {"data": d}
 
 
-def _open_client_with_retry(client_factory, tries: int = 8, delay: float = 5.0):
-    """This dev environment's HydraDB graph-node process restarts roughly
-    every 1-2 minutes (a manifest/GC issue on its local-filesystem storage
-    backend, not something this app controls), with down-windows up to
-    ~50s. A single failed connection attempt would otherwise 500 the whole
-    dashboard for a condition that reliably clears within a minute, so
-    retry with a budget wide enough to span one down-window. This only
-    costs latency on the *first* successful fetch of a given cache key —
-    fetch_seed/fetch_same_as/fetch_supersedes all cache their result
-    indefinitely once they succeed once."""
+def _open_client_with_retry(client_factory, tries: int = 2, delay: float = 0.5):
     last_exc: Optional[Exception] = None
     for attempt in range(tries):
         try:
@@ -119,12 +110,15 @@ def _open_client_with_retry(client_factory, tries: int = 8, delay: float = 5.0):
 
 
 @contextmanager
-def _client_ctx(client_factory, tries: int = 3, delay: float = 2.0):
+def _client_ctx(client_factory, tries: int = 2, delay: float = 0.5):
     client = _open_client_with_retry(client_factory, tries, delay)
     try:
         yield client
     finally:
-        client.close()
+        try:
+            client.close()
+        except Exception:
+            pass
 
 
 class TopologyCache:
@@ -208,18 +202,16 @@ class TopologyCache:
                 eidx = 0
                 losers = self._get_loser_ids(workspace_id=workspace_id)
 
-                for r in doc_rows:
-                    did = r["d.doc_id"]
-                    doc_nid = _node_id("Document", did)
+                doc_id_set = {r.get("d.doc_id") or r.get("doc_id") for r in doc_rows if (r.get("d.doc_id") or r.get("doc_id"))}
 
+                for did in doc_id_set:
+                    doc_nid = _node_id("Document", did)
                     for label in _ENTITY_LABELS:
                         if workspace_id:
-                            query = f"MATCH (d:Document {{doc_id: $did, workspace_id: $ws}})-[:MENTIONS]->(e:{label} {{workspace_id: $ws}}) RETURN e.id, e.name LIMIT 15"
-                            params = {"did": did, "ws": workspace_id}
+                            query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:MENTIONS]->(e:{label}) RETURN e.id, e.name LIMIT 8"
                         else:
-                            query = f"MATCH (d:Document {{doc_id: $did}})-[:MENTIONS]->(e:{label}) RETURN e.id, e.name LIMIT 15"
-                            params = {"did": did}
-                        rows = client.run(query, params)
+                            query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:MENTIONS]->(e:{label}) RETURN e.id, e.name LIMIT 8"
+                        rows = client.run(query)
                         for row in rows:
                             nid = _node_id(label, row["e.id"])
                             if nid not in node_ids:
@@ -229,12 +221,10 @@ class TopologyCache:
                             edges.append(_edge(f"e{eidx}", doc_nid, nid, "MENTIONS"))
 
                     if workspace_id:
-                        query = "MATCH (d:Document {doc_id: $did, workspace_id: $ws})-[:HAS_FACT]->(f:Fact {workspace_id: $ws}) RETURN f.id, f.subject, f.attribute, f.value LIMIT 8"
-                        params = {"did": did, "ws": workspace_id}
+                        query = f"MATCH (d:Document {{doc_id: '{did}', workspace_id: '{workspace_id}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 6"
                     else:
-                        query = "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 8"
-                        params = {"did": did}
-                    fact_rows = client.run(query, params)
+                        query = f"MATCH (d:Document {{doc_id: '{did}'}})-[:HAS_FACT]->(f:Fact) RETURN f.id, f.subject, f.attribute, f.value LIMIT 6"
+                    fact_rows = client.run(query)
                     for row in fact_rows:
                         nid = _node_id("Fact", row["f.id"])
                         if nid not in node_ids:
@@ -381,13 +371,13 @@ class TopologyCache:
                 if workspace_id:
                     rows = client.run(
                         "MATCH (a:Person {workspace_id: $ws})-[r:SAME_AS]->(b:Person {workspace_id: $ws}) "
-                        "RETURN a.id, a.name, b.id, b.name, r.confidence",
+                        "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300",
                         {"ws": workspace_id}
                     )
                 else:
                     rows = client.run(
                         "MATCH (a:Person)-[r:SAME_AS]->(b:Person) "
-                        "RETURN a.id, a.name, b.id, b.name, r.confidence"
+                        "RETURN a.id, a.name, b.id, b.name, r.confidence LIMIT 300"
                     )
                 edges = []
                 for i, row in enumerate(rows):
@@ -416,13 +406,13 @@ class TopologyCache:
                 if workspace_id:
                     rows = client.run(
                         "MATCH (a:Fact {workspace_id: $ws})-[:SUPERSEDES]->(b:Fact {workspace_id: $ws}) "
-                        "RETURN a.id, a.subject, a.value, b.id, b.value",
+                        "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150",
                         {"ws": workspace_id}
                     )
                 else:
                     rows = client.run(
                         "MATCH (a:Fact)-[:SUPERSEDES]->(b:Fact) "
-                        "RETURN a.id, a.subject, a.value, b.id, b.value"
+                        "RETURN a.id, a.subject, a.value, b.id, b.value LIMIT 150"
                     )
                 edges = []
                 losers = set()

@@ -254,68 +254,114 @@ theia/
 
 ## 9. Reproducibility & Quickstart Guide
 
-**Prerequisites:** Docker, Python 3.11+, and the project venv
-(`pip install -r requirements.txt`). No Rust toolchain and no local HydraDB
-build are needed. All `python3` commands below assume `PYTHONPATH=src`.
+This guide walks through starting from a **fresh clone**, setting up dependencies, running a clean-slate wipe, ingesting the 812-document benchmark corpus with local MiniLM vectorization and HydraDB graph ontology, executing evaluations, and launching the full-stack interactive dashboard with live SaaS integrations.
 
-> **Storage backend note.** `scripts/start_hydradb.sh` runs HydraDB against a
-> local **MinIO** container over the S3 API, not the local filesystem. This is
-> required, not a preference: HydraDB's SlateDB layer updates its manifest with
-> a conditional put (compare-and-swap), and the `object_store` LocalFileSystem
-> backend does not implement that operation --
-> `Operation put_opts with mode PutMode::Update not yet implemented`.
-> With `CLOUD_PROVIDER=local`, graph writes succeed only while the store is
-> fresh and then fail permanently, which makes ingestion stall partway through
-> (e.g. 332 of 812 documents) and never recover, however many times it is retried.
+### 📋 Prerequisites
+* **Python**: 3.10+ (with virtual environment)
+* **Node.js**: 18+ & npm
+* **HydraDB**: Local HydraDB binary or runtime running Bolt on port `7687`
 
-### 1. Start HydraDB + MinIO
+---
+
+### Step 1: Environment Setup & Dependencies
+
 ```bash
-bash scripts/start_hydradb.sh            # idempotent; safe to re-run
-bash scripts/start_hydradb.sh --reset    # wipe the graph and start clean
+# 1. Create and activate Python virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 2. Install backend dependencies
+pip install -r requirements.txt
+
+# 3. Install frontend dependencies
+cd frontend && npm install && cd ..
+
+# 4. Create environment configuration (.env)
+cat << 'EOF' > .env
+BOLT_URI=bolt://127.0.0.1:7687
+HYDRA_USER=neo4j
+HYDRA_PASSWORD=password
+# Optional: Set COMPOSIO_API_KEY for live SaaS integrations (Slack, GitHub, Discord, Gmail, Google Drive)
+COMPOSIO_API_KEY=your_composio_api_key_here
+EOF
 ```
-Exposes Bolt on `bolt://127.0.0.1:7687` (the default in `config.py`, so no
-`.env` is required) and the MinIO console on <http://127.0.0.1:9001>.
 
-### 2. Run Ingestion & Vector Indexing (Full-Corpus Passage Chunking)
+---
+
+### Step 2: Clean Slate & Start HydraDB
+
+To start fresh with 0 existing nodes, wipe any previous storage and start HydraDB:
+
 ```bash
+# 1. Completely wipe previous HydraDB store and vector cache (Optional clean slate)
+bash scripts/wipe_hydradb.sh
+
+# 2. Start HydraDB in development mode (exposes Bolt on bolt://127.0.0.1:7687)
+bash scripts/start_hydradb.sh
+```
+
+---
+
+### Step 3: Ingest Corpus & Build Knowledge Graph
+
+```bash
+# 1. Ingest 812 documents, extract facts/entities, and build 7,881 MiniLM dense vector chunks
 python3 scripts/run_ingest.py
-```
-* **Passage Chunking**: Recursively splits all 812 enterprise documents into **7,881 overlapping passages** (1,000 chars, 200 char overlap, zero text truncation).
-* **Vector Indexing**: Embeds all 7,881 chunks using `sentence-transformers/all-MiniLM-L6-v2` into a dense 384-dim numpy index (`data/vectors/chunk_embeddings.npy` & `chunk_meta.json`).
-* **Graph Ingestion**: Ingests `:Document` nodes, extracted `:Entity` nodes, and `:Fact` triples into HydraDB over the Bolt protocol.
 
-### 3. Run Entity & Conflict Resolution
-```bash
+# 2. Run Entity Resolution (SAME_AS) and Conflict Detection (SUPERSEDES)
 python3 scripts/run_resolution.py
-```
-* Merges aliases and creates `[:SAME_AS]` cross-source links between Person nodes.
-* Resolves temporal and trust conflicts by creating `[:SUPERSEDES]` edges between Fact nodes.
 
-### 4. Inspect the Graph Topology
-```bash
+# 3. Verify vector embeddings and HydraDB graph counts
+python3 scripts/verify_ingestion.py
+
+# 4. Inspect full graph topology across all node and edge types
 python3 scripts/inspect_graph_topology.py
 ```
 
-### 5. Interactive Query CLI
+---
+
+### Step 4: Run Benchmark Evaluation (100% Local Inference)
+
+Runs the EnterpriseRAG-Bench evaluation suite using local `sentence-transformers/all-MiniLM-L6-v2` dense vector retrieval and HydraDB graph traversals (zero external AI API calls or rate limits):
+
 ```bash
-python3 scripts/interactive_query.py
+# Run full evaluation across all 500 benchmark questions
+python3 scripts/run_eval.py
+
+# Or run a quick smoke test on 10 questions
+python3 scripts/run_eval.py --limit 10
 ```
 
-### 6. Run the 500-Question Benchmark Evaluation
-```bash
-python3 scripts/run_eval.py --questions data/questions/questions.jsonl --output data/eval_results/eval_latest.json
-```
+---
 
-### 7. Start the FastAPI Backend Server
+### Step 5: Launch the Full-Stack Application
+
+#### Terminal 1: Start FastAPI Backend
 ```bash
+source .venv/bin/activate
 python3 src/company_brain/server/app.py
 ```
-* Access interactive API docs at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+* Backend runs on [http://127.0.0.1:8000](http://127.0.0.1:8000) (Swagger Docs at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)).
 
-### 8. Start the React Frontend UI
+#### Terminal 2: Start React Frontend
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 * Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+### Step 6: Testing Live SaaS Integrations & Workspace Purging
+
+1. **Open Dashboard**: Visit [http://localhost:5173](http://localhost:5173).
+2. **Switch to Live Mode**: In the top navigation toolbar, click **`⚡ Live Mode (Connect SaaS)`**.
+3. **Set Identity**: Enter your name (e.g. `Alice Chen`) to establish your isolated personal workspace.
+4. **Connect Integrations**: Click **`⚙️ Manage Integrations`** to connect Slack, GitHub, Discord, Gmail, or Google Drive.
+   * For **GitHub**, you can select specific repositories rather than syncing the entire account.
+5. **Start Ingestion**: Click **`🚀 Start Live Ingestion & Launch Dashboard`**.
+6. **Inspect Live Subgraph via CLI**:
+   ```bash
+   python3 scripts/inspect_graph_topology.py --workspace <your_user_id>
+   ```
+7. **Purge Workspace Data**: Click the **`🗑️ Purge Workspace`** button in the top toolbar to wipe your live data and re-sync freshly at any time.

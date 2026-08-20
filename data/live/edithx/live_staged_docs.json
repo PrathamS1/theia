@@ -1,4 +1,68 @@
 {
+  "slack_e4ac61ef19ed61ea5b7c5b37": {
+    "doc_id": "slack_e4ac61ef19ed61ea5b7c5b37",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BRA2D1B9S",
+    "text": "Channel: #all-theia\nAuthor: @U0BRA2D1B9S\nTimestamp: 2026-08-19T14:59:57+00:00\n\nwhat",
+    "author": "U0BRA2D1B9S",
+    "created_at": "2026-08-19T14:59:57+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787151597.224159",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "edithx"
+  },
+  "slack_a7b7f5fe4dd1b2f20689b4f5": {
+    "doc_id": "slack_a7b7f5fe4dd1b2f20689b4f5",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BS1QDB656",
+    "text": "Channel: #all-theia\nAuthor: @U0BS1QDB656\nTimestamp: 2026-08-19T09:03:16+00:00\n\nincels",
+    "author": "U0BS1QDB656",
+    "created_at": "2026-08-19T09:03:16+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787130196.594749",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "edithx"
+  },
+  "slack_4dc85bc541e10ef6487fb77c": {
+    "doc_id": "slack_4dc85bc541e10ef6487fb77c",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BS1QDB656",
+    "text": "Channel: #all-theia\nAuthor: @U0BS1QDB656\nTimestamp: 2026-08-19T09:03:13+00:00\n\nhi",
+    "author": "U0BS1QDB656",
+    "created_at": "2026-08-19T09:03:13+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787130193.386719",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "edithx"
+  },
+  "slack_cb2eb32b753d67681bb1fddf": {
+    "doc_id": "slack_cb2eb32b753d67681bb1fddf",
+    "source": "slack",
+    "title": "#all-theia - message from @U0BS1QDB656",
+    "text": "Channel: #all-theia\nAuthor: @U0BS1QDB656\nTimestamp: 2026-08-19T09:02:27+00:00\n\n<@U0BS1QDB656> has joined the channel",
+    "author": "U0BS1QDB656",
+    "created_at": "2026-08-19T09:02:27+00:00",
+    "metadata": {
+      "channel_id": "C0BQR0U33T9",
+      "channel_name": "all-theia",
+      "slack_ts": "1787130147.448129",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "edithx"
+  },
   "slack_5a0d078afc4b54684fafb2b6": {
     "doc_id": "slack_5a0d078afc4b54684fafb2b6",
     "source": "slack",
@@ -13,7 +77,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_6683ac26ffa30fd7a15a1193": {
     "doc_id": "slack_6683ac26ffa30fd7a15a1193",
@@ -29,7 +93,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_3d72c5b36db1556565aeb65a": {
     "doc_id": "slack_3d72c5b36db1556565aeb65a",
@@ -45,7 +109,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_8e381e0109a80960a12ce7d8": {
     "doc_id": "slack_8e381e0109a80960a12ce7d8",
@@ -61,7 +125,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_f127c3218e2fcae11c990a2d": {
     "doc_id": "slack_f127c3218e2fcae11c990a2d",
@@ -77,7 +141,23 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
+  },
+  "slack_5917b8bc26a4d4d83044e598": {
+    "doc_id": "slack_5917b8bc26a4d4d83044e598",
+    "source": "slack",
+    "title": "#help - message from @U0BS1QDB656",
+    "text": "Channel: #help\nAuthor: @U0BS1QDB656\nTimestamp: 2026-08-19T09:02:27+00:00\n\n<@U0BS1QDB656> has joined the channel",
+    "author": "U0BS1QDB656",
+    "created_at": "2026-08-19T09:02:27+00:00",
+    "metadata": {
+      "channel_id": "C0BQR1726CF",
+      "channel_name": "help",
+      "slack_ts": "1787130147.593589",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "edithx"
   },
   "slack_37131fda068a7e75ec91398f": {
     "doc_id": "slack_37131fda068a7e75ec91398f",
@@ -93,7 +173,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_cde2c2507b756f7ceb5164c1": {
     "doc_id": "slack_cde2c2507b756f7ceb5164c1",
@@ -109,7 +189,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_7a3af88915933a650dbe9074": {
     "doc_id": "slack_7a3af88915933a650dbe9074",
@@ -125,7 +205,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_0f75096eb564e7f06293c7d6": {
     "doc_id": "slack_0f75096eb564e7f06293c7d6",
@@ -141,7 +221,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_1d0da18f69adbee95b29ad5a": {
     "doc_id": "slack_1d0da18f69adbee95b29ad5a",
@@ -157,7 +237,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_2d7adf5b2bf1ad71c7e81153": {
     "doc_id": "slack_2d7adf5b2bf1ad71c7e81153",
@@ -173,7 +253,23 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
+  },
+  "slack_9345b3b07b4a3349614a5e2a": {
+    "doc_id": "slack_9345b3b07b4a3349614a5e2a",
+    "source": "slack",
+    "title": "#social - message from @U0BS1QDB656",
+    "text": "Channel: #social\nAuthor: @U0BS1QDB656\nTimestamp: 2026-08-19T09:02:27+00:00\n\n<@U0BS1QDB656> has joined the channel",
+    "author": "U0BS1QDB656",
+    "created_at": "2026-08-19T09:02:27+00:00",
+    "metadata": {
+      "channel_id": "C0BR4D4JZ8E",
+      "channel_name": "social",
+      "slack_ts": "1787130147.525869",
+      "reactions": [],
+      "reply_count": 0
+    },
+    "workspace_id": "edithx"
   },
   "slack_353d787169d815f604083ad2": {
     "doc_id": "slack_353d787169d815f604083ad2",
@@ -189,7 +285,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_d4db3b7201d7eeef800f1f6c": {
     "doc_id": "slack_d4db3b7201d7eeef800f1f6c",
@@ -205,7 +301,7 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
   },
   "slack_b7e2c5c1fb5f43c4b6f27715": {
     "doc_id": "slack_b7e2c5c1fb5f43c4b6f27715",
@@ -221,6 +317,22 @@
       "reactions": [],
       "reply_count": 0
     },
-    "workspace_id": "default_user"
+    "workspace_id": "edithx"
+  },
+  "gh_repo_PrathamS1_theia": {
+    "doc_id": "gh_repo_PrathamS1_theia",
+    "source": "github",
+    "author": "PrathamS1",
+    "created_at": "2026-08-14T13:03:00Z",
+    "title": "Repository: PrathamS1/theia",
+    "text": "# Repository: PrathamS1/theia\n**Owner:** @PrathamS1\n**Primary Language:** Python\n\n\n## Overview\nCompany brain using hydraDB",
+    "url": "https://github.com/PrathamS1/theia",
+    "metadata": {
+      "type": "repository",
+      "full_name": "PrathamS1/theia",
+      "language": "Python",
+      "url": "https://github.com/PrathamS1/theia"
+    },
+    "workspace_id": "edithx"
   }
 }
