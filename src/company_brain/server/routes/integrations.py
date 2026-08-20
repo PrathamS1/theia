@@ -33,8 +33,9 @@ class GitHubSyncRequest(BaseModel):
     user_id: str = "default_user"
     selected_repos: Optional[List[str]] = None
     max_repos: int = 10
-    prs_per_repo: int = 20
-    issues_per_repo: int = 20
+    prs_per_repo: int = 50
+    issues_per_repo: int = 50
+    commits_per_repo: int = 50
 
 
 class DiscordSyncRequest(BaseModel):
@@ -264,6 +265,7 @@ def sync_github(req: GitHubSyncRequest, background_tasks: BackgroundTasks):
             max_repos=req.max_repos,
             prs_per_repo=req.prs_per_repo,
             issues_per_repo=req.issues_per_repo,
+            commits_per_repo=req.commits_per_repo,
         )
     except Exception as e:
         logger.error("Error during GitHub sync: %s", e)
@@ -365,10 +367,14 @@ def sync_all(req: SyncAllRequest, background_tasks: BackgroundTasks):
         except Exception as e:
             results[toolkit] = {"status": "ERROR", "error": str(e)}
 
+    # After all syncs, run cross-source resolution to link persons across platforms
+    resolution_result = worker.run_cross_source_resolution()
+
     return {
         "status": "SUCCESS",
         "user_id": req.user_id,
         "results": results,
+        "cross_source_resolution": resolution_result,
     }
 
 
@@ -392,3 +398,22 @@ def purge_workspace_data(user_id: str):
 def purge_workspace_post(req: ConnectRequest):
     """POST alternative for purging workspace data."""
     return purge_workspace_data(user_id=req.user_id)
+
+
+# ── Cross-Source Resolution ───────────────────────────────────────────────────
+
+@router.post("/resolve")
+def run_resolution(req: ConnectRequest):
+    """
+    Runs cross-source entity resolution across ALL ingested sources for a workspace.
+    Links Person entities that appear under different names across Slack (@handles)
+    and GitHub (logins) by fuzzy matching with handle normalization.
+
+    Should be called AFTER all individual syncs are complete.
+    """
+    try:
+        worker = LiveSyncWorker(user_id=req.user_id)
+        return worker.run_cross_source_resolution()
+    except Exception as e:
+        logger.error("Failed to run cross-source resolution for %s: %s", req.user_id, e)
+        raise HTTPException(status_code=500, detail=str(e))

@@ -332,6 +332,40 @@ class TopologyCache:
                         eidx += 1
                         edges.append(_edge(f"x{eidx}", origin, nid, "HAS_FACT"))
 
+                    # BELONGS_TO: find parent doc (this doc belongs to a repo)
+                    try:
+                        if workspace_id:
+                            bt_query = "MATCH (c:Document {doc_id: $did, workspace_id: $ws})-[:BELONGS_TO]->(p:Document {workspace_id: $ws}) RETURN p.doc_id, p.title, p.source, p.created_at LIMIT 5"
+                            bt_params = {"did": key, "ws": workspace_id}
+                        else:
+                            bt_query = "MATCH (c:Document {doc_id: $did})-[:BELONGS_TO]->(p:Document) RETURN p.doc_id, p.title, p.source, p.created_at LIMIT 5"
+                            bt_params = {"did": key}
+                        parent_rows = client.run(bt_query, bt_params)
+                        for row in parent_rows:
+                            nid = _node_id("Document", row["p.doc_id"])
+                            nodes.append({"data": {"id": nid, "label": "Document", "name": row.get("p.title") or row["p.doc_id"], "source": row.get("p.source", "")}})
+                            eidx += 1
+                            edges.append(_edge(f"x{eidx}", origin, nid, "BELONGS_TO"))
+                    except Exception:
+                        pass
+
+                    # BELONGS_TO: find child docs (commits/PRs/issues that belong to this repo)
+                    try:
+                        if workspace_id:
+                            bt_query = "MATCH (c:Document {workspace_id: $ws})-[:BELONGS_TO]->(p:Document {doc_id: $did, workspace_id: $ws}) RETURN c.doc_id, c.title, c.source, c.created_at LIMIT 25"
+                            bt_params = {"did": key, "ws": workspace_id}
+                        else:
+                            bt_query = "MATCH (c:Document)-[:BELONGS_TO]->(p:Document {doc_id: $did}) RETURN c.doc_id, c.title, c.source, c.created_at LIMIT 25"
+                            bt_params = {"did": key}
+                        child_rows = client.run(bt_query, bt_params)
+                        for row in child_rows:
+                            nid = _node_id("Document", row["c.doc_id"])
+                            nodes.append({"data": {"id": nid, "label": "Document", "name": row.get("c.title") or row["c.doc_id"], "source": row.get("c.source", "")}})
+                            eidx += 1
+                            edges.append(_edge(f"x{eidx}", nid, origin, "BELONGS_TO"))
+                    except Exception:
+                        pass
+
                 elif label in _ENTITY_LABELS:
                     origin = _node_id(label, key)
                     # documents that mention this entity, anchored on the entity's int id

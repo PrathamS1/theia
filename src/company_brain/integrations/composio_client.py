@@ -213,34 +213,44 @@ class ComposioManager:
         repo: str,
         user_id: str = "default_user",
         state: str = "all",
-        limit: int = 30,
+        limit: int = 50,
     ) -> List[Dict[str, Any]]:
         """
         Fetches pull requests for a repository using GITHUB_LIST_PULL_REQUESTS.
-        Requires both owner and repo parameters.
+        Paginates to collect up to `limit` items.
         """
-        logger.info("Fetching GitHub pull requests for %s/%s (state=%s)...", owner, repo, state)
-        try:
-            res = self.sdk.tools.execute(
-                slug="GITHUB_LIST_PULL_REQUESTS",
-                user_id=user_id,
-                arguments={
-                    "owner": owner,
-                    "repo": repo,
-                    "state": state,
-                    "per_page": limit,
-                },
-                dangerously_skip_version_check=True,
-            )
-            data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
-            if isinstance(data, list):
-                return data
-            elif isinstance(data, dict):
-                return data.get("pull_requests") or data.get("prs") or []
-            return []
-        except Exception as e:
-            logger.error("Failed to fetch GitHub pull requests for %s/%s: %s", owner, repo, e)
-            return []
+        logger.info("Fetching GitHub pull requests for %s/%s (state=%s, limit=%d)...", owner, repo, state, limit)
+        all_items: List[Dict[str, Any]] = []
+        page = 1
+        page_size = min(limit, 30)
+        while len(all_items) < limit:
+            try:
+                res = self.sdk.tools.execute(
+                    slug="GITHUB_LIST_PULL_REQUESTS",
+                    user_id=user_id,
+                    arguments={
+                        "owner": owner,
+                        "repo": repo,
+                        "state": state,
+                        "per_page": page_size,
+                        "page": page,
+                    },
+                    dangerously_skip_version_check=True,
+                )
+                data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
+                batch = []
+                if isinstance(data, list):
+                    batch = data
+                elif isinstance(data, dict):
+                    batch = data.get("pull_requests") or data.get("prs") or []
+                all_items.extend(batch)
+                if len(batch) < page_size:
+                    break  # No more pages
+                page += 1
+            except Exception as e:
+                logger.error("Failed to fetch GitHub pull requests for %s/%s page %d: %s", owner, repo, page, e)
+                break
+        return all_items[:limit]
 
     def fetch_github_issues(
         self,
@@ -248,67 +258,88 @@ class ComposioManager:
         repo: str,
         user_id: str = "default_user",
         state: str = "all",
-        limit: int = 30,
+        limit: int = 50,
     ) -> List[Dict[str, Any]]:
         """
         Fetches repository issues using GITHUB_LIST_REPOSITORY_ISSUES.
-        Requires both owner and repo parameters.
+        Paginates to collect up to `limit` items. Filters out PRs from issue list.
         """
-        logger.info("Fetching GitHub issues for %s/%s (state=%s)...", owner, repo, state)
-        try:
-            res = self.sdk.tools.execute(
-                slug="GITHUB_LIST_REPOSITORY_ISSUES",
-                user_id=user_id,
-                arguments={
-                    "owner": owner,
-                    "repo": repo,
-                    "state": state,
-                    "per_page": limit,
-                },
-                dangerously_skip_version_check=True,
-            )
-            data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
-            if isinstance(data, list):
-                # Filter out pure pull requests from issue list
-                return [item for item in data if isinstance(item, dict) and "pull_request" not in item]
-            elif isinstance(data, dict):
-                return data.get("issues") or []
-            return []
-        except Exception as e:
-            logger.error("Failed to fetch GitHub issues for %s/%s: %s", owner, repo, e)
-            return []
+        logger.info("Fetching GitHub issues for %s/%s (state=%s, limit=%d)...", owner, repo, state, limit)
+        all_items: List[Dict[str, Any]] = []
+        page = 1
+        page_size = min(limit, 30)
+        while len(all_items) < limit:
+            try:
+                res = self.sdk.tools.execute(
+                    slug="GITHUB_LIST_REPOSITORY_ISSUES",
+                    user_id=user_id,
+                    arguments={
+                        "owner": owner,
+                        "repo": repo,
+                        "state": state,
+                        "per_page": page_size,
+                        "page": page,
+                    },
+                    dangerously_skip_version_check=True,
+                )
+                data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
+                batch = []
+                if isinstance(data, list):
+                    batch = [item for item in data if isinstance(item, dict) and "pull_request" not in item]
+                elif isinstance(data, dict):
+                    batch = data.get("issues") or []
+                all_items.extend(batch)
+                raw_count = len(data) if isinstance(data, list) else len(batch)
+                if raw_count < page_size:
+                    break
+                page += 1
+            except Exception as e:
+                logger.error("Failed to fetch GitHub issues for %s/%s page %d: %s", owner, repo, page, e)
+                break
+        return all_items[:limit]
 
     def fetch_github_commits(
         self,
         owner: str,
         repo: str,
         user_id: str = "default_user",
-        limit: int = 20,
+        limit: int = 50,
     ) -> List[Dict[str, Any]]:
         """
-        Fetches recent repository commits using GITHUB_LIST_COMMITS.
+        Fetches repository commits using GITHUB_LIST_COMMITS.
+        Paginates to collect up to `limit` items.
         """
-        logger.info("Fetching GitHub commits for %s/%s...", owner, repo)
-        try:
-            res = self.sdk.tools.execute(
-                slug="GITHUB_LIST_COMMITS",
-                user_id=user_id,
-                arguments={
-                    "owner": owner,
-                    "repo": repo,
-                    "per_page": limit,
-                },
-                dangerously_skip_version_check=True,
-            )
-            data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
-            if isinstance(data, list):
-                return data
-            elif isinstance(data, dict):
-                return data.get("commits") or []
-            return []
-        except Exception as e:
-            logger.error("Failed to fetch GitHub commits for %s/%s: %s", owner, repo, e)
-            return []
+        logger.info("Fetching GitHub commits for %s/%s (limit=%d)...", owner, repo, limit)
+        all_items: List[Dict[str, Any]] = []
+        page = 1
+        page_size = min(limit, 30)
+        while len(all_items) < limit:
+            try:
+                res = self.sdk.tools.execute(
+                    slug="GITHUB_LIST_COMMITS",
+                    user_id=user_id,
+                    arguments={
+                        "owner": owner,
+                        "repo": repo,
+                        "per_page": page_size,
+                        "page": page,
+                    },
+                    dangerously_skip_version_check=True,
+                )
+                data = res.get("data", {}) if isinstance(res, dict) else getattr(res, "data", {})
+                batch = []
+                if isinstance(data, list):
+                    batch = data
+                elif isinstance(data, dict):
+                    batch = data.get("commits") or []
+                all_items.extend(batch)
+                if len(batch) < page_size:
+                    break
+                page += 1
+            except Exception as e:
+                logger.error("Failed to fetch GitHub commits for %s/%s page %d: %s", owner, repo, page, e)
+                break
+        return all_items[:limit]
 
     def fetch_github_readme(
         self,

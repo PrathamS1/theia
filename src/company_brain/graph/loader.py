@@ -96,6 +96,35 @@ class GraphLoader:
         except Exception as e:
             logger.debug("Failed to write Document node: %s", e)
 
+        # 0. If extraction yielded zero entities, synthesize a minimum structural
+        #    entity from the document's source/title so HydraDB doesn't reject the
+        #    standalone CREATE (it requires at least one edge pattern).
+        if not extraction.entities and not extraction.facts:
+            fallback_name = title.strip() if title.strip() else doc_id
+            # Use source as the entity type label hint
+            fallback_label = "Topic"
+            fallback_key = f"{fallback_label}_{fallback_name}"
+            if effective_ws:
+                fallback_key = f"{effective_ws}_{fallback_key}"
+            fallback_int_id = string_to_int_id(fallback_key)
+
+            fb_cypher = (
+                f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
+                f"title: $title, created_at: $created_at{ws_prop}}})"
+                f"-[r:MENTIONS {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                f"(t:{fallback_label} {{id: $fb_int_id, name: $fb_name, source: $source{ws_prop}}})"
+            )
+            try:
+                self.client.run_write(fb_cypher, {
+                    **doc_props,
+                    "fb_int_id": fallback_int_id,
+                    "fb_name": fallback_name,
+                })
+                stats["entities_ok"] += 1
+            except Exception as e:
+                stats["entities_failed"] += 1
+                logger.debug("Failed to write fallback entity for %s: %s", doc_id, e)
+
         # 1. Load entities via one-hop (Document)-[:MENTIONS]->(Entity) pattern.
         for entity in extraction.entities:
             entity_key = f"{entity.entity_type}_{entity.name}"
@@ -185,3 +214,45 @@ class GraphLoader:
                     logger.debug("Failed to write ABOUT edge: %s", e)
 
         return stats
+
+    def create_belongs_to(
+        self,
+        child_doc_id: str,
+        parent_doc_id: str,
+        workspace_id: Optional[str] = None,
+    ) -> bool:
+        """
+        Creates a structural (ChildDoc)-[:BELONGS_TO]->(ParentDoc) edge so that
+        commits, PRs, and issues are visibly linked to their parent repository
+        in the graph.
+        """
+        effective_ws = workspace_id or self.workspace_id
+        child_key = f"doc_{child_doc_id}"
+        parent_key = f"doc_{parent_doc_id}"
+        if effective_ws:
+            child_key = f"{effective_ws}_{child_key}"
+            parent_key = f"{effective_ws}_{parent_key}"
+        child_int_id = string_to_int_id(child_key)
+        parent_int_id = string_to_int_id(parent_key)
+
+        ws_prop = f", workspace_id: $workspace_id" if effective_ws else ""
+        params: Dict[str, Any] = {
+            "child_id": child_int_id,
+            "parent_id": parent_int_id,
+            "child_doc_id": child_doc_id,
+            "parent_doc_id": parent_doc_id,
+        }
+        if effective_ws:
+            params["workspace_id"] = effective_ws
+
+        cypher = (
+            f"CREATE (c:Document {{id: $child_id, doc_id: $child_doc_id{ws_prop}}})"
+            f"-[:BELONGS_TO {{doc_id: $child_doc_id{ws_prop}}}]->"
+            f"(p:Document {{id: $parent_id, doc_id: $parent_doc_id{ws_prop}}})"
+        )
+        try:
+            self.client.run_write(cypher, params)
+            return True
+        except Exception as e:
+            logger.debug("Failed to write BELONGS_TO edge %s -> %s: %s", child_doc_id, parent_doc_id, e)
+            return False

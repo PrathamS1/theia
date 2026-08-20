@@ -106,17 +106,19 @@ class LiveSyncWorker:
         self,
         selected_repos: Optional[List[str]] = None,
         max_repos: int = 10,
-        prs_per_repo: int = 20,
-        issues_per_repo: int = 20,
+        prs_per_repo: int = 50,
+        issues_per_repo: int = 50,
+        commits_per_repo: int = 50,
     ) -> Dict[str, Any]:
         """
         Executes an incremental sync for GitHub:
         1. Checks connection
         2. Discovers repositories
         3. Filters to user-selected repositories (or top max_repos)
-        4. Fetches PRs and Issues for each selected repo
+        4. Fetches READMEs, Commits, PRs and Issues for each selected repo
         5. Normalizes via GitHubNormalizer
         6. Chunks, builds local vector embeddings, and writes to HydraDB with workspace isolation
+        7. Creates BELONGS_TO edges linking commits/PRs/issues to their parent repository
         """
         logger.info("Starting GitHub sync for workspace=%s (selected_repos=%s)...", self.user_id, selected_repos)
 
@@ -159,6 +161,8 @@ class LiveSyncWorker:
 
         normalizer = GitHubNormalizer()
         all_normalized_docs: List[Dict[str, Any]] = []
+        # Track parent-child relationships: list of (child_doc_id, parent_repo_doc_id)
+        belongs_to_pairs: List[tuple] = []
 
         for repo in target_repos:
             repo_name = repo.get("name") or repo.get("full_name", "")
@@ -169,6 +173,9 @@ class LiveSyncWorker:
                 owner, repo_name = repo_name.split("/", 1)
             elif not owner:
                 owner = self.user_id
+
+            full_name = repo.get("full_name") or f"{owner}/{repo_name}"
+            repo_doc_id = f"gh_repo_{full_name.replace('/', '_')}"
 
             # 1. Normalize repository metadata
             repo_doc = normalizer.normalize_repository(repo)
@@ -184,21 +191,23 @@ class LiveSyncWorker:
                     if doc:
                         doc["workspace_id"] = self.user_id
                         all_normalized_docs.append(doc)
+                        belongs_to_pairs.append((doc["doc_id"], repo_doc_id))
             except Exception as e:
                 logger.debug("Failed to fetch README for %s/%s: %s", owner, repo_name, e)
 
-            # 3. Fetch & normalize Commits
+            # 3. Fetch & normalize Commits (with pagination)
             try:
-                commits = self.composio.fetch_github_commits(owner=owner, repo=repo_name, user_id=self.user_id, limit=15)
+                commits = self.composio.fetch_github_commits(owner=owner, repo=repo_name, user_id=self.user_id, limit=commits_per_repo)
                 for commit in commits:
-                    doc = normalizer.normalize_commit(commit)
+                    doc = normalizer.normalize_commit(commit, repo_name=full_name)
                     if doc:
                         doc["workspace_id"] = self.user_id
                         all_normalized_docs.append(doc)
+                        belongs_to_pairs.append((doc["doc_id"], repo_doc_id))
             except Exception as e:
                 logger.debug("Failed to fetch commits for %s/%s: %s", owner, repo_name, e)
 
-            # 4. Fetch & normalize PRs
+            # 4. Fetch & normalize PRs (with pagination)
             prs = self.composio.fetch_github_pull_requests(
                 owner=owner,
                 repo=repo_name,
@@ -210,8 +219,9 @@ class LiveSyncWorker:
                 if doc:
                     doc["workspace_id"] = self.user_id
                     all_normalized_docs.append(doc)
+                    belongs_to_pairs.append((doc["doc_id"], repo_doc_id))
 
-            # 5. Fetch & normalize Issues
+            # 5. Fetch & normalize Issues (with pagination)
             issues = self.composio.fetch_github_issues(
                 owner=owner,
                 repo=repo_name,
@@ -223,6 +233,7 @@ class LiveSyncWorker:
                 if doc:
                     doc["workspace_id"] = self.user_id
                     all_normalized_docs.append(doc)
+                    belongs_to_pairs.append((doc["doc_id"], repo_doc_id))
 
         if not all_normalized_docs:
             return {
@@ -232,7 +243,23 @@ class LiveSyncWorker:
             }
 
         logger.info("Normalized %d live GitHub documents for workspace=%s.", len(all_normalized_docs), self.user_id)
-        return self._process_and_index_docs(all_normalized_docs, source_label="GitHub")
+        result = self._process_and_index_docs(all_normalized_docs, source_label="GitHub")
+
+        # 6. Create BELONGS_TO structural edges linking child docs to repo docs
+        belongs_to_count = 0
+        if belongs_to_pairs:
+            try:
+                with GraphClient() as client:
+                    loader = GraphLoader(client, workspace_id=self.user_id)
+                    for child_id, parent_id in belongs_to_pairs:
+                        if loader.create_belongs_to(child_id, parent_id, workspace_id=self.user_id):
+                            belongs_to_count += 1
+                logger.info("Created %d BELONGS_TO edges for workspace=%s.", belongs_to_count, self.user_id)
+            except Exception as e:
+                logger.warning("Failed to create BELONGS_TO edges: %s", e)
+
+        result["belongs_to_edges"] = belongs_to_count
+        return result
 
     def _process_and_index_docs(self, all_normalized_docs: List[Dict[str, Any]], source_label: str = "Live") -> Dict[str, Any]:
         """
@@ -602,4 +629,40 @@ class LiveSyncWorker:
             "status": "SUCCESS",
             "message": f"Successfully purged all live data for workspace '{self.user_id}'. You can now ingest fresh data.",
             "user_id": self.user_id,
+        }
+
+    def run_cross_source_resolution(self) -> Dict[str, Any]:
+        """
+        Runs entity resolution and conflict detection globally across ALL sources
+        in this workspace. This is critical for linking Person entities that appear
+        under different names across Slack (@handles) and GitHub (logins).
+
+        Should be called AFTER all individual source syncs are complete.
+        """
+        logger.info("Running cross-source entity resolution for workspace=%s...", self.user_id)
+        same_as_count = 0
+        conflict_count = 0
+        try:
+            with GraphClient() as client:
+                same_as_count = resolve_entities(client, workspace_id=self.user_id)
+                conflict_count = detect_and_tag_conflicts(client, workspace_id=self.user_id)
+            logger.info(
+                "Cross-source resolution complete for workspace=%s: %d SAME_AS, %d SUPERSEDES.",
+                self.user_id, same_as_count, conflict_count
+            )
+        except Exception as e:
+            logger.warning("Cross-source resolution failed: %s", e)
+
+        # Clear topology cache so UI reflects new edges
+        try:
+            from company_brain.graph.topology import cache as topology_cache
+            topology_cache.clear_cache(workspace_id=self.user_id)
+        except Exception:
+            pass
+
+        return {
+            "status": "SUCCESS",
+            "user_id": self.user_id,
+            "same_as_edges": same_as_count,
+            "supersedes_edges": conflict_count,
         }
