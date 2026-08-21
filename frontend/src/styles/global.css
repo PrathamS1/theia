@@ -1,0 +1,110 @@
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100vh; }
+
+h1, h2, h3 { margin: 0; font-weight: 600; line-height: 1.2; }
+/* Tracking is size-specific: tighten as type grows. */
+h1 { font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.022em; line-height: 1.08; }
+h2 { font-size: 1.375rem; letter-spacing: -0.012em; }
+h3 { font-size: 1rem; letter-spacing: -0.004em; }
+p { margin: 0; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+button, input, textarea, select { font: inherit; color: inherit; }
+
+:focus-visible { outline: none; box-shadow: var(--focus); border-radius: var(--r-sm); }
+
+code, .mono { font-family: var(--font-mono); font-size: 0.8125em; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--s-3); top: -3rem; z-index: 100;
+  background: var(--surface); color: var(--text); padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  transition: top 120ms ease-out;
+}
+.skip-link:focus { top: var(--s-3); }
+
+/* ---- Shared primitives ---- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--r-md);
+  cursor: pointer; white-space: nowrap;
+  transition: background 120ms ease-out, transform 90ms ease-out, border-color 120ms ease-out;
+}
+.btn:hover:not(:disabled) { background: var(--surface-2); }
+/* Feedback on press, not on release. */
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-primary {
+  background: var(--accent); color: #fff; border-color: transparent; font-weight: 500;
+}
+/* Dark .btn-primary text colour (#0a1f1d) parked alongside the dark palette
+ * in tokens.css -- restore together if dark mode comes back. */
+.btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.08); }
+
+.btn-sm { padding: var(--s-1) var(--s-3); font-size: 0.875rem; }
+
+.field {
+  width: 100%; padding: var(--s-2) var(--s-3);
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--r-md);
+}
+.field::placeholder { color: var(--text-faint); }
+
+.tag {
+  display: inline-flex; align-items: center; gap: var(--s-1);
+  padding: 2px var(--s-2); border-radius: var(--r-sm);
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.01em;
+  background: var(--surface-3); color: var(--text-muted);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+/* Shared by every in-flight indicator: the Ask button, the graph filter and the
+ * question search. Lives here rather than in one component's stylesheet because
+ * three components depend on it. */
+.spin { animation: spin 900ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
+.skeleton {
+  background: var(--surface-3);
+  border-radius: var(--r-sm);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 50% { opacity: 0.45; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

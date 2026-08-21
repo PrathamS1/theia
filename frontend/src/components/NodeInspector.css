@@ -1,0 +1,146 @@
+/* Anchored to the right edge of the canvas, not the left. It previously sat over
+ * the top-left of the graph — directly on top of the region you had just clicked
+ * into — so inspecting a node hid its neighbourhood. Floating right keeps the
+ * selected node and its edges visible while you read the panel. */
+.inspector {
+  position: absolute;
+  right: var(--s-3);
+  top: var(--s-3);
+  z-index: 5;
+  width: min(22rem, calc(100% - var(--s-6)));
+  /* Stops short of the bottom so the zoom/fit controls in the same corner stay
+   * clickable when a node with many neighbours is selected. */
+  max-height: calc(100% - 5.5rem);
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.inspector-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--s-3); padding: var(--s-3); border-bottom: 1px solid var(--border);
+}
+.inspector-actions { display: flex; align-items: center; gap: var(--s-2); }
+.inspector-body { padding: var(--s-3); overflow-y: auto; display: flex; flex-direction: column; gap: var(--s-3); }
+.inspector-name { font-size: 0.9375rem; line-height: 1.35; }
+
+.props { margin: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+.prop { display: grid; grid-template-columns: 5.5rem 1fr; gap: var(--s-2); font-size: 0.75rem; }
+.prop dt { color: var(--text-faint); }
+.prop dd { margin: 0; word-break: break-all; }
+
+.body-block summary {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-faint); cursor: pointer;
+}
+.body-text {
+  margin: var(--s-2) 0 0; padding: var(--s-2);
+  background: var(--surface-2); border-radius: var(--r-sm);
+  font-size: 0.75rem; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 16rem; overflow-y: auto;
+}
+.neighbors h4 {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-faint); margin: 0 0 var(--s-2);
+}
+.neighbors ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-1); }
+.neighbors li { display: flex; align-items: center; gap: var(--s-2); }
+
+/* ── Informative card ────────────────────────────────────────────────────────
+ * The panel previously showed a hash, a source, the title echoed back as "source
+ * text", and rows reading "MENTIONS Person" five times. Everything below exists
+ * to answer three questions a new user actually has: what am I looking at, what
+ * does the graph know about it, and what is it connected to. */
+
+.ins-head-left { display: flex; align-items: center; gap: var(--s-2); }
+.ins-type { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+
+.ins-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--n-document); }
+.ins-dot-person { background: var(--n-person); }
+.ins-dot-fact { background: var(--n-fact); }
+.ins-dot-org { background: var(--n-org); }
+.ins-dot-ticket { background: var(--n-ticket); }
+.ins-dot-project { background: var(--n-project); }
+.ins-dot-metric { background: var(--n-metric); }
+.ins-dot-topic { background: var(--n-topic); }
+
+.btn-icon { padding: var(--s-1); }
+
+/* A plain-language line explaining the node type. */
+.ins-what { margin: var(--s-1) 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--text-muted); }
+
+.ins-meta { display: flex; flex-wrap: wrap; gap: var(--s-1); margin-top: var(--s-1); }
+.ins-pill {
+  padding: 1px var(--s-2); border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 0.6875rem; color: var(--text-muted);
+}
+.ins-pill-accent { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+.ins-section { display: flex; flex-direction: column; gap: var(--s-2); }
+.ins-h {
+  margin: 0; font-size: 0.6875rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint);
+}
+
+/* attribute — value, with the subject on a second line only when it is not just
+ * the document's own title repeated. Every placement is explicit: grid's
+ * auto-placement puts definite-row items first, which silently swapped the
+ * label and the value into the wrong columns. */
+.fact-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-2); }
+.fact-rows li {
+  display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+  gap: 2px var(--s-3);
+  padding: var(--s-2) var(--s-3); border-radius: var(--r-md);
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.fr-attr {
+  grid-column: 1; grid-row: 1;
+  font-size: 0.6875rem; color: var(--text-faint);
+  text-transform: lowercase; overflow-wrap: anywhere;
+}
+.fr-val {
+  grid-column: 2; grid-row: 1;
+  font-size: 0.8125rem; font-weight: 600; color: var(--text);
+  text-align: right; overflow-wrap: anywhere;
+}
+.fr-subj {
+  grid-column: 1 / -1; grid-row: 2;
+  font-size: 0.75rem; color: var(--text-muted); overflow-wrap: anywhere;
+}
+
+.rel-group { display: flex; flex-direction: column; gap: var(--s-1); }
+.rel-label { font-size: 0.6875rem; color: var(--text-faint); }
+.rel-items { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.rel-chip {
+  display: inline-flex; align-items: center; gap: var(--s-1);
+  padding: 2px var(--s-2); border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 0.75rem; color: var(--text);
+}
+.rel-more { font-size: 0.6875rem; color: var(--text-faint); align-self: center; }
+
+/* Identifier demoted to a copy affordance at the foot of the card. */
+.ins-id {
+  display: inline-flex; align-items: center; gap: var(--s-1);
+  margin-top: var(--s-1); padding: var(--s-1) var(--s-2);
+  background: none; border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text-faint); font-size: 0.625rem; cursor: pointer;
+  overflow-wrap: anywhere; text-align: left;
+}
+.ins-id:hover { background: var(--surface-2); color: var(--text-muted); }
+.ins-id:focus-visible { box-shadow: var(--focus); outline: none; }
+
+/* Frosted material, matching the legend and control pill so all floating chrome
+ * reads as one layer over the canvas. */
+.inspector {
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .inspector { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

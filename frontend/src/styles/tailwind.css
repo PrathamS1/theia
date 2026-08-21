@@ -1,0 +1,239 @@
+/* Scoped to the new hero/nav components only. Preflight is intentionally
+ * skipped: the rest of the app already has its own reset in global.css and
+ * re-applying Tailwind's would risk touching pages outside this pass. */
+@import 'tailwindcss/theme.css' layer(theme);
+/* Deliberately NOT layered: global.css predates Tailwind and has its own
+ * plain (unlayered) rules on a/h1/h2/h3. Cascade layers always lose to
+ * unlayered CSS regardless of specificity, so a layered utility class can
+ * never beat global.css's `a { color }` or `h1 { font-weight }`. Importing
+ * utilities unlayered restores normal specificity rules, where a class
+ * selector correctly beats those element selectors. */
+@import 'tailwindcss/utilities.css';
+
+@custom-variant reduced-transparency (@media (prefers-reduced-transparency: reduce));
+@custom-variant more-contrast (@media (prefers-contrast: more));
+
+@theme {
+  /* Mirrors tokens.css so both systems read from one set of values. */
+  --color-brand: #6caaac;
+  --color-brand-ink: #4E9FA2;
+  --color-brand-solid: #4E9FA2;
+  --font-sans: 'Inter Variable',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  Roboto,
+  sans-serif;
+
+  /* Colonnade section. --color-sand is the card fill: the Figma code export
+   * called it stone-200 (#e7e5e4) but the rendered mock is distinctly warmer,
+   * so the render wins. The rest mirror tokens.css one-for-one. */
+  --color-sand: #e5dfd2;
+  --color-ink: #17181a;
+  --color-muted: #64686f;
+  --color-line: #e0e0dc;
+
+  --radius-card: 1.5rem;
+  --radius-tile: 1rem;
+
+  --animate-glass-in: glass-in 500ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-rise: rise 520ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  --animate-statue-in: statue-in 900ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+@keyframes glass-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+    backdrop-filter: blur(0px) saturate(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+    backdrop-filter: blur(24px) saturate(180%);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scale/opacity only — positioning and live parallax now live on a
+ * non-animated wrapper transform (see Hero.tsx) so they keep responding to
+ * --px/--py after this animation's fill-mode state holds. */
+@keyframes statue-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The one thing kept in plain CSS per explicit instruction: Georgia is a
+ * system font, not a Tailwind theme font, so it gets its own utility-style
+ * class rather than living in @theme. */
+.font-georgia {
+  font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.font-instrument-serif {
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', Times, serif;
+}
+
+/* global.css's `h1 { font-size: clamp(...) }` is plain, un-layered CSS.
+ * Tailwind v4 puts its utilities in @layer utilities, and un-layered CSS
+ * always wins over layered CSS regardless of specificity — so a bracket
+ * font-size utility on the hero h1 would silently lose to that rule. This
+ * is the one other spot that has to escape Tailwind's utility layer. */
+.hero-title {
+  /* The vh term is load-bearing, not decoration. Browser zoom shrinks width
+   * and height together, but the 4.25rem cap binds long before the vw term
+   * moves -- so on a wide screen this block's height was *constant* while the
+   * statue behind it grew as a share of the viewport, and the two collided.
+   * min(vw, vh) hands control to whichever axis is actually scarce. */
+  font-size: clamp(1.5rem, min(5vw, 7.2vh), 4.25rem);
+  line-height: 1.28;
+  letter-spacing: -0.005em;
+}
+
+/* Same reason as .hero-title above: global.css's `h2 { font-size: 1.375rem }`
+ * is plain un-layered CSS and would beat a layered Tailwind utility. */
+.section-title {
+  /* Same min(vw, vh) reasoning as .hero-title, plus a lower ceiling: this
+   * heading sits above a full-height card grid that has to fit one screen. */
+  font-size: clamp(1.75rem, min(3.6vw, 4.8vh), 2.75rem);
+  line-height: 1.18;
+  /* Tracking is size-specific -- this runs large, so it tightens. */
+  letter-spacing: -0.012em;
+}
+
+/* ---- Colonnade: one-screen budget ----
+ *
+ * These live in real CSS rather than as arbitrary properties on the section
+ * because the card height is *derived* from the space left over, and the
+ * arithmetic needs room to be explained.
+ *
+ * Below lg the three columns are one stack and nothing has to fit a screen,
+ * so the card height is the plain fluid clamp. From lg up it is solved for
+ * instead: two cards plus their gap have to fill whatever the viewport has
+ * left after the section's own furniture, so
+ *
+ *   card-h = (viewport - top-art - everything-else) / 2
+ *
+ * The 8.1vw term is the top art. The ceiling strip and the barcode under it
+ * are 100vw images -- 85px + 69px at a 1920 viewport -- so their cost tracks
+ * width, not height, and it has to come out of the budget before the split.
+ * The 22rem is the rest of the furniture measured together: heading, its
+ * margin, the subhead, the grid's top margin and the section's bottom
+ * padding. It is approximate on purpose; the clamp bounds are what keep the
+ * result sane when it drifts.
+ *
+ * The three row variables below belong to IntegrationsCard. The logo is sized
+ * with an explicit calc rather than `aspect-square h-full w-auto`, because
+ * this file skips Tailwind's Preflight (see the header) -- without it there
+ * is no `img { display: block }`, and the square never came out square: the
+ * box stayed 128px wide while object-contain letterboxed the artwork in the
+ * middle of it, which is what pushed every row ~44px to the right. */
+.colonnade {
+  --card-gap: 1.25rem;
+  --card-h: clamp(8.5rem, min(14.5vw, 20vh), 14rem);
+
+  --row-pad: clamp(0.85rem, 1.5vw, 1.35rem);
+  --row-gap: clamp(0.4rem, 0.9vw, 0.75rem);
+  /* Three rows and two gaps fill the card's content box exactly, so the tile
+   * *is* the row -- which is what keeps the vertical gaps equal to --row-gap
+   * and the four paddings equal to --row-pad at every card height.
+   *
+   * That only holds because the content column is wide enough for the tile
+   * and a one-line label to coexist (see max-w on the wrapper in
+   * ColonnadeSection). Narrow the column and the tile starts eating the
+   * label's width instead. */
+  --logo: calc((var(--card-h) - 2 * var(--row-pad) - 2 * var(--row-gap)) / 3);
+}
+
+@media (min-width: 64rem) {
+  .colonnade {
+    --card-h: clamp(8.5rem, calc((100svh - 8.1vw - 22rem) / 2), 18rem);
+  }
+}
+
+/* ---- Colonnade: scroll-linked statues ----
+ *
+ * One registered custom property carries "how far in is this section", and a
+ * single transform rule consumes it. Driving a *number* rather than the
+ * transform itself is what lets the CSS path and the JS fallback in
+ * useScrollReveal.ts share one definition of the resting geometry.
+ *
+ * A view() timeline is inherently reversible and runs off the main thread:
+ * scrolling back up walks the same value back down, no listener involved. */
+/* Inherits, because the animation runs on the *section* and the statues read
+ * it. Driving it per-statue instead gives each figure its own view() progress:
+ * the lower one then never reaches rest while the upper one is already home,
+ * and the JS fallback (which writes to the section) and the CSS path end up
+ * animating different elements. */
+@property --enter {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@keyframes statue-enter {
+  from {
+    --enter: 0;
+  }
+
+  to {
+    --enter: 1;
+  }
+}
+
+.statue-frame {
+  /* At --enter:0 each statue is parked a full width outside its resting spot:
+   * the left one lands entirely behind its pillar, the right one past the
+   * section edge. Both are clipped, so neither can pop into view. */
+  transform: translate3d(calc((1 - var(--enter)) * var(--statue-out)), 0, 0);
+  will-change: transform;
+}
+
+.statue-frame--left {
+  --statue-out: -100%;
+}
+
+.statue-frame--right {
+  --statue-out: 100%;
+}
+
+@supports (animation-timeline: view()) {
+  .colonnade {
+    animation: statue-enter linear both;
+    animation-timeline: view();
+    /* The section is taller than the viewport, so `cover` would stretch the
+     * reveal over an unreadably long scroll. Tying it to the entry phase means
+     * the statues arrive as the section fills the screen and reverse on the
+     * way back up. */
+    animation-range: entry 25% entry 100%;
+  }
+}
+
+/* global.css already clamps every animation to 0.01ms under reduced motion,
+ * which collapses a progress-timeline animation to its end state. Say so
+ * explicitly rather than relying on that interaction: statues sit in place. */
+@media (prefers-reduced-motion: reduce) {
+  .colonnade {
+    animation: none;
+    --enter: 1;
+  }
+}

@@ -1,9 +1,20 @@
 neo4j==5.28.0
 google-genai==1.20.0
-pydantic==2.10.6
+pydantic>=2.11,<3   # composio 0.20 requires >=2.11; was pinned ==2.10.6
 pandas==2.2.3
 rapidfuzz==3.12.2
 python-dotenv==1.0.1
 streamlit==1.45.1
+streamlit-agraph==0.0.45
 pytest==8.3.5
 tqdm==4.67.1
+sentence-transformers>=3.0.0
+numpy>=1.24.0
+fastapi>=0.115.0
+uvicorn>=0.30.0
+
+# Live SaaS integrations (Slack / GitHub / Gmail / Drive / Discord).
+# integrations/composio_client.py imports `composio`, but it was never declared
+# here -- so live integrations failed with ModuleNotFoundError on a fresh clone
+# and the SDK silently stayed None behind a logger.debug.
+composio>=0.20.0

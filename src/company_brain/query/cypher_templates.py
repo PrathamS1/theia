@@ -1,34 +1,52 @@
 """
-query/cypher_templates.py — Parameterised Cypher query builders for multi-hop graph traversal.
+query/cypher_templates.py — HydraDB-compliant Cypher query builders.
 
-Obeyes HydraDB Cypher rules:
-- Requires a label or property predicate on node MATCH (e.g. MATCH (f:Fact))
+Rules obeyed:
+- Requires a label or property predicate on node MATCH (e.g. MATCH (d:Document {id: $did}))
 - RETURN bindings.<property>
+- Uses node IDs as anchors for sub-millisecond targeted lookups
 """
 
-from typing import List, Dict, Any
+from typing import List
 
 
-def build_fact_query(search_terms: List[str]) -> str:
+def build_doc_facts_query() -> str:
     """
-    Builds Cypher query to retrieve facts matching query keywords.
+    Retrieves facts connected to a specific Document node by integer ID.
+    Sub-millisecond latency on HydraDB.
     """
-    conditions = []
-    for term in search_terms:
-        clean_term = term.replace("'", "\\'").lower()
-        conditions.append(
-            f"toLower(f.subject) CONTAINS '{clean_term}' OR "
-            f"toLower(f.attribute) CONTAINS '{clean_term}' OR "
-            f"toLower(f.value) CONTAINS '{clean_term}'"
-        )
-
-    where_clause = " OR ".join(conditions) if conditions else "true"
-    return f"MATCH (f:Fact) WHERE {where_clause} RETURN f.id, f.subject, f.attribute, f.value, f.trust_score, f.doc_id"
+    return (
+        "MATCH (d:Document {id: $did})-[:HAS_FACT]->(f:Fact) "
+        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
+        "f.value AS value, f.trust_score AS trust_score, f.doc_id AS doc_id"
+    )
 
 
-def build_entity_query(entity_name: str) -> str:
+def build_entity_docs_query(label: str = "Person") -> str:
     """
-    Builds Cypher query to find matching entity node and its mentioned documents.
+    Finds Document IDs mentioning a specific entity.
     """
-    clean_name = entity_name.replace("'", "\\'").lower()
-    return f"MATCH (d:Document)-[r:MENTIONS]->(e:Person) WHERE toLower(e.name) CONTAINS '{clean_name}' RETURN d.doc_id, d.source, e.name, e.id"
+    return (
+        f"MATCH (d:Document)-[:MENTIONS]->(e:{label} {{id: $eid}}) "
+        "RETURN d.id AS did, d.doc_id AS doc_id, d.source AS source"
+    )
+
+
+def build_same_as_query() -> str:
+    """
+    Finds resolved canonical aliases for an entity using SAME_AS edges.
+    """
+    return (
+        "MATCH (a:Person {id: $pid})-[:SAME_AS]->(b:Person) "
+        "RETURN b.id AS id, b.name AS name"
+    )
+
+
+def build_supersedes_query() -> str:
+    """
+    Finds facts superseded by a winner fact.
+    """
+    return (
+        "MATCH (w:Fact {id: $fid})-[:SUPERSEDES]->(l:Fact) "
+        "RETURN l.id AS loser_id"
+    )

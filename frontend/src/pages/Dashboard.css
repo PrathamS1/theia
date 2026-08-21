@@ -1,0 +1,286 @@
+/* Narrow screens stack bar / toolbar / canvas / legend / side vertically, which
+ * genuinely needs more room than one viewport — so here the page scrolls, and the
+ * grid is sized by content. Pinning this to 100dvh with overflow:hidden (as the
+ * desktop rule does) would make the lower panels unreachable rather than tidy.
+ *
+ * `min-height` is deliberately NOT set: combined with `#root { min-height: 100vh }`
+ * it was what produced a page scrollbar and a band of empty space below the
+ * layout even when the content fit. */
+.dash {
+  display: grid;
+  grid-template-areas:
+    'bar'
+    'workspace'
+    'toolbar'
+    'canvas'
+    'side';
+  grid-template-rows: auto auto auto minmax(20rem, 50vh) auto;
+}
+
+/* Translucent chrome: content scrolls under the bar rather than being cut off
+ * by an opaque strip. Sticky so the workspace identity stays visible. */
+.dash-workspace-bar {
+  /* Its own row. This previously said `grid-area: bar`, which is also
+   * StatusBar's area (StatusBar.css:2) -- two elements in one grid cell stack,
+   * and this one won on z-index, hiding the live document/fact/vector counts
+   * entirely. */
+  grid-area: workspace;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--s-2) var(--s-4);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+/* Segmented control: the two corpus modes are mutually exclusive, so they read as
+ * one control with a selected segment rather than two competing buttons. */
+.workspace-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.workspace-toggle-group > .btn:not(.btn-danger-outline) {
+  border-radius: 0;
+  border-right-width: 0;
+  margin: 0;
+}
+.workspace-toggle-group > .btn:not(.btn-danger-outline):first-child {
+  border-radius: var(--r-md) 0 0 var(--r-md);
+}
+/* Last segment = the one before the purge button, or the final child. */
+.workspace-toggle-group > .btn:not(.btn-danger-outline):nth-last-child(1),
+.workspace-toggle-group > .btn:not(.btn-danger-outline):nth-last-child(2) {
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  border-right-width: 1px;
+}
+/* The purge action is destructive and unrelated to the mode choice — push it away
+ * so it can never be hit while switching corpora. */
+.workspace-toggle-group > .btn-danger-outline {
+  margin-left: var(--s-4);
+  border-radius: var(--r-md);
+}
+/* Selected segment sits above its neighbour so its border is unbroken. */
+.workspace-toggle-group > .btn-primary { position: relative; z-index: 1; }
+
+/* Primary action. Flat accent fill from the token palette — the accent already
+ * carries meaning (identity//resolution), so it needs no gradient to be found. */
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  font-weight: 500;
+  transition: background 110ms ease-out, box-shadow 110ms ease-out;
+}
+.btn-accent:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+  border-color: color-mix(in srgb, var(--accent) 88%, #000);
+}
+.btn-accent:active { background: color-mix(in srgb, var(--accent) 78%, #000); }
+.btn-accent:focus-visible { box-shadow: var(--focus); outline: none; }
+
+/* Destructive action, light-theme correct: the previous #f87171/#fca5a5 pair
+ * was a dark-theme red and sat at ~2.4:1 on white. */
+.btn-danger-outline {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  font-weight: 500;
+  transition: background 110ms ease-out, border-color 110ms ease-out;
+}
+.btn-danger-outline:hover {
+  background: color-mix(in srgb, var(--danger-bg) 70%, var(--danger));
+  border-color: var(--danger);
+}
+.btn-danger-outline:focus-visible { box-shadow: var(--focus); outline: none; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .dash-workspace-bar { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+.dash-toolbar {
+  grid-area: toolbar;
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-set { display: flex; flex-wrap: wrap; gap: var(--s-2); border: 0; margin: 0; padding: 0; }
+.chip {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  height: 30px; padding: 0 var(--s-3);
+  font-size: 0.8125rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text-muted);
+  transition: background 110ms ease-out, color 110ms ease-out, border-color 110ms ease-out;
+}
+/* Pill chips with a glyph read as filters; the previous square 13px-tall text
+ * boxes read as disabled buttons. */
+.chip svg { flex: none; opacity: 0.7; }
+.chip-on svg { opacity: 1; }
+.chip:hover { background: var(--surface-2); }
+.chip-on { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); font-weight: 500; }
+.chip:has(:focus-visible) { box-shadow: var(--focus); }
+
+.tb-search { flex: 1 1 12rem; min-width: 0; }
+
+/* Two groups, not one undifferentiated row: what you're filtering *to* on the
+ * left, how the result is *presented* on the right. Matching the reference's
+ * split between content controls and view controls. */
+.tb-layout {
+  display: flex;
+  gap: 0;
+  margin-left: auto;
+}
+.tb-layout .btn { border-radius: 0; border-right-width: 0; }
+.tb-layout .btn:first-child { border-radius: var(--r-md) 0 0 var(--r-md); }
+.tb-layout .btn:last-child { border-radius: 0 var(--r-md) var(--r-md) 0; border-right-width: 1px; }
+.tb-layout .btn-on { position: relative; z-index: 1; }
+.btn-on { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.tb-count { font-size: 0.75rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+.dash-canvas { grid-area: canvas; position: relative; padding: var(--s-3) var(--s-4); min-height: 0; }
+
+.canvas-state {
+  height: 100%; min-height: 18rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--s-3); text-align: center;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface-2);
+}
+.canvas-sk { width: 60%; height: 40%; }
+
+
+.dash-side {
+  grid-area: side;
+  display: flex; flex-direction: column; min-height: 0;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-top: 1px solid var(--border);
+  /* Recessed ground so the two panels read as cards sitting on it, rather than as
+   * two undifferentiated blocks sharing one surface. */
+  background: var(--surface-2);
+}
+
+/* Each panel is a card: bordered, rounded, on its own surface. This is the single
+ * change that stops the column reading as a wall of controls. */
+.dash-side > .ask,
+.dash-side > .picker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The divider was separating two flush blocks; cards separate themselves. */
+.side-divider { display: none; }
+
+/* Desktop: canvas and side panel sit side by side, each scrolling independently. */
+/* Desktop: the dashboard owns exactly one viewport and never scrolls as a page —
+ * the canvas and each side panel scroll internally instead. 100dvh rather than
+ * 100vh so browser chrome cannot introduce the same phantom gap. */
+@media (min-width: 1024px) {
+  .dash {
+    grid-template-areas:
+      'bar       bar'
+      'workspace side'
+      'toolbar   side'
+      'canvas    side';
+    grid-template-columns: minmax(0, 1fr) 25rem;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .dash-side {
+    border-top: 0; border-left: 1px solid var(--border);
+    /* The column itself does NOT scroll. It used to, which meant a long answer
+     * pushed the question picker below the fold and you could not pick another
+     * question without scrolling past the whole result. Each panel now scrolls
+     * inside its own box, so the picker is always reachable. */
+    overflow: hidden;
+  }
+  /* The ask panel sizes to its CONTENT and is never compressed below it — the
+   * textarea and Ask button must always be fully visible. `flex: 1 1 auto` made
+   * it share space equally with the picker, so on shorter viewports the button
+   * was squeezed out of view and the question list appeared to occupy its place.
+   * `0 0 auto` + a max-height keeps it intact and caps it once an answer is long. */
+  .dash-side > .ask {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow-y: auto;
+    max-height: 60%;
+  }
+  /* The picker absorbs whatever is left, and only what is left. */
+  .dash-side > .picker {
+    flex: 1 1 auto;
+    min-height: 10rem;
+    overflow: hidden;   /* .picker-list does the scrolling */
+  }
+  .dash-canvas { overflow: hidden; }
+}
+
+@media (min-width: 1440px) {
+  .dash { grid-template-columns: minmax(0, 1fr) 28rem; }
+}
+
+/* Explains a filter that has legitimately hidden every edge, rather than leaving
+ * the user staring at disconnected dots and assuming the graph is broken. */
+.canvas-note {
+  position: absolute;
+  top: var(--s-5); left: 50%; transform: translateX(-50%);
+  z-index: 6;
+  display: flex; align-items: center; gap: var(--s-3);
+  max-width: min(38rem, calc(100% - var(--s-7)));
+  padding: var(--s-3) var(--s-4);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  font-size: 0.8125rem; line-height: 1.45; color: var(--text-muted);
+}
+.canvas-note strong { color: var(--text); font-weight: 600; }
+.canvas-note .btn { flex: none; }
+@media (prefers-reduced-transparency: reduce) {
+  .canvas-note { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* ── One material across all chrome ──────────────────────────────────────────
+ * The legend, control pill and inspector already float over the canvas on a
+ * blurred translucent surface. The toolbar and the two side cards were opaque,
+ * so the dashboard read as two unrelated design languages sharing a screen.
+ * They now use the same material. Where a surface sits on an opaque ground the
+ * blur contributes little on its own — the translucency letting the recessed
+ * tray tint through, plus matching elevation, is what unifies them. */
+.dash-toolbar {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.dash-side > .ask,
+.dash-side > .picker {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Transparency is decoration here, never the thing carrying meaning, so the
+ * reduced-transparency fallback is a straight swap to the opaque surface. */
+@media (prefers-reduced-transparency: reduce) {
+  .dash-toolbar,
+  .dash-side > .ask,
+  .dash-side > .picker {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

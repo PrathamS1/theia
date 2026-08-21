@@ -1,14 +1,12 @@
 """
-resolution/resolve.py — Entity Resolution engine.
+resolution/resolve.py — Entity Resolution Engine for HydraDB.
 
-Evaluates candidate pairs, checks shared graph context, invokes LLM adjudication when needed,
-and writes SAME_AS {confidence, evidence} edges to HydraDB.
+Evaluates candidate pairs, leverages graph co-occurrence evidence,
+and writes SAME_AS {confidence, evidence} edges into HydraDB using one-hop CREATE.
 """
 
 import logging
-from typing import List, Tuple, Dict, Any
-from google import genai
-from pydantic import BaseModel, Field
+from typing import List, Tuple, Dict, Any, Optional, Set
 
 from company_brain import config
 from company_brain.graph.client import GraphClient
@@ -17,83 +15,59 @@ from company_brain.resolution.blocking import generate_candidate_pairs
 logger = logging.getLogger(__name__)
 
 
-class AdjudicationResult(BaseModel):
-    is_same_entity: bool = Field(..., description="True if both refers to the same real-world person/org")
-    confidence: float = Field(..., description="Confidence score 0.0 to 1.0")
-    reasoning: str = Field(..., description="Brief explanation of why they are or are not the same entity")
-
-
-ADJUDICATION_PROMPT = """
-You are an entity resolution expert for Redwood Inference's enterprise data.
-Determine whether Entity A and Entity B refer to the exact same real-world person, organisation, or project.
-
-Entity A:
-Name: {name_a}
-Email: {email_a}
-Source: {source_a}
-
-Entity B:
-Name: {name_b}
-Email: {email_b}
-Source: {source_b}
-
-Respond with JSON adhering to the schema.
-"""
-
-
-def resolve_entities(client: GraphClient) -> int:
+def resolve_entities(
+    client: GraphClient,
+    workspace_id: Optional[str] = None,
+    doc_ids: Optional[Set[str]] = None,
+) -> int:
     """
-    Runs blocking, adjudicates candidate pairs, and writes SAME_AS edges into HydraDB.
-    Returns count of SAME_AS edges created.
+    Runs blocking, evaluates candidate entity pairs, and writes SAME_AS edges into HydraDB
+    strictly scoped to the specified workspace_id.
+    Returns: count of SAME_AS edges created.
     """
-    pairs = generate_candidate_pairs(client)
+    candidate_pairs = generate_candidate_pairs(client, workspace_id=workspace_id, doc_ids=doc_ids)
     same_as_count = 0
 
-    genai_client = genai.Client(api_key=config.get_gemini_api_key())
+    for p1, p2, score, shared_docs in candidate_pairs:
+        confidence = round(score / 100.0, 3)
+        evidence_parts = []
+        if shared_docs:
+            evidence_parts.append(f"Shared docs: {', '.join(shared_docs[:2])}")
+        name1 = str(p1.get("name", "")).replace("'", "").replace('"', "")
+        name2 = str(p2.get("name", "")).replace("'", "").replace('"', "")
+        evidence_parts.append(f"Fuzzy match: {score:.1f}% ({name1} / {name2})")
+        evidence = "; ".join(evidence_parts)
 
-    for p1, p2, score in pairs:
-        # High similarity / exact attribute match -> auto resolve
-        if score >= 95.0:
-            confidence = score / 100.0
-            evidence = f"High fuzzy match ({score:.1f}%) between '{p1['name']}' and '{p2['name']}'"
-            _write_same_as(client, p1["id"], p2["id"], confidence, evidence)
+        # Write SAME_AS edge
+        success = _write_same_as(client, p1["id"], p2["id"], confidence, evidence, workspace_id=workspace_id)
+        if success:
             same_as_count += 1
-        elif score >= 85.0:
-            # LLM Adjudication for ambiguous cases
-            try:
-                prompt = ADJUDICATION_PROMPT.format(
-                    name_a=p1.get("name"), email_a=p1.get("email"), source_a=p1.get("source"),
-                    name_b=p2.get("name"), email_b=p2.get("email"), source_b=p2.get("source"),
-                )
-                res = genai_client.models.generate_content(
-                    model=config.GEMINI_MODEL,
-                    contents=prompt,
-                    config={
-                        "response_mime_type": "application/json",
-                        "response_schema": AdjudicationResult,
-                    },
-                )
-                if res.parsed and res.parsed.is_same_entity:
-                    _write_same_as(client, p1["id"], p2["id"], res.parsed.confidence, res.parsed.reasoning)
-                    same_as_count += 1
-            except Exception as exc:
-                logger.warning("LLM adjudication failed for %s vs %s: %s", p1['name'], p2['name'], exc)
 
-    logger.info("Entity resolution complete. Created %d SAME_AS edges.", same_as_count)
+    logger.info("Entity resolution complete for workspace=%s. Created %d SAME_AS edges in HydraDB.", workspace_id, same_as_count)
     return same_as_count
 
 
-def _write_same_as(client: GraphClient, id1: int, id2: int, confidence: float, evidence: str) -> None:
+def _write_same_as(
+    client: GraphClient,
+    id1: int,
+    id2: int,
+    confidence: float,
+    evidence: str,
+    workspace_id: Optional[str] = None,
+) -> bool:
     """
-    Writes a SAME_AS edge between two resolved entity nodes in HydraDB.
-    Uses compliant one-hop CREATE pattern.
+    Writes a SAME_AS edge between two resolved entity nodes in HydraDB using one-hop CREATE.
     """
-    clean_evidence = evidence.replace("'", "\\'").replace('"', '\\"')
+    clean_evidence = evidence.replace("'", "\\'").replace('"', '\\"').replace("\n", " ")
+    ws_prop = f", workspace_id: '{workspace_id}'" if workspace_id else ""
     cypher = (
-        f"MATCH (a:Person {{id: {id1}}}), (b:Person {{id: {id2}}}) "
-        f"CREATE (a)-[:SAME_AS {{confidence: {confidence}, evidence: '{clean_evidence}'}}]->(b)"
+        f"CREATE (a:Person {{id: {id1}}})"
+        f"-[:SAME_AS {{confidence: {confidence}, evidence: '{clean_evidence}'{ws_prop}}}]->"
+        f"(b:Person {{id: {id2}}})"
     )
     try:
         client.run_write(cypher)
+        return True
     except Exception as exc:
         logger.debug("Failed to write SAME_AS edge between %d and %d: %s", id1, id2, exc)
+        return False

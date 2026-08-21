@@ -1,0 +1,52 @@
+.statusbar {
+  grid-area: bar;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--border);
+  /* Translucent chrome: content scrolls beneath rather than a solid strip. */
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  position: sticky; top: 0; z-index: 10;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .statusbar { background: var(--surface); backdrop-filter: none; }
+}
+
+.sb-left { display: flex; align-items: baseline; gap: var(--s-3); }
+.sb-mark { text-decoration: none; color: var(--text); }
+.sb-sub { font-size: 0.8125rem; color: var(--text-faint); }
+
+.sb-stats { display: flex; align-items: stretch; flex-wrap: wrap; gap: var(--s-2); font-size: 0.8125rem; }
+
+/* Stat tiles rather than a run of text. These four numbers are the first thing a
+ * reader looks at, and as an undifferentiated sentence they were unreadable:
+ * value and label now separate, with hairline dividers grouping them as one set.
+ * Tabular figures keep the columns from shifting as counts refresh. */
+.sb-stat {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 var(--s-3);
+  border-left: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 0.6875rem; line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+.sb-stat:first-of-type { border-left: 0; }
+.sb-stat strong {
+  display: block;
+  color: var(--text); font-weight: 600;
+  font-size: 0.875rem;
+  /* Tighter tracking as size grows — large figures read too loose otherwise. */
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sb-conn { display: inline-flex; align-items: center; gap: var(--s-2); }
+.sb-conn .dot { width: 7px; height: 7px; border-radius: 50%; }
+.sb-ok { color: var(--ok); }
+.sb-ok .dot { background: var(--ok); }
+.sb-off { color: var(--warn); }
+.sb-off .dot { background: var(--warn); }
+
+.sb-score { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.sb-score strong { color: var(--accent); font-weight: 600; }

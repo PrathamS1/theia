@@ -1,0 +1,133 @@
+.graph-canvas { position: relative; width: 100%; height: 100%; }
+
+.graph-box {
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--surface-2);
+  border-radius: var(--r-lg);
+}
+.graph-box:focus-visible { box-shadow: var(--focus); outline: none; }
+
+/* Expansion is the graph's most useful action and was previously discoverable
+ * only from a tooltip on the node count. */
+.graph-hint {
+  position: absolute; left: var(--s-3); bottom: var(--s-3);
+  margin: 0; font-size: 0.6875rem; color: var(--text-faint);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  padding: var(--s-1) var(--s-2); border-radius: var(--r-sm);
+  pointer-events: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .graph-hint { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+/* Both the hint and the collapsed legend chip anchor to the bottom-left. Below
+ * this width they overlap, and of the two the legend is the one you can act on
+ * — the hint is advisory, and the same instructions are on the canvas's
+ * aria-label for anyone navigating by keyboard. */
+@media (max-width: 1199px) {
+  .graph-hint { display: none; }
+}
+
+/* A single floating control pill, matching the legend's material so the two read
+ * as one layer of chrome over the canvas rather than two unrelated widgets. */
+.graph-tools {
+  position: absolute; right: var(--s-3); bottom: var(--s-3);
+  z-index: 4;
+  display: flex; align-items: center; gap: 2px;
+  padding: 3px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+}
+
+.gt-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-1);
+  height: 28px; min-width: 28px; padding: 0 var(--s-2);
+  background: none; border: 0; border-radius: 999px;
+  color: var(--text-muted); cursor: pointer;
+  transition: background 110ms ease-out, color 110ms ease-out;
+}
+.gt-btn:hover { background: var(--surface-2); color: var(--text); }
+/* Feedback on press, not on release. */
+.gt-btn:active { background: var(--surface-3); }
+.gt-btn:focus-visible { box-shadow: var(--focus); outline: none; }
+.gt-fit { padding: 0 var(--s-3); font-size: 0.75rem; font-weight: 500; }
+
+.gt-zoom {
+  min-width: 3.25rem; text-align: center;
+  font-size: 0.75rem; color: var(--text-muted);
+  font-variant-numeric: tabular-nums;   /* digits stop jittering as you zoom */
+}
+.gt-sep { width: 1px; height: 18px; background: var(--border); margin: 0 2px; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .graph-tools { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+
+/* Neutral by default: most expand outcomes are informational ("all connections
+ * are already on the canvas"), and rendering those in the danger palette would
+ * report a success as a failure. Errors opt in via .graph-toast-error. */
+.graph-toast {
+  position: absolute; left: 50%; bottom: var(--s-4); transform: translateX(-50%);
+  z-index: 6; max-width: calc(100% - var(--s-6));
+  padding: var(--s-2) var(--s-4);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  color: var(--text); border: 1px solid var(--border-strong);
+  border-radius: 999px; font-size: 0.8125rem; box-shadow: var(--shadow-md);
+  animation: toast-in 160ms ease-out;
+}
+.graph-toast-error {
+  background: var(--danger-bg); color: var(--danger); border-color: var(--danger);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .graph-toast { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, 4px); } }
+
+/* ── Hover tooltip ───────────────────────────────────────────────────────────
+ * Name, type and degree without a click. Positioned in rendered (screen)
+ * coordinates and translated up-left of the cursor's node so it never covers
+ * the node it describes. */
+.graph-tip {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, calc(-100% - 14px));
+  pointer-events: none;
+  display: flex; flex-direction: column; gap: 2px;
+  max-width: 16rem;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: var(--shadow-md);
+}
+.gtip-name {
+  font-size: 0.8125rem; font-weight: 600; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gtip-meta {
+  display: flex; align-items: center; gap: var(--s-2);
+  font-size: 0.6875rem; color: var(--text-muted);
+}
+.gtip-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--n-document); }
+.gtip-dot-person { background: var(--n-person); }
+.gtip-dot-fact { background: var(--n-fact); }
+.gtip-dot-org { background: var(--n-org); }
+.gtip-dot-ticket { background: var(--n-ticket); }
+.gtip-dot-project { background: var(--n-project); }
+.gtip-dot-metric { background: var(--n-metric); }
+.gtip-dot-topic { background: var(--n-topic); }
+
+@media (prefers-reduced-transparency: reduce) {
+  .graph-tip { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

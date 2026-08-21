@@ -1,0 +1,103 @@
+/* Fixed header (title + filters), scrolling list. The list is the only part that
+ * scrolls, so the category filter and search stay put while you browse. */
+.picker { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); min-height: 0; }
+.picker-h, .picker-controls, .picker-count { flex: 0 0 auto; }
+.picker-h { font-size: 0.9375rem; letter-spacing: 0; }
+.picker-controls { display: flex; gap: var(--s-2); }
+.field-sm { padding: var(--s-1) var(--s-2); font-size: 0.8125rem; }
+.picker-controls select { flex: 0 0 11rem; }
+.picker-count { font-size: 0.75rem; color: var(--text-faint); }
+
+.picker-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--s-2);
+  overflow-y: auto; min-height: 0;
+  flex: 1 1 auto;
+  /* Room for the focus ring, which the overflow box would otherwise clip. */
+  padding-right: 2px;
+}
+.q-sk { height: 3.5rem; display: block; }
+
+/* ── Question card ───────────────────────────────────────────────────────────
+ * Previously: a grey pill and a mono id on the top row, then the question
+ * itself dimmed to --text-muted and clipped at two lines. The metadata was the
+ * loudest thing on a card whose entire purpose is the question. Inverted: the
+ * question leads at full contrast, the provenance sits under it as quiet
+ * micro-type, and the category is a plain uppercase label rather than a washed
+ * grey pill that carried no information its text did not already carry. */
+.q-btn {
+  display: flex; flex-direction: column; gap: var(--s-2); width: 100%;
+  padding: var(--s-3); text-align: left; cursor: pointer;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: background 110ms ease-out, border-color 110ms ease-out,
+              transform 90ms ease-out;
+}
+.q-btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
+/* Feedback on press, not on release. */
+.q-btn:active { transform: scale(0.995); }
+
+/* The selected card is marked by a filled accent rail on the leading edge. The
+ * old version swapped the whole card to --accent-bg, which drowned the text it
+ * was meant to highlight. */
+.q-active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.q-active .q-text { color: var(--text); }
+.q-active .q-type { color: var(--accent); }
+
+.q-text {
+  font-size: 0.875rem; line-height: 1.45; color: var(--text);
+  /* Three lines, not two: at two lines nearly every benchmark question was cut
+   * mid-clause, so the list read as a column of unfinished sentences. */
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.q-head { display: flex; align-items: center; gap: var(--s-2); }
+.q-id { font-size: 0.6875rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.q-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-strong); flex: none; }
+.q-type {
+  font-size: 0.625rem; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-faint);
+}
+
+.picker-empty { font-size: 0.875rem; color: var(--text-muted); padding: var(--s-4) 0; }
+
+/* ── Search field with a live state ──────────────────────────────────────────
+ * Shared by this panel and the graph toolbar. The leading glyph says "this
+ * filters", and the trailing slot is a single fixed-width position holding
+ * either a spinner (debounce in flight) or a clear button, so the field never
+ * reflows as you type. */
+.picker-search, .tb-search { position: relative; display: flex; align-items: center; min-width: 0; }
+.picker-search { flex: 1; }
+
+.tbs-icon {
+  position: absolute; left: var(--s-2); color: var(--text-faint);
+  pointer-events: none; flex: none;
+}
+/* Scoped to the wrapper rather than left as a bare `.tbs-input`: `.field` is
+ * defined later in the bundle and was winning the cascade at equal specificity,
+ * which put the leading magnifier directly on top of the placeholder text. */
+.picker-search .tbs-input,
+.tb-search .tbs-input { padding-left: 1.875rem; padding-right: 1.75rem; }
+.tbs-trail {
+  position: absolute; right: var(--s-2);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1rem; height: 1rem; color: var(--text-faint);
+}
+.tbs-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%; padding: 0;
+  background: none; border: 0; border-radius: 50%;
+  color: var(--text-faint); cursor: pointer;
+}
+.tbs-clear:hover { background: var(--surface-3); color: var(--text); }
+.tbs-clear:focus-visible { box-shadow: var(--focus); outline: none; }
+
+/* Focus is the one moment the field must be unmistakable. */
+.tbs-input:focus, .tbs-input:focus-visible {
+  border-color: var(--accent); box-shadow: var(--focus); outline: none;
+}
+.picker-search:focus-within .tbs-icon, .tb-search:focus-within .tbs-icon { color: var(--accent); }
