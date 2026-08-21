@@ -810,7 +810,7 @@ enough to locate a real bug we had already dismissed.
 
 ## 13. Remaining Limitations
 
-1. **`info_not_found` is unsolved.** 0.00 on both corpora — see §10.4 for the full analysis and why
+1. **`info_not_found` is unsolved.** 0.00 on both corpora — see 10.4 for the full analysis and why
    thresholds cannot fix it.
 2. **Answers are extractive, not generated.** `_synthesize_grounded_answer` concatenates
    non-superseded graph facts and the best passage per cited document. **No LLM is called at query
