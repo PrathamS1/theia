@@ -36,6 +36,11 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="Limit number of questions evaluated (e.g. 50 or 500)")
     parser.add_argument("--output", type=str, default="data/eval_results/eval_latest.json", help="Output results file")
     parser.add_argument("--concurrency", type=int, default=1, help="Evaluation concurrency (default 1)")
+    parser.add_argument("--staged", type=str, default="data/staged_gold_docs.json",
+                        help="Corpus the engine retrieves over (default: data/staged_gold_docs.json). "
+                             "Use data/staged_noisy_docs.json to evaluate under distractor noise.")
+    parser.add_argument("--vector-dir", type=str, default="data/vectors",
+                        help="Vector index matching --staged (default: data/vectors)")
     args = parser.parse_args()
 
     questions_file = Path(args.questions)
@@ -61,7 +66,7 @@ def main():
             logger.warning("⚠️  HydraDB is NOT RUNNING on bolt://127.0.0.1:7687! Evaluation will run in Vector-Only mode without graph traversals.")
             logger.warning("   To enable full graph traversal, start HydraDB with: bash scripts/start_hydradb.sh")
 
-    engine = QueryEngine()
+    engine = QueryEngine(vector_dir=args.vector_dir, staged_docs_path=args.staged)
 
     eval_records: List[Dict[str, Any]] = []
     start_time = time.time()

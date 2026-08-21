@@ -16,8 +16,9 @@ from company_brain.graph.topology import cache as topology_cache, _ID_PREFIX
 
 router = APIRouter(prefix="/api/graph", tags=["Graph"])
 
-_ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact", "Topic", "Deal", "Entity"}
+_ALL_LABELS = {"Document", "Person", "Org", "Ticket", "Project", "Fact", "Topic", "Deal", "Entity", "Metric"}
 
+from company_brain import config
 from company_brain.config import LIVE_DATA_DIR
 
 # In-memory document text cache, for full_body lookups only
@@ -27,7 +28,12 @@ _DOCS_CACHE: Dict[str, Dict[str, Any]] = {}
 def _get_docs_cache(workspace_id: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
     global _DOCS_CACHE
     if not _DOCS_CACHE:
-        staged_path = Path("data/staged_gold_docs.json")
+        # Follow the corpus the API is actually serving. This was hardcoded to the
+        # 812-document gold file, so when THEIA_STAGED_DOCS points at the 25,812-doc
+        # noisy corpus the other 25,000 documents missed the cache and fell through
+        # to a branch that sets `text = title` -- which is why the inspector's
+        # "SOURCE TEXT" was just the title repeated back.
+        staged_path = Path(config.STAGED_DOCS_PATH)
         if staged_path.exists():
             with open(staged_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -60,11 +66,39 @@ def _filter_by_labels(nodes: List[Dict], edges: List[Dict], allowed: set) -> tup
     return kept_nodes, kept_edges
 
 
+def _search_doc_ids(
+    search: str, limit: int, workspace_id: Optional[str] = None
+) -> tuple[list, int]:
+    """Resolve a free-text query to document ids across the entire staged corpus.
+
+    Matching happens against the in-memory docs cache rather than in Cypher:
+    HydraDB 0.1.0 has no usable string-predicate support for this shape, and the
+    cache is already loaded to serve node details. Title matches rank above body
+    matches so the most obviously relevant documents seed the graph.
+    """
+    needle = search.strip().lower()
+    if not needle:
+        return [], 0
+
+    docs = _get_docs_cache(workspace_id=workspace_id)
+    title_hits: list = []
+    body_hits: list = []
+    for doc_id, doc in docs.items():
+        title = str(doc.get("title") or "").lower()
+        if needle in title:
+            title_hits.append(doc_id)
+        elif needle in str(doc.get("text") or "").lower():
+            body_hits.append(doc_id)
+
+    ranked = title_hits + body_hits
+    return ranked[:limit], len(ranked)
+
+
 @router.get("/topology")
 def get_graph_topology(
     doc_limit: int = Query(45, ge=5, le=100, description="Number of seed documents to expand"),
     labels: Optional[str] = Query(None, description="Comma-separated labels to include: Document,Person,Org,Ticket,Project,Topic,Deal,Fact"),
-    search: Optional[str] = Query(None, description="Filter documents by title (applies to the currently cached seed only)"),
+    search: Optional[str] = Query(None, description="Search all documents by title and body; seeds the subgraph from the matches"),
     refresh: bool = Query(False, description="Bypass the topology cache and re-query HydraDB"),
     workspace_id: Optional[str] = Query(None, description="Filter topology to a specific user/workspace"),
 ):
@@ -72,30 +106,31 @@ def get_graph_topology(
     Returns a bounded seed subgraph (documents plus their MENTIONS/HAS_FACT
     neighbours) from HydraDB, structured for Cytoscape.js.
     """
+    # Search resolves against the WHOLE corpus, then seeds the subgraph from the
+    # documents that matched. It previously filtered the ~45 already-cached seed
+    # documents by title, so a real query like "multipart" matched none of them
+    # and the box returned an empty canvas for almost every term anyone typed.
+    seed_doc_ids = None
+    matched_total = None
+    if search and search.strip():
+        seed_doc_ids, matched_total = _search_doc_ids(search, doc_limit, workspace_id)
+        if not seed_doc_ids:
+            return {
+                "nodes": [], "edges": [], "total_nodes": 0, "total_edges": 0,
+                "query": search.strip(), "matched_documents": 0,
+            }
+
     try:
-        seed = topology_cache.fetch_seed(doc_limit=doc_limit, refresh=refresh, workspace_id=workspace_id)
+        seed = topology_cache.fetch_seed(
+            doc_limit=doc_limit, refresh=refresh,
+            workspace_id=workspace_id, seed_doc_ids=seed_doc_ids,
+        )
     except Exception:
         return {"nodes": [], "edges": [], "total_nodes": 0, "total_edges": 0, "degraded": True}
     nodes, edges = seed["nodes"], seed["edges"]
 
     allowed_labels = set(labels.split(",")) & _ALL_LABELS if labels else set(_ALL_LABELS)
     nodes, edges = _filter_by_labels(nodes, edges, allowed_labels)
-
-    if search and search.strip():
-        needle = search.strip().lower()
-        doc_ids_kept = {
-            n["data"]["id"] for n in nodes
-            if n["data"]["label"] == "Document" and needle in n["data"]["name"].lower()
-        }
-        # Keep matching documents plus anything connected to them; drop unrelated documents.
-        connected_to_match = {
-            e["data"]["target"] if e["data"]["source"] in doc_ids_kept else e["data"]["source"]
-            for e in edges
-            if e["data"]["source"] in doc_ids_kept or e["data"]["target"] in doc_ids_kept
-        }
-        keep_ids = doc_ids_kept | connected_to_match
-        nodes = [n for n in nodes if n["data"]["id"] in keep_ids]
-        edges = [e for e in edges if e["data"]["source"] in keep_ids and e["data"]["target"] in keep_ids]
 
     # Layer in the full identity-resolution and supersession edge sets, but
     # only where both endpoints are already present in this seed -- keeps the
@@ -109,6 +144,16 @@ def get_graph_topology(
         for e in topology_cache.fetch_supersedes(workspace_id=workspace_id):
             if e["data"]["source"] in node_ids and e["data"]["target"] in node_ids:
                 edges.append(e)
+
+    if matched_total is not None:
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "total_nodes": len(nodes),
+            "total_edges": len(edges),
+            "query": search.strip(),
+            "matched_documents": matched_total,
+        }
 
     return {
         "nodes": nodes,
@@ -203,17 +248,53 @@ def get_node_details(
                 exp = topology_cache.expand_node("Document", key, workspace_id=workspace_id)
                 for n in exp["nodes"][:12]:
                     rel = "HAS_FACT" if n["data"]["label"] == "Fact" else "MENTIONS"
-                    neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": rel})
+                    neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"],
+                                       "name": n["data"].get("name") or n["data"]["id"],
+                                       "relationship": rel})
             except Exception:
                 pass
+
+            # The facts a document asserts are the single most interesting thing
+            # about it, and the card omitted them entirely -- so a Document read as
+            # a title plus a list of anonymous "MENTIONS Person" rows. Anchored
+            # lookup, ~40ms.
+            facts = []
+            try:
+                with GraphClient() as client:
+                    rows = client.run(
+                        "MATCH (d:Document {doc_id: $did})-[:HAS_FACT]->(f:Fact) "
+                        "RETURN f.id AS id, f.subject AS subject, f.attribute AS attribute, "
+                        "f.value AS value, f.created_at AS created_at LIMIT 12",
+                        {"did": key},
+                    )
+                for r in rows:
+                    subj, val = str(r.get("subject") or ""), str(r.get("value") or "")
+                    if not subj or subj.strip().lower() == val.strip().lower():
+                        continue  # tautology guard, same rule the query engine applies
+                    facts.append({
+                        "id": r.get("id"),
+                        "subject": subj,
+                        "attribute": r.get("attribute"),
+                        "value": val,
+                        "created_at": r.get("created_at") or "",
+                    })
+            except Exception:
+                pass
+
+            body = doc.get("text", "") or ""
+            title = doc.get("title", "Document")
             return {
                 "id": node_id,
                 "label": "Document",
-                "name": doc.get("title", "Document"),
+                "name": title,
                 "source": doc.get("source", ""),
                 "doc_id": key,
                 "created_at": doc.get("created_at", ""),
-                "full_body": doc.get("text", ""),
+                # Suppress the body when it is merely the title echoed back: showing
+                # the same string twice under a "SOURCE TEXT" heading is worse than
+                # showing nothing, because it implies the document has no content.
+                "full_body": "" if body.strip() == title.strip() else body,
+                "facts": facts,
                 "properties": {
                     "doc_id": key,
                     "source": doc.get("source", ""),
@@ -239,11 +320,15 @@ def get_node_details(
             try:
                 exp = topology_cache.expand_node("Fact", key, workspace_id=workspace_id)
                 for n in exp["nodes"][:8]:
-                    neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": "SUPERSEDES"})
+                    neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"],
+                                       "name": n["data"].get("name") or n["data"]["id"],
+                                       "relationship": "SUPERSEDES"})
             except Exception:
                 pass
             if f.get("f.doc_id"):
-                neighbours.append({"id": f"doc_{f['f.doc_id']}", "label": "Document", "relationship": "HAS_FACT"})
+                neighbours.append({"id": f"doc_{f['f.doc_id']}", "label": "Document",
+                                   "name": f.get("d.title") or f["f.doc_id"],
+                                   "relationship": "HAS_FACT"})
             return {
                 "id": node_id,
                 "label": "Fact",
@@ -287,7 +372,9 @@ def get_node_details(
             exp = topology_cache.expand_node(label, key, workspace_id=workspace_id)
             for n in exp["nodes"][:12]:
                 rel = "SAME_AS" if n["data"]["label"] == "Person" and label == "Person" else "MENTIONS"
-                neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"], "relationship": rel})
+                neighbours.append({"id": n["data"]["id"], "label": n["data"]["label"],
+                                       "name": n["data"].get("name") or n["data"]["id"],
+                                       "relationship": rel})
         except Exception:
             pass
         return {

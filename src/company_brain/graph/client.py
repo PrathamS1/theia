@@ -32,6 +32,31 @@ from company_brain import config
 logger = logging.getLogger(__name__)
 
 
+def _snapshot_of(session: Session, cypher: str) -> dict[str, Any] | None:
+    """
+    Read the session's Bolt bookmark and pull the graph epoch out of it.
+
+    HydraDB bookmarks look like
+        sgk:1:<namespace>:<graph>:<cell>:<epoch>
+    where the trailing segment is a monotonically increasing epoch. Capturing it
+    turns "the graph said so" into a checkable claim.
+    """
+    try:
+        bookmarks = list(session.last_bookmarks().raw_values)
+    except Exception:
+        return None
+    if not bookmarks:
+        return None
+
+    bookmark = bookmarks[-1]
+    epoch: int | None = None
+    tail = bookmark.rsplit(":", 1)[-1]
+    if tail.isdigit():
+        epoch = int(tail)
+
+    return {"bookmark": bookmark, "read_epoch": epoch, "cypher": cypher}
+
+
 class GraphClient:
     """
     Wraps a Neo4j Bolt driver targeting HydraDB.
@@ -124,7 +149,20 @@ class GraphClient:
             result: Result = session.run(cypher, parameters or {})
             records = [dict(record) for record in result]
             result.consume()
+            self._last_snapshot = _snapshot_of(session, cypher)
             return records
+
+    @property
+    def last_snapshot(self) -> dict[str, Any] | None:
+        """
+        Provenance for the most recent read: the HydraDB bookmark, the graph epoch
+        it pins, and the Cypher that produced it.
+
+        The bookmark identifies an immutable point in the graph's history, so an
+        answer can be re-checked against exactly the state that produced it rather
+        than against whatever the graph looks like later.
+        """
+        return getattr(self, "_last_snapshot", None)
 
     def run_batch(
         self,

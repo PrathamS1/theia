@@ -87,6 +87,13 @@ code, .mono { font-family: var(--font-mono); font-size: 0.8125em; }
   border-radius: var(--r-lg);
 }
 
+/* Shared by every in-flight indicator: the Ask button, the graph filter and the
+ * question search. Lives here rather than in one component's stylesheet because
+ * three components depend on it. */
+.spin { animation: spin 900ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+
 .skeleton {
   background: var(--surface-3);
   border-radius: var(--r-sm);

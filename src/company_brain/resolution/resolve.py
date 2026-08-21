@@ -6,7 +6,7 @@ and writes SAME_AS {confidence, evidence} edges into HydraDB using one-hop CREAT
 """
 
 import logging
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Tuple, Dict, Any, Optional, Set
 
 from company_brain import config
 from company_brain.graph.client import GraphClient
@@ -15,13 +15,17 @@ from company_brain.resolution.blocking import generate_candidate_pairs
 logger = logging.getLogger(__name__)
 
 
-def resolve_entities(client: GraphClient, workspace_id: Optional[str] = None) -> int:
+def resolve_entities(
+    client: GraphClient,
+    workspace_id: Optional[str] = None,
+    doc_ids: Optional[Set[str]] = None,
+) -> int:
     """
     Runs blocking, evaluates candidate entity pairs, and writes SAME_AS edges into HydraDB
     strictly scoped to the specified workspace_id.
     Returns: count of SAME_AS edges created.
     """
-    candidate_pairs = generate_candidate_pairs(client, workspace_id=workspace_id)
+    candidate_pairs = generate_candidate_pairs(client, workspace_id=workspace_id, doc_ids=doc_ids)
     same_as_count = 0
 
     for p1, p2, score, shared_docs in candidate_pairs:

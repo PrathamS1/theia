@@ -6,15 +6,29 @@
     <title>Theia — Enterprise Company Brain</title>
     <meta
       name="description"
-      content="Graph-augmented enterprise intelligence on HydraDB: identity resolution, temporal supersession, and grounded abstention."
+      content="Graph-augmented enterprise intelligence on HydraDB: identity resolution, temporal supersession, and a citation on every answer."
     />
-    <link
-      rel="preload"
-      as="image"
-      imagesrcset="/img/bg-1600.webp 1600w, /img/bg-2560.webp 2560w, /img/bg-3840.webp 3840w"
-      imagesizes="100vw"
-      fetchpriority="high"
-    />
+    <!--
+      The hero background is the landing page's LCP element, so it is worth
+      preloading — but ONLY there. As a static <link> this fired on every route,
+      and /dashboard never mounts <Hero>, so each dashboard load downloaded
+      between 234 KB and 1 MB of image and threw it away (Chrome reports it as
+      "preloaded using link preload but not used"). Injecting it from an inline
+      head script keeps the preload ahead of everything that matters on "/" while
+      costing the other routes nothing. Kept in sync with Hero.tsx's BG_SRCSET.
+    -->
+    <script>
+      if (location.pathname === '/' || location.pathname === '/index.html') {
+        var l = document.createElement('link');
+        l.rel = 'preload';
+        l.as = 'image';
+        l.imageSrcset =
+          '/img/bg-1600.webp 1600w, /img/bg-2560.webp 2560w, /img/bg-3840.webp 3840w';
+        l.imageSizes = '100vw';
+        l.fetchPriority = 'high';
+        document.head.appendChild(l);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

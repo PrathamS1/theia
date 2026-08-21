@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
+import { FileText, User, Building2, Ticket as TicketIcon, FolderGit2, Sparkles, Gauge, Settings2, Globe, Zap, Trash2, Hash, Search, Loader2, X } from 'lucide-react';
 import { getEvalLatest, getHealth, getTopology } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
+import { useDebouncedValue } from '../lib/useDebouncedValue';
 import type { NodeLabel } from '../lib/types';
 import StatusBar from '../components/StatusBar';
 import GraphCanvas, { type GraphCanvasHandle, type LayoutName } from '../components/GraphCanvas';
@@ -11,13 +13,30 @@ import QuestionPicker from '../components/QuestionPicker';
 import LiveIntegrationsModal from '../components/LiveIntegrationsModal';
 import './Dashboard.css';
 
-const ALL_LABELS: NodeLabel[] = ['Document', 'Person', 'Org', 'Ticket', 'Project', 'Fact'];
+const ALL_LABELS: NodeLabel[] =
+  ['Document', 'Person', 'Org', 'Ticket', 'Project', 'Fact', 'Metric', 'Topic'];
+
+/* An icon per node type. The chips were seven near-identical text pills; a glyph
+ * makes each scannable without reading, and matches the swatch colour used on the
+ * canvas so the filter and the graph speak the same language. */
+const LABEL_ICON: Record<NodeLabel, typeof FileText> = {
+  Document: FileText,
+  Person: User,
+  Org: Building2,
+  Ticket: TicketIcon,
+  Project: FolderGit2,
+  Fact: Sparkles,
+  Metric: Gauge,
+  Topic: Hash,
+};
 const DEFAULT_DOC_LIMIT = 30;
-const LAYOUTS: { id: LayoutName; name: string }[] = [
-  { id: 'breadthfirst', name: 'Tree' },
-  { id: 'concentric', name: 'Concentric' },
-  { id: 'cose', name: 'Force' },
-  { id: 'grid', name: 'Grid' },
+/* Named for what they SHOW, not for their algorithm. `breadthfirst` ("Tree") was
+ * removed: most documents sit at the same depth in this topology, so it drew 108
+ * nodes as flat rows and implied a hierarchy that does not exist. */
+const LAYOUTS: { id: LayoutName; name: string; hint: string }[] = [
+  { id: 'cose', name: 'Clusters', hint: 'Force-directed — groups what is densely connected' },
+  { id: 'concentric', name: 'By links', hint: 'Most-connected nodes in the centre' },
+  { id: 'grid', name: 'Grid', hint: 'Even spacing, no structure implied' },
 ];
 
 export default function Dashboard() {
@@ -28,9 +47,18 @@ export default function Dashboard() {
   const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
 
   const [labels, setLabels] = useState<NodeLabel[]>(ALL_LABELS);
-  const [search, setSearch] = useState('');
+  /* `draft` is what is typed; `search` is what has been applied. These used to
+   * be joined only by a form submit, so typing did nothing until you pressed
+   * Enter — the field looked broken. It now applies itself once typing pauses,
+   * and `pending` drives an inline spinner so the pause reads as work. */
   const [draft, setDraft] = useState('');
-  const [layout, setLayout] = useState<LayoutName>('breadthfirst');
+  const search = useDebouncedValue(draft, 350);
+  const searchPending = draft !== search;
+  // Force-directed by default. `breadthfirst` ("Tree") lays this topology out as a
+  // single flat row -- most documents sit at the same depth, so the hierarchy it
+  // draws is meaningless and the graph reads as a line of dots across an otherwise
+  // empty canvas. Force layout shows the actual clustering.
+  const [layout, setLayout] = useState<LayoutName>('cose');
   const [selected, setSelected] = useState<string | null>(null);
   const [preset, setPreset] = useState<{ q: string; id: string } | null>(null);
   const canvasRef = useRef<GraphCanvasHandle>(null);
@@ -75,7 +103,7 @@ export default function Dashboard() {
             className={`btn btn-sm ${workspaceMode === 'benchmark' ? 'btn-primary' : 'btn-outline'}`}
             onClick={() => setWorkspaceMode('benchmark')}
           >
-            🌐 Enterprise Benchmark Corpus
+            <Globe size={14} aria-hidden="true" /> Enterprise Benchmark Corpus
           </button>
           <button
             className={`btn btn-sm ${workspaceMode === 'live' ? 'btn-primary' : 'btn-outline'}`}
@@ -87,7 +115,8 @@ export default function Dashboard() {
               }
             }}
           >
-            {userName ? `👤 ${userName}’s Live Workspace` : '⚡ Live Mode (Connect SaaS)'}
+            <Zap size={14} aria-hidden="true" />
+            {userName ? `${userName}’s Live Workspace` : 'Live Mode (Connect SaaS)'}
           </button>
 
           {workspaceMode === 'live' && userId && (
@@ -111,7 +140,7 @@ export default function Dashboard() {
                 }
               }}
             >
-              🗑️ Purge Workspace
+              <Trash2 size={14} aria-hidden="true" /> Purge Workspace
             </button>
           )}
         </div>
@@ -120,32 +149,51 @@ export default function Dashboard() {
           className="btn btn-sm btn-accent"
           onClick={() => setIsIntegrationsOpen(true)}
         >
-          ⚙️ Manage Integrations (Slack & GitHub)
+          <Settings2 size={14} aria-hidden="true" /> Manage Integrations
         </button>
       </div>
 
       <div className="dash-toolbar">
         <fieldset className="filter-set">
           <legend className="sr-only">Filter node types</legend>
-          {ALL_LABELS.map((l) => (
-            <label key={l} className={`chip ${labels.includes(l) ? 'chip-on' : ''}`}>
-              <input
-                type="checkbox" className="sr-only"
-                checked={labels.includes(l)} onChange={() => toggleLabel(l)}
-              />
-              {l}
-            </label>
-          ))}
+          {ALL_LABELS.map((l) => {
+            const Icon = LABEL_ICON[l];
+            return (
+              <label key={l} className={`chip ${labels.includes(l) ? 'chip-on' : ''}`}>
+                <input
+                  type="checkbox" className="sr-only"
+                  checked={labels.includes(l)} onChange={() => toggleLabel(l)}
+                />
+                <Icon size={13} aria-hidden="true" />
+                {l}
+              </label>
+            );
+          })}
         </fieldset>
 
-        <form className="tb-search" onSubmit={(e) => { e.preventDefault(); setSearch(draft); }}>
-          <label className="sr-only" htmlFor="graph-search">Search documents</label>
+        <div className="tb-search">
+          <label className="sr-only" htmlFor="graph-search">Filter documents by title</label>
+          <Search size={14} className="tbs-icon" aria-hidden="true" />
           <input
-            id="graph-search" type="search" className="field field-sm"
+            id="graph-search" type="text" className="field field-sm tbs-input"
             placeholder="Filter documents…" value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setDraft(''); }}
           />
-        </form>
+          {/* Occupies one slot so the field's width never jumps between the
+            * three states. */}
+          <span className="tbs-trail">
+            {searchPending
+              ? <Loader2 size={13} className="spin" aria-label="Filtering" />
+              : draft
+                ? (
+                  <button type="button" className="tbs-clear" onClick={() => setDraft('')} aria-label="Clear filter">
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )
+                : null}
+          </span>
+        </div>
 
         <div className="tb-layout" role="group" aria-label="Graph layout">
           {LAYOUTS.map((l) => (
@@ -154,6 +202,7 @@ export default function Dashboard() {
               className={`btn btn-sm ${layout === l.id ? 'btn-on' : ''}`}
               onClick={() => setLayout(l.id)}
               aria-pressed={layout === l.id}
+              title={l.hint}
             >
               {l.name}
             </button>
@@ -161,7 +210,11 @@ export default function Dashboard() {
         </div>
 
         <span className="tb-count" title="Double-click a node, or use Expand in the inspector, to grow the graph">
-          {topo.data ? `${topo.data.total_nodes} nodes · ${topo.data.total_edges} edges (seed)` : '—'}
+          {!topo.data
+            ? '—'
+            : topo.data.matched_documents !== undefined
+              ? `${topo.data.matched_documents.toLocaleString()} document${topo.data.matched_documents === 1 ? '' : 's'} match · showing ${topo.data.total_nodes.toLocaleString()} nodes`
+              : `${topo.data.total_nodes.toLocaleString()} node${topo.data.total_nodes === 1 ? '' : 's'} · ${topo.data.total_edges.toLocaleString()} edge${topo.data.total_edges === 1 ? '' : 's'} (seed)`}
         </span>
       </div>
 
@@ -194,10 +247,31 @@ export default function Dashboard() {
                 Connect & Sync Apps
               </button>
             ) : (
-              <button className="btn" onClick={() => { setSearch(''); setDraft(''); setLabels(ALL_LABELS); }}>
+              <button className="btn" onClick={() => { setDraft(''); setLabels(ALL_LABELS); }}>
                 Reset filters
               </button>
             )}
+          </div>
+        )}
+
+        {/* People connect to each other THROUGH documents, so hiding Document
+          * legitimately removes every MENTIONS edge and leaves only the 78 direct
+          * SAME_AS identity bridges. Without this note that reads as a broken
+          * graph rather than as what the ontology actually says. */}
+        {!topo.loading && !topo.error && topo.data && topo.data.nodes.length > 0 &&
+          topo.data.total_edges <= 1 && topo.data.total_nodes > 5 && !labels.includes('Document') && (
+          <div className="canvas-note" role="status">
+            <span>
+              <strong>{topo.data.total_nodes} nodes, {topo.data.total_edges} link
+              {topo.data.total_edges === 1 ? '' : 's'}.</strong>{' '}
+              These connect to each other <em>through documents</em> — hiding Document hides those links.
+            </span>
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => setLabels((cur) => [...cur, 'Document'])}
+            >
+              Show connections
+            </button>
           </div>
         )}
 
@@ -209,12 +283,12 @@ export default function Dashboard() {
           />
         )}
 
+        <GraphLegend />
+
         {selected && (
           <NodeInspector nodeId={selected} workspaceId={activeWorkspaceId} onClose={() => setSelected(null)} onExpand={handleExpand} />
         )}
       </main>
-
-      <GraphLegend />
 
       <aside className="dash-side">
         <AskPanel

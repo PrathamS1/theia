@@ -170,9 +170,9 @@ export default function ColonnadeSection() {
             leading-relaxed text-brand-ink animate-rise [animation-delay:160ms]
             [font-size:clamp(0.75rem,min(1.25vw,1.7vh),0.95rem)]"
         >
-          Nine tools, one graph. Theia folds 812 documents into 2,786 resolved entities and
-          4,483 facts &mdash; linking the aliases that mean the same person, preferring the
-          fact that is still true, and keeping a citation on every one of them.
+          Nine tools, one graph. Theia folds 25,812 documents into 18,262 resolved entities
+          and 10,357 facts &mdash; linking the aliases that mean the same person, preferring
+          the fact that is still true, and keeping a citation on every one of them.
         </p>
 
         <div
@@ -197,10 +197,10 @@ export default function ColonnadeSection() {
                 className="h-[var(--card-h)] w-full z-2"
                 title="Uniform Format"
                 description="Ingestion complete"
-                count={721}
+                count={25812}
                 itemLabel="file"
                 previews={FOLDER_PREVIEWS}
-                ariaLabel="Uniform Format, 721 files. Open to browse."
+                ariaLabel="Uniform Format, 25,812 files. Open to browse."
               />
             </div>
           </div>

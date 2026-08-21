@@ -1,19 +1,48 @@
 .ask { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-4); }
 .ask-h { font-size: 0.9375rem; letter-spacing: 0; }
 
-.ask-input { resize: vertical; min-height: 4.5rem; line-height: 1.45; }
+/* Height is driven by content (see AskPanel.tsx), capped so a pathological
+ * paste cannot push the Ask button off-screen. `resize: none` because the
+ * element now sizes itself — leaving the handle would fight that. */
+.ask-input {
+  resize: none; min-height: 3.75rem; max-height: 14rem;
+  line-height: 1.5; overflow-y: auto;
+}
 
 .ask-actions { display: flex; align-items: center; gap: var(--s-3); margin-top: var(--s-3); }
 .hint { color: var(--text-faint); font-size: 0.75rem; }
 
+/* Reads as a tag attached to the field above it: one row, tinted with the
+ * accent that already means "resolved / benchmark" elsewhere in the UI, with
+ * the dismiss affordance as an icon at the trailing edge rather than an
+ * underlined "Clear" orphaned on its own line. */
 .preset-note {
-  display: flex; align-items: center; flex-wrap: wrap; gap: var(--s-2);
-  margin-top: var(--s-2); font-size: 0.8125rem; color: var(--text-muted);
+  display: flex; align-items: center; gap: var(--s-2);
+  margin-top: var(--s-2); padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  font-size: 0.75rem; color: var(--accent);
+  /* Only as wide as its content — a full-bleed bar would read as an alert.
+   * `width: fit-content` rather than `align-self`, because the parent <form>
+   * is block-level and alignment properties would be inert there. */
+  width: fit-content; max-width: 100%;
 }
-.linkish {
-  background: none; border: 0; padding: 0; color: var(--accent);
-  cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+.pn-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
+.pn-id { font-size: 0.6875rem; font-weight: 600; flex: none; }
+.pn-label {
+  color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.pn-clear {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.125rem; height: 1.125rem; flex: none; padding: 0;
+  background: none; border: 0; border-radius: 50%;
+  color: var(--accent); cursor: pointer;
+  transition: background 110ms ease-out;
+}
+.pn-clear:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.pn-clear:focus-visible { box-shadow: var(--focus); outline: none; }
 
 .alert { padding: var(--s-3); border-radius: var(--r-md); font-size: 0.875rem; }
 .alert-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
@@ -38,6 +67,52 @@
 }
 .answer p { font-size: 0.9375rem; line-height: 1.55; white-space: pre-wrap; }
 
+/* Answer body: graph facts and source passages are different kinds of evidence,
+ * so they are not rendered as the same undifferentiated text. */
+.answer { display: flex; flex-direction: column; gap: var(--s-4); }
+
+.ans-sub {
+  display: flex; align-items: center; gap: var(--s-2);
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: var(--s-2);
+}
+.ans-count {
+  font-variant-numeric: tabular-nums; font-size: 0.6875rem;
+  padding: 0 var(--s-1); min-width: 1.25rem; text-align: center;
+  background: var(--accent-bg); color: var(--accent);
+  border-radius: var(--r-sm); letter-spacing: 0;
+}
+
+/* Accent rail marks these as graph-resolved, matching the accent's existing
+ * meaning (identity / resolution) rather than introducing a new colour. */
+.fact-list {
+  list-style: none; margin: 0; padding: 0 0 0 var(--s-3);
+  display: flex; flex-direction: column; gap: var(--s-2);
+  border-left: 2px solid var(--accent);
+}
+.fact-list li {
+  font-size: 0.875rem; line-height: 1.45; color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.ans-passages { display: flex; flex-direction: column; gap: var(--s-3); }
+
+.passage { margin: 0; }
+.passage blockquote {
+  margin: 0; padding: var(--s-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  font-size: 0.875rem; line-height: 1.55;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  /* Long passages stay scannable instead of pushing the trace off-screen. */
+  max-height: 13rem; overflow-y: auto;
+}
+.passage figcaption {
+  margin-top: var(--s-1); font-size: 0.6875rem;
+  color: var(--text-faint); overflow-wrap: anywhere;
+}
+
 .abstain {
   padding: var(--s-3); border-radius: var(--r-md);
   background: var(--warn-bg); border: 1px solid var(--warn);
@@ -51,5 +126,75 @@
 .cite-list, .trace-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s-1); }
 .cite-list li { font-size: 0.75rem; color: var(--text-muted); word-break: break-all; }
 .trace-list li { display: flex; justify-content: space-between; gap: var(--s-2); font-size: 0.75rem; }
+
+/* Graph proof: bookmark + epoch + the Cypher that ran. */
+.proof { margin: 0 0 var(--s-2); display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-1) var(--s-3); align-items: baseline; }
+.proof dt { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); }
+.proof dd { margin: 0; font-size: 0.75rem; min-width: 0; }
+.proof-bookmark { overflow-wrap: anywhere; color: var(--text-muted); }
+.proof-cypher {
+  margin: 0; padding: var(--s-2);
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--font-mono); font-size: 0.6875rem; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  max-height: 9rem; overflow-y: auto;
+}
 .trace-id { word-break: break-all; }
 .gold { font-size: 0.9375rem; margin-bottom: var(--s-2); }
+
+/* ── Ask panel refinements ───────────────────────────────────────────────────
+ * The panel is the primary surface of the product and read as a plain form: an
+ * unstyled textarea, a text-only button, and three grey bars standing in for a
+ * query that can take several seconds. */
+
+/* The input is where every session starts, so it gets a real focus state. */
+.ask-input {
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+.ask-input:focus-visible,
+.ask-input:focus {
+  border-color: var(--accent);
+  box-shadow: var(--focus);
+  outline: none;
+}
+
+.ask-btn { display: inline-flex; align-items: center; gap: var(--s-2); }
+
+/* Elapsed time plus an indeterminate track: honest about the fact that the
+ * server reports no per-stage progress, while still reading as motion. */
+.ask-progress {
+  display: flex; flex-direction: column; gap: var(--s-2);
+  padding: var(--s-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.askp-head {
+  display: flex; align-items: center; gap: var(--s-2);
+  font-size: 0.8125rem; color: var(--text-muted);
+}
+.askp-time { margin-left: auto; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.askp-track {
+  height: 3px; border-radius: 999px; overflow: hidden;
+  background: var(--surface-3);
+}
+.askp-fill {
+  display: block; height: 100%; width: 40%; border-radius: 999px;
+  background: var(--accent);
+  animation: askp-slide 1.4s ease-in-out infinite;
+}
+@keyframes askp-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+/* The answer is the payload; it was set at the same size as the surrounding
+ * chrome. */
+.answer p { font-size: 1rem; line-height: 1.6; }
+
+@media (prefers-reduced-motion: reduce) {
+  .askp-fill { animation: none; }
+  .askp-fill { width: 100%; opacity: 0.5; }
+}

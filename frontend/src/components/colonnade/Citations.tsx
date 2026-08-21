@@ -189,7 +189,7 @@ export function CitationsReveal({ active }: { active: boolean }) {
       <p className="text-[11px] leading-[1.45] text-muted">
         Every answer arrives with the documents it came from.
       </p>
-      <Citations citations={CITATION_ITEMS} visible={visible} total={812} defaultOpen />
+      <Citations citations={CITATION_ITEMS} visible={visible} total={25812} defaultOpen />
     </div>
   );
 }

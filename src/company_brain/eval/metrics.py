@@ -1,12 +1,22 @@
 """
-eval/metrics.py — Official EnterpriseRAG-Bench metric calculations.
+eval/metrics.py — "Theia composite": our own local harness over the
+EnterpriseRAG-Bench question set.
 
-Computes:
+NOT the official leaderboard metric, and not comparable to it. The official
+benchmark scores each question as "the completeness percentage if the answer is
+correct and zero otherwise", averaged, with correctness and completeness judged
+by an LLM (GPT-5.4, medium reasoning); document recall is measured @10 and
+invalid extras are an absolute, judge-filtered count.
+
+This module instead computes, entirely locally and deterministically:
 1. Document Recall: |Retrieved ∩ Expected| / |Expected|
-2. Invalid Extra Docs: |Retrieved \ Expected| / max(|Retrieved|, 1)
-3. Answer Correctness: Fact-level precision of generated answer vs gold expected facts
-4. Answer Completeness: Recall of atomic facts in gold answer
-5. Composite Benchmark Score: 100 * (0.40 * Corr + 0.30 * Comp + 0.30 * DocRecall - 0.10 * InvalidPenalty)
+2. Invalid Extra Docs: |Retrieved \ Expected| / max(|Retrieved|, 1)   (ratio, not count)
+3. Answer Correctness: keyword-overlap proxy for fact-level precision (no LLM judge)
+4. Answer Completeness: fraction of gold atomic facts whose keywords appear in the answer
+5. Theia composite: 100 * (0.40*Corr + 0.30*Comp + 0.30*DocRecall - 0.10*InvalidPenalty)
+
+Use it to compare Theia against itself across changes. Do not report it as an
+EnterpriseRAG-Bench leaderboard score.
 """
 
 import re

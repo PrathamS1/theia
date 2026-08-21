@@ -131,7 +131,15 @@ class GraphLoader:
             if effective_ws:
                 entity_key = f"{effective_ws}_{entity_key}"
             entity_int_id = string_to_int_id(entity_key)
-            label = entity.entity_type if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal"] else "Entity"
+            # "Metric" is a first-class label: metric/config keys used to be minted
+            # as tautological Facts (`X metric_name is X`, 96% of the graph) and are
+            # now modelled as entities a document mentions. Without it here they
+            # would collapse into the generic "Entity" bucket.
+            label = (
+                entity.entity_type
+                if entity.entity_type in ["Person", "Org", "Project", "Ticket", "Deal", "Metric"]
+                else "Entity"
+            )
 
             cypher = (
                 f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
@@ -161,8 +169,14 @@ class GraphLoader:
                 f"CREATE (d:Document {{id: $doc_int_id, doc_id: $doc_id, source: $source, "
                 f"title: $title, created_at: $created_at{ws_prop}}})"
                 f"-[r:HAS_FACT {{source: $source, timestamp: $created_at, doc_id: $doc_id{ws_prop}}}]->"
+                # created_at belongs on the Fact node itself, not only on the
+                # HAS_FACT edge: resolution/conflicts.py ranks competing facts by
+                # `f.created_at`, and because the node never carried the property
+                # every fact compared equal (the string 'None') and supersession
+                # silently degraded to trust_score alone.
                 f"(f:Fact {{id: $fact_int_id, subject: $subject, attribute: $attribute, "
-                f"value: $value, trust_score: $trust_score, doc_id: $doc_id{ws_prop}}})"
+                f"value: $value, trust_score: $trust_score, doc_id: $doc_id, "
+                f"created_at: $created_at{ws_prop}}})"
             )
             try:
                 self.client.run_write(cypher, {

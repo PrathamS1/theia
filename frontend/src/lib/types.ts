@@ -4,17 +4,29 @@ export interface Health {
   status: 'healthy' | 'degraded';
   hydradb_connected: boolean;
   vector_store_loaded: boolean;
-  total_documents: number;
-  total_persons: number;
-  total_facts: number;
+  /* Graph label counts are null until the server's background refresh has
+   * measured them: on a 25k-document graph an unanchored `count(*)` can exceed
+   * HydraDB's 30s statement timeout, so /api/health never blocks on them. */
+  total_documents: number | null;
+  total_persons: number | null;
+  total_orgs: number | null;
+  total_topics: number | null;
+  total_facts: number | null;
+  /* Vector count is read from the loaded index, so it is always a number. */
   total_vectors: number;
+  /* Age of the label counts in seconds; null before the first refresh lands. */
+  counts_age_seconds: number | null;
   /* NOTE: same_as_edges / supersedes_edges are hardcoded server-side and do
    * not reflect the real graph. Shown as "documented", never as live counts. */
   same_as_edges: number;
   supersedes_edges: number;
 }
 
-export type NodeLabel = 'Document' | 'Person' | 'Org' | 'Ticket' | 'Project' | 'Fact';
+/* 'Metric' holds config/metric keys a document references. They used to be minted
+ * as tautological Facts (`X metric_name is X`); modelling them as entities is what
+ * removed 96% of the graph's noise. */
+export type NodeLabel =
+  | 'Document' | 'Person' | 'Org' | 'Ticket' | 'Project' | 'Fact' | 'Metric' | 'Topic';
 export type EdgeType = 'SAME_AS' | 'SUPERSEDES' | 'MENTIONS' | 'HAS_FACT';
 
 export interface GraphNode {
@@ -49,6 +61,12 @@ export interface Topology {
   edges: GraphEdge[];
   total_nodes: number;
   total_edges: number;
+  /* Present only on a search response. `matched_documents` counts matches across
+   * the WHOLE corpus, of which the seed shows the first `doc_limit` — without it
+   * the toolbar could only report the subgraph size, which reads as if the
+   * corpus contained just those few documents. */
+  query?: string;
+  matched_documents?: number;
 }
 
 /* Same shape as Topology -- returned by /api/graph/expand, the 1-hop
@@ -64,7 +82,12 @@ export interface NodeDetail {
   created_at?: string;
   full_body?: string;
   properties: Record<string, string | number>;
-  connected_neighbors: { id: string; label: string; relationship: string }[];
+  /* Facts the document asserts — the most informative thing about it, and absent
+   * from the card until now. */
+  facts?: { id?: number; subject: string; attribute: string; value: string; created_at?: string }[];
+  /* `name` was missing from this payload, so the panel could only render the type
+   * ("MENTIONS Person") instead of who was actually mentioned. */
+  connected_neighbors: { id: string; label: string; name?: string; relationship: string }[];
 }
 
 export interface Question {
@@ -101,6 +124,13 @@ export interface QueryResult {
     traversed_entities: string[];
     active_facts: { subject: string; status: string; text: string }[];
     abstained: boolean;
+    /* HydraDB bookmark pinning the exact graph epoch this answer was read from,
+     * plus the Cypher that produced it. Null if the graph was unreachable. */
+    snapshot?: {
+      bookmark: string;
+      read_epoch: number | null;
+      cypher: string;
+    } | null;
   };
 }
 

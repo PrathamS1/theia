@@ -179,8 +179,33 @@ class TopologyCache:
 
     # ---- seed ----------------------------------------------------------------
 
-    def fetch_seed(self, doc_limit: int = 30, refresh: bool = False, workspace_id: Optional[str] = None) -> Dict[str, Any]:
-        cache_key = f"{workspace_id or 'default'}_{doc_limit}"
+    def fetch_seed(
+        self,
+        doc_limit: int = 30,
+        refresh: bool = False,
+        workspace_id: Optional[str] = None,
+        seed_doc_ids: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Build a bounded subgraph.
+
+        By default the seed is the first `doc_limit` documents by id, which is an
+        arbitrary slice of the corpus. `seed_doc_ids` instead seeds from specific
+        documents -- this is what makes the search box search all 25,812
+        documents rather than filtering the ~45 that happened to be cached.
+
+        Note on the per-id lookup below: HydraDB 0.1.0 rejects both
+        `WHERE d.doc_id IN $ids` ("composite parameter is only supported as an
+        UNWIND input") and the UNWIND rewrite ("UNWIND batch supports one-hop
+        relationships only"). Looping one query per id is the pattern the
+        expansion code below already uses, so it is the one that works here.
+        """
+        if seed_doc_ids is not None:
+            ids = list(seed_doc_ids)[:doc_limit]
+            cache_key = f"{workspace_id or 'default'}_q_{hash(tuple(ids)) & 0xFFFFFFFF}"
+        else:
+            ids = None
+            cache_key = f"{workspace_id or 'default'}_{doc_limit}"
+
         if not refresh and cache_key in self._seed_cache:
             return self._seed_cache[cache_key]
 
@@ -189,7 +214,26 @@ class TopologyCache:
                 return self._seed_cache[cache_key]
 
             with _client_ctx(self._client_factory) as client:
-                if workspace_id:
+                if ids is not None:
+                    doc_rows = []
+                    for did in ids:
+                        try:
+                            if workspace_id:
+                                rows = client.run(
+                                    "MATCH (d:Document {doc_id: $did, workspace_id: $ws}) "
+                                    "RETURN d.doc_id, d.title, d.source, d.created_at",
+                                    {"did": did, "ws": workspace_id},
+                                )
+                            else:
+                                rows = client.run(
+                                    "MATCH (d:Document {doc_id: $did}) "
+                                    "RETURN d.doc_id, d.title, d.source, d.created_at",
+                                    {"did": did},
+                                )
+                            doc_rows.extend(rows)
+                        except Exception:
+                            continue
+                elif workspace_id:
                     doc_rows = client.run(
                         "MATCH (d:Document {workspace_id: $ws}) RETURN d.doc_id, d.title, d.source, d.created_at "
                         "ORDER BY d.doc_id LIMIT $lim",

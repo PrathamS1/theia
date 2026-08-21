@@ -25,7 +25,14 @@ HYDRA_PASSWORD: str = os.getenv("HYDRA_PASSWORD", "local-development-token-32-by
 # ── LLM ───────────────────────────────────────────────────────────────────────
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 # Model used for extraction and resolution adjudication.
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+# Model choice is driven by the FREE-TIER DAILY quota, not by capability:
+#   gemini-2.5-flash       404 — retired for new API keys
+#   gemini-3.6-flash        20 requests/DAY  (GenerateRequestsPerDayPerProjectPerModel)
+#   gemini-3.5-flash-lite   ample — 812 documents extract in ~7 minutes, 0 retries
+# 20/day makes the larger Flash model unusable here: at 4 documents per request it
+# would take five days to cover the benchmark corpus. Flash-Lite yields fewer facts
+# per document (3.5 vs 8.1 measured) but is the only one that can actually finish.
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 # ── Composio ──────────────────────────────────────────────────────────────────
 COMPOSIO_API_KEY: str = os.getenv("COMPOSIO_API_KEY", "")
@@ -37,6 +44,17 @@ LIVE_DATA_DIR: Path = DATA_DIR / "live"
 QUESTIONS_DIR: Path = DATA_DIR / "questions"
 QUESTIONS_FILE: Path = QUESTIONS_DIR / "questions.jsonl"
 EXTRA_QUESTIONS_FILE: Path = QUESTIONS_DIR / "extra_questions.jsonl"
+
+# Which corpus the API serves. Defaults to the 812-document gold corpus, which is
+# small enough to deploy anywhere. Point both at the noisy corpus to serve the
+# 25,812-document build (812 gold + 25,000 distractors):
+#     THEIA_STAGED_DOCS=data/staged_noisy_docs.json
+#     THEIA_VECTOR_DIR=data/vectors_noisy
+# They must be set together: the vector index and the staged corpus are keyed to
+# each other, and a mismatch silently drops every candidate whose doc_id is not
+# in staged_docs.
+STAGED_DOCS_PATH: str = os.getenv("THEIA_STAGED_DOCS", "data/staged_gold_docs.json")
+VECTOR_DIR: str = os.getenv("THEIA_VECTOR_DIR", "data/vectors")
 
 # ── Pipeline tuning ───────────────────────────────────────────────────────────
 # Maximum number of hops for multi-hop traversal queries.

@@ -27,7 +27,7 @@ from company_brain import config
 from company_brain.graph.client import GraphClient
 from company_brain.graph.loader import GraphLoader
 from company_brain.indexing.vector_store import VectorStore
-from company_brain.extraction.hybrid_extractor import extract_entities_and_facts
+from company_brain.extraction.hybrid_extractor import extract_entities_and_facts, infer_created_at
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("run_ingest")
@@ -69,32 +69,56 @@ def connect_with_retry(tries: int = 10, delay: float = 8.0):
 
 
 def main():
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Ingest a staged corpus into HydraDB + vector index.")
+    ap.add_argument("--staged", type=str, default=str(STAGED_FILE),
+                    help="Staged corpus JSON (default: data/staged_gold_docs.json)")
+    ap.add_argument("--vector-dir", type=str, default="data/vectors",
+                    help="Where to write the MiniLM chunk index (default: data/vectors)")
+    ap.add_argument("--workspace-id", type=str, default=None,
+                    help="Isolate this corpus under a workspace_id (default: none / shared graph)")
+    ap.add_argument("--skip-vectors", action="store_true",
+                    help="Graph-load only; do not rebuild the vector index. Use when the index is "
+                         "built separately over a different (e.g. superset) corpus.")
+    args = ap.parse_args()
+
+    staged_file = Path(args.staged)
     logger.info("=== Starting Step 1: Ingestion & Vector Indexing Pipeline ===")
+    logger.info("    corpus=%s  vectors=%s  workspace=%s",
+                staged_file, args.vector_dir, args.workspace_id or "(shared)")
 
     # 1. Ensure staged docs exist
-    if not STAGED_FILE.exists():
-        logger.info("Staged docs not found. Running extract_gold_docs.py...")
-        from scripts.extract_gold_docs import main as extract_main
-        extract_main()
+    if not staged_file.exists():
+        if staged_file == STAGED_FILE:
+            logger.info("Staged docs not found. Running extract_gold_docs.py...")
+            from scripts.extract_gold_docs import main as extract_main
+            extract_main()
+        else:
+            logger.error("Staged corpus not found: %s", staged_file)
+            sys.exit(1)
 
-    with open(STAGED_FILE, "r", encoding="utf-8") as f:
+    with open(staged_file, "r", encoding="utf-8") as f:
         staged_docs = json.load(f)
 
     doc_list = list(staged_docs.values())
     total_docs = len(doc_list)
-    logger.info("Loaded %d staged gold documents.", total_docs)
+    logger.info("Loaded %d staged documents.", total_docs)
 
     # 2. Build local dense chunk vector index (Zero Truncation)
-    logger.info("Chunking full corpus and building passage vector index with all-MiniLM-L6-v2...")
-    from company_brain.indexing.chunker import DocumentChunker
-    chunker = DocumentChunker(chunk_size=1000, chunk_overlap=200)
-    all_chunks = chunker.chunk_all_documents(staged_docs)
-    logger.info("Generated %d passages from %d documents.", len(all_chunks), len(staged_docs))
+    if args.skip_vectors:
+        logger.info("Skipping vector index build (--skip-vectors).")
+    else:
+        logger.info("Chunking full corpus and building passage vector index with all-MiniLM-L6-v2...")
+        from company_brain.indexing.chunker import DocumentChunker
+        chunker = DocumentChunker(chunk_size=1000, chunk_overlap=200)
+        all_chunks = chunker.chunk_all_documents(staged_docs)
+        logger.info("Generated %d passages from %d documents.", len(all_chunks), len(staged_docs))
 
-    vstore = VectorStore()
-    vstore.build_chunk_index(all_chunks)
-    vstore.save("data/vectors")
-    logger.info("[OK] Chunk vector index successfully built and saved (%d embeddings).", len(all_chunks))
+        vstore = VectorStore()
+        vstore.build_chunk_index(all_chunks)
+        vstore.save(args.vector_dir)
+        logger.info("[OK] Chunk vector index successfully built and saved (%d embeddings).", len(all_chunks))
 
     # 3. Connect to HydraDB and load graph elements
     logger.info("Connecting to HydraDB via Bolt...")
@@ -103,7 +127,7 @@ def main():
         logger.error("HydraDB is not reachable at %s after repeated attempts. Please check it's running "
                      "(scripts/start_hydradb.sh or the WSL/docker setup) and try again.", config.BOLT_URI)
         sys.exit(1)
-    loader = GraphLoader(client)
+    loader = GraphLoader(client, workspace_id=args.workspace_id)
     start_time = time.time()
 
     total_entities = 0
@@ -115,9 +139,22 @@ def main():
     for idx, doc in enumerate(doc_list):
         doc_id = doc["doc_id"]
         source = doc["source"]
-        created_at = doc.get("created_at", "2026-01-01T00:00:00Z")
         title = doc.get("title", doc_id)
         text = doc.get("text", "")
+        # The staged corpus carries no created_at, so the old default stamped every
+        # document 2026-01-01 -- which made every fact look simultaneous and silently
+        # disabled temporal supersession. Recover the real date where the filename or
+        # text carries one (~45% of the corpus); leave it unset otherwise so ranking
+        # falls back to source authority honestly rather than on a fabricated date.
+        # Unknown dates are the empty string, NOT None: HydraDB rejects null
+        # parameters outright ("only boolean, signed integer, finite float, and
+        # string parameters are supported"), so passing None failed every write
+        # for the ~55% of documents with no recoverable date. Empty string sorts
+        # below any real timestamp, so a dated fact still wins a conflict against
+        # an undated one.
+        created_at = doc.get("created_at") or infer_created_at(
+            doc.get("file_name", "") or "", title, text
+        ) or ""
 
         extraction = extract_entities_and_facts(
             doc_text=text,
@@ -139,7 +176,7 @@ def main():
                 # processing prior documents in this loop.
                 client = connect_with_retry(tries=3, delay=RECONNECT_DELAY_SECONDS)
                 if client is not None:
-                    loader = GraphLoader(client)
+                    loader = GraphLoader(client, workspace_id=args.workspace_id)
 
             if client is None:
                 stats = {"entities_ok": 0, "entities_failed": len(extraction.entities), "facts_ok": 0, "facts_failed": len(extraction.facts)}

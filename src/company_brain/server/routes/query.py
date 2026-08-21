@@ -146,6 +146,9 @@ def execute_query(req: QueryRequest):
         "traversed_entities": result.traversed_entities,
         "active_facts": result.facts_used,
         "abstained": result.abstained,
+        # Bookmark + epoch of the graph read behind this answer, plus the Cypher
+        # that ran. Makes the provenance checkable rather than asserted.
+        "snapshot": result.snapshot,
     }
 
     return {

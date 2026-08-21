@@ -49,10 +49,16 @@ export default function StatusBar({ health, healthError, evalData }: Props) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+/* `value` is null while a count has not been measured yet: on a large graph the
+ * label scans are slow, so /api/health serves the counts it has and refreshes the
+ * rest in the background rather than blocking the page. Render an em dash for the
+ * ones still pending -- "not measured" is not "zero". */
+function Stat({ label, value }: { label: string; value: number | null | undefined }) {
+  const shown = typeof value === 'number' ? value.toLocaleString() : '—';
   return (
     <span className="sb-stat">
-      <strong>{value.toLocaleString()}</strong> {label}
+      <strong>{shown}</strong>
+      {label}
     </span>
   );
 }

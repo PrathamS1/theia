@@ -6,10 +6,33 @@ ranks them by temporal recency and source authority, and writes SUPERSEDES edges
 """
 
 import logging
+import re
 from typing import Dict, List, Any, Tuple, Optional
 from company_brain.graph.client import GraphClient
 
 logger = logging.getLogger(__name__)
+
+# Units that describe the same kind of quantity, so two values are comparable.
+# Anything unrecognised is "unknown" and is never treated as a conflict -- we would
+# rather miss a contradiction than invent one.
+_UNIT_GROUPS = (
+    ("duration", re.compile(r"\b\d+(?:\.\d+)?\s*(?:ms|milliseconds?|s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?|d|days?|w|weeks?|months?|years?)\b", re.I)),
+    ("bytes",    re.compile(r"\b\d+(?:\.\d+)?\s*(?:b|kb|mb|gb|tb|kib|mib|gib|tib)\b", re.I)),
+    ("percent",  re.compile(r"\b\d+(?:\.\d+)?\s*%")),
+    ("money",    re.compile(r"(?:[$€£]\s*\d+(?:\.\d+)?|\b\d+(?:\.\d+)?\s*(?:usd|eur|gbp)\b)", re.I)),
+    ("count",    re.compile(r"^\s*\d+(?:\.\d+)?\s*$")),
+)
+
+
+def _unit_of(value: Any) -> str:
+    """Classify a fact value by the kind of quantity it expresses."""
+    v = str(value or "").strip()
+    if not v:
+        return "unknown"
+    for name, pattern in _UNIT_GROUPS:
+        if pattern.search(v):
+            return name
+    return "unknown"
 
 
 def detect_and_tag_conflicts(client: GraphClient, workspace_id: Optional[str] = None) -> int:
@@ -45,15 +68,29 @@ def detect_and_tag_conflicts(client: GraphClient, workspace_id: Optional[str] = 
         if len(fact_list) < 2:
             continue
 
-        # Check for conflicting values
-        unique_values = set(str(f.get("value", "")).strip() for f in fact_list)
-        if len(unique_values) > 1:
-            # Sort facts by: 1) created_at timestamp descending, 2) trust_score descending
+        # Two values only conflict if they are the same *kind* of quantity.
+        # Grouping on the generic `limit_or_target` attribute previously declared
+        # "12 months", "30 days" and "5%" to be contradictions of one another,
+        # which produced SUPERSEDES edges between unrelated measurements.
+        by_unit: Dict[str, List[Dict[str, Any]]] = {}
+        for f in fact_list:
+            by_unit.setdefault(_unit_of(f.get("value")), []).append(f)
+
+        for unit, unit_facts in by_unit.items():
+            if len(unit_facts) < 2 or unit == "unknown":
+                continue
+            unique_values = set(str(f.get("value", "")).strip() for f in unit_facts)
+            if len(unique_values) <= 1:
+                continue
+
+            # Sort by recency, then source authority. `.get(k, default)` does not
+            # fire when the key exists with a None value -- which is exactly the
+            # case here -- so the fallback is applied explicitly.
             sorted_facts = sorted(
-                fact_list,
+                unit_facts,
                 key=lambda x: (
-                    str(x.get("created_at", "1970-01-01")),
-                    float(x.get("trust_score", 0.5))
+                    str(x.get("created_at") or "1970-01-01T00:00:00Z"),
+                    float(x.get("trust_score") or 0.5),
                 ),
                 reverse=True
             )

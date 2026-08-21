@@ -55,6 +55,16 @@
   --n-org: #7a4a86;
   --n-ticket: #a05a2c;
   --n-project: #4a7a6a;
+  /* Metric/config keys. Slate — deliberately close to no other entity hue, since
+   * metrics are the most numerous node type and should read as background texture
+   * rather than compete with people and documents. */
+  --n-metric: #5a6b8c;
+  /* Topics. 7,197 of these exist in the graph and the UI had no colour, legend
+   * entry or filter for them at all, so expanding a node pulled in unstyled
+   * default-grey blobs. Muted rose: the one hue not already claimed by
+   * documents (blue), people (teal), facts (green), orgs (purple), tickets
+   * (burnt orange) or metrics (slate). */
+  --n-topic: #a34a5e;
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 12px rgb(0 0 0 / 0.08);

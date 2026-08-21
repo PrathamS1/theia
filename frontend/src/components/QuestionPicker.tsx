@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Search, Loader2, X } from 'lucide-react';
 import { getQuestions } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
+import { useDebouncedValue } from '../lib/useDebouncedValue';
 import './QuestionPicker.css';
 
 interface Props {
@@ -10,8 +12,11 @@ interface Props {
 
 export default function QuestionPicker({ onPick, activeId }: Props) {
   const [category, setCategory] = useState('all');
-  const [search, setSearch] = useState('');
+  /* Applied once typing pauses. This was a form that only submitted on Enter,
+   * so the field looked inert while you typed into it. */
   const [draft, setDraft] = useState('');
+  const search = useDebouncedValue(draft, 350);
+  const searchPending = draft !== search;
 
   const { data, loading, error, reload } = useAsync(
     (s) => getQuestions({ category, search, limit: 40 }, s),
@@ -32,17 +37,27 @@ export default function QuestionPicker({ onPick, activeId }: Props) {
           {data?.categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
 
-        <form
-          className="picker-search"
-          onSubmit={(e) => { e.preventDefault(); setSearch(draft); }}
-        >
+        <div className="picker-search">
           <label className="sr-only" htmlFor="pick-search">Search questions</label>
+          <Search size={14} className="tbs-icon" aria-hidden="true" />
           <input
-            id="pick-search" type="search" className="field field-sm"
+            id="pick-search" type="text" className="field field-sm tbs-input"
             placeholder="Search…" value={draft}
             onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setDraft(''); }}
           />
-        </form>
+          <span className="tbs-trail">
+            {searchPending
+              ? <Loader2 size={13} className="spin" aria-label="Searching" />
+              : draft
+                ? (
+                  <button type="button" className="tbs-clear" onClick={() => setDraft('')} aria-label="Clear search">
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                )
+                : null}
+          </span>
+        </div>
       </div>
 
       {loading && (
@@ -81,11 +96,16 @@ export default function QuestionPicker({ onPick, activeId }: Props) {
                   onClick={() => onPick(q.question, q.question_id)}
                   aria-pressed={activeId === q.question_id}
                 >
-                  <span className="q-head">
-                    <span className="mono q-id">{q.question_id}</span>
-                    <span className="tag q-type">{q.question_type}</span>
-                  </span>
+                  {/* The question is the content; the id and category are
+                    * provenance. Reversing that order — metadata on its own
+                    * row above a dimmed, clipped question — is what made these
+                    * cards read as filler. */}
                   <span className="q-text">{q.question}</span>
+                  <span className="q-head">
+                    <span className="mono q-id">{q.question_id.replace('qst_', '')}</span>
+                    <span className="q-dot" aria-hidden="true" />
+                    <span className="q-type">{q.question_type.replace(/_/g, ' ')}</span>
+                  </span>
                 </button>
               </li>
             ))}
@@ -95,3 +115,4 @@ export default function QuestionPicker({ onPick, activeId }: Props) {
     </section>
   );
 }
+

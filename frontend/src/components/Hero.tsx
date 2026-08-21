@@ -109,8 +109,8 @@ export default function Hero() {
             [font-size:clamp(0.75rem,min(1.4vw,1.9vh),1.0225rem)]"
         >
           Theia answers questions across Slack, Gmail, Linear, Jira, GitHub, Confluence,
-          Drive, HubSpot and Fireflies, resolving who is who, preferring the fact that is
-          still true, and declining to answer when the evidence is not there.
+          Drive, HubSpot and Fireflies &mdash; resolving who is who, preferring the fact
+          that is still true, and citing the document behind every line it gives you.
         </p>
 
         <Link
